@@ -21,6 +21,7 @@ interface ForgotPasswordFormProps {
 export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const { resetPassword } = useAuth();
 
   const form = useForm<ForgotPasswordData>({
@@ -39,7 +40,16 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
       const { error } = await resetPassword(data.email);
       console.log('ForgotPasswordForm - resetPassword resultado:', { error });
       
-      if (!error) {
+      if (error) {
+        // Verificar se é erro de rate limit
+        if (error.message?.includes('rate limit') || error.message?.includes('Rate limit')) {
+          setIsBlocked(true);
+          // Desbloquear após 2 minutos
+          setTimeout(() => {
+            setIsBlocked(false);
+          }, 120000); // 2 minutos
+        }
+      } else {
         setEmailSent(true);
         console.log('ForgotPasswordForm - Email enviado com sucesso');
       }
@@ -134,10 +144,18 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
           <Button
             type="submit"
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isBlocked}
           >
-            {isSubmitting ? 'Enviando...' : 'Enviar Link de Recuperação'}
+            {isSubmitting ? 'Enviando...' : 
+             isBlocked ? 'Aguarde 2 minutos...' : 
+             'Enviar Link de Recuperação'}
           </Button>
+          
+          {isBlocked && (
+            <p className="text-sm text-orange-600 text-center">
+              Muitas tentativas detectadas. Aguarde alguns minutos antes de tentar novamente.
+            </p>
+          )}
           
           <Button
             type="button"

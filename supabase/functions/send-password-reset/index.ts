@@ -1,9 +1,6 @@
-import React from 'npm:react@18.3.1'
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
-import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0'
-import { ResetPasswordEmail } from './templates/reset-password.tsx'
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -21,8 +18,11 @@ interface PasswordResetRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Password reset function called');
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log('Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -41,7 +41,10 @@ const handler = async (req: Request): Promise<Response> => {
     if (userError || !userExists) {
       console.log('Usuário não encontrado:', email);
       // Retornar sucesso mesmo se usuário não existir (por segurança)
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: "Se o email estiver cadastrado, você receberá as instruções"
+      }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
@@ -50,11 +53,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Usuário encontrado:', userExists.nome);
 
     // Gerar link de redefinição usando Supabase Auth
+    const redirectUrl = `https://preview--ignite-corp-catalog.lovable.app/auth?reset=true`;
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'supabase.co')}/auth/v1/verify?redirect_to=${encodeURIComponent(window?.location?.origin || 'http://localhost:5173')}/auth`
+        redirectTo: redirectUrl
       }
     });
 
@@ -65,13 +69,45 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Link de reset gerado com sucesso');
 
-    // Renderizar template de email
-    const html = await renderAsync(
-      React.createElement(ResetPasswordEmail, {
-        nome: userExists.nome,
-        resetLink: resetData.properties?.action_link || '#'
-      })
-    );
+    // Criar HTML simples para o email (sem React Email por enquanto)
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Redefinição de Senha</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #f6f9fc; padding: 32px; border-radius: 8px;">
+            <h1 style="color: #7c3aed; text-align: center; margin-bottom: 24px;">Redefinição de Senha</h1>
+            
+            <p style="font-size: 16px; color: #333; margin-bottom: 16px;">Olá ${userExists.nome},</p>
+            
+            <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
+              Você solicitou a redefinição de sua senha. Clique no botão abaixo para criar uma nova senha:
+            </p>
+            
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${resetData.properties?.action_link || '#'}" 
+                 style="background-color: #7c3aed; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                Redefinir Senha
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; text-align: center; margin-top: 24px;">
+              Este link é válido por 24 horas. Se você não solicitou esta redefinição, ignore este email.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 32px 0;">
+            
+            <p style="font-size: 14px; color: #666; text-align: center; margin: 0;">
+              Atenciosamente,<br>
+              Equipe IA na Prática
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
 
     // Enviar email
     const emailResponse = await resend.emails.send({
