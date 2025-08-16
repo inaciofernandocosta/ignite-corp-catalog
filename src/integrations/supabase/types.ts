@@ -866,6 +866,10 @@ export type Database = {
         Args: { curlopt: string; value: string }
         Returns: boolean
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       limpar_tokens_expirados: {
         Args: Record<PropertyKey, never>
         Returns: undefined
