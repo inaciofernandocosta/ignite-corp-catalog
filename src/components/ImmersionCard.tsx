@@ -12,6 +12,9 @@ interface Immersion {
   nextClass: string;
   badges?: ('new' | 'popular')[];
   description?: string;
+  image?: string;
+  duration: string;
+  startDate?: string;
 }
 
 interface ImmersionCardProps {
@@ -86,9 +89,32 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
 
   return (
     <Card className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
+      {/* Course Image */}
+      {immersion.image ? (
+        <div className="relative h-48 overflow-hidden">
+          <img 
+            src={immersion.image} 
+            alt={immersion.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          
+          {/* Badges overlay on image */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            <Badge variant="outline" className="text-xs font-medium bg-black/50 border-white/20 text-white">
+              {accessInfo.label}
+            </Badge>
+            {immersion.badges?.map((badge) => (
+              <Badge key={badge} variant={badge === 'new' ? 'new' : 'popular'} className="text-xs">
+                {badge === 'new' ? 'Novo' : 'Mais procurado'}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* Badges without image */
+        <div className="p-4 pb-0">
+          <div className="flex gap-2 mb-3">
             <Badge variant="outline" className="text-xs font-medium border-border">
               {accessInfo.label}
             </Badge>
@@ -99,19 +125,33 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
             ))}
           </div>
         </div>
-
-        <h3 className="font-heading font-bold text-lg sm:text-xl lg:text-2xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
+      )}
+      
+      <CardHeader className={`pb-4 ${!immersion.image ? 'pt-0' : ''}`}>
+        {/* Title */}
+        <h3 className="font-heading font-bold text-lg sm:text-xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
           {immersion.title}
         </h3>
+        
+        {/* Course Info */}
+        <div className="space-y-2 mb-4">
+          {immersion.duration && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              <span>{immersion.duration}</span>
+            </div>
+          )}
+          
+          {immersion.startDate && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>Início: {new Date(immersion.startDate).toLocaleDateString('pt-BR')}</span>
+            </div>
+          )}
+        </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          {accessInfo.showTeaser 
-            ? "Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria."
-            : immersion.description
-          }
-        </p>
-
-        <div className="flex flex-wrap gap-2 mb-4">
+        {/* Tags */}
+        <div className="flex flex-wrap gap-2">
           {immersion.tags.slice(0, 2).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
@@ -122,7 +162,6 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           </Badge>
         </div>
       </CardHeader>
-
 
       <CardFooter className="pt-0">
         <Button

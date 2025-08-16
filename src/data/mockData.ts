@@ -7,6 +7,9 @@ export interface Immersion {
   nextClass: string;
   badges?: ('new' | 'popular')[];
   description: string;
+  image?: string;
+  duration: string;
+  startDate?: string;
 }
 
 export const mockImmersions: Immersion[] = [
@@ -18,7 +21,9 @@ export const mockImmersions: Immersion[] = [
     workloadDays: 1,
     nextClass: "2024-09-15",
     badges: ["popular"],
-    description: "Aprenda a implementar soluções de IA no varejo, desde recomendação de produtos até otimização de estoque."
+    description: "Aprenda a implementar soluções de IA no varejo, desde recomendação de produtos até otimização de estoque.",
+    duration: "1 dia",
+    startDate: "2024-09-15"
   },
   {
     id: "machine-learning-fundamentos",
@@ -28,7 +33,9 @@ export const mockImmersions: Immersion[] = [
     workloadDays: 2,
     nextClass: "2024-09-20",
     badges: ["new"],
-    description: "Domine os conceitos fundamentais de Machine Learning com exemplos práticos e casos de uso reais."
+    description: "Domine os conceitos fundamentais de Machine Learning com exemplos práticos e casos de uso reais.",
+    duration: "2 dias",
+    startDate: "2024-09-20"
   },
   {
     id: "data-governance-compliance",
@@ -37,7 +44,9 @@ export const mockImmersions: Immersion[] = [
     level: "advanced",
     workloadDays: 2,
     nextClass: "2024-09-22",
-    description: "Implemente frameworks robustos de governança de dados alinhados às regulamentações LGPD e GDPR."
+    description: "Implemente frameworks robustos de governança de dados alinhados às regulamentações LGPD e GDPR.",
+    duration: "2 dias",
+    startDate: "2024-09-22"
   },
   {
     id: "mlops-production",
@@ -47,7 +56,9 @@ export const mockImmersions: Immersion[] = [
     workloadDays: 3,
     nextClass: "2024-10-05",
     badges: ["popular"],
-    description: "Master class em MLOps: desde versionamento de modelos até monitoramento em produção e CI/CD."
+    description: "Master class em MLOps: desde versionamento de modelos até monitoramento em produção e CI/CD.",
+    duration: "3 dias",
+    startDate: "2024-10-05"
   },
   {
     id: "python-data-science",
@@ -57,7 +68,9 @@ export const mockImmersions: Immersion[] = [
     workloadDays: 2,
     nextClass: "2024-09-25",
     badges: ["new"],
-    description: "Aprenda Python aplicado à ciência de dados com pandas, numpy, matplotlib e scikit-learn."
+    description: "Aprenda Python aplicado à ciência de dados com pandas, numpy, matplotlib e scikit-learn.",
+    duration: "2 dias",
+    startDate: "2024-09-25"
   },
   {
     id: "ai-security-threats",
@@ -66,7 +79,9 @@ export const mockImmersions: Immersion[] = [
     level: "intermediate",
     workloadDays: 1,
     nextClass: "2024-09-28",
-    description: "Identifique e mitigue riscos de segurança em sistemas de IA e machine learning."
+    description: "Identifique e mitigue riscos de segurança em sistemas de IA e machine learning.",
+    duration: "1 dia",
+    startDate: "2024-09-28"
   }
 ];
 

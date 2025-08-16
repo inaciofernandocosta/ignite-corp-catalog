@@ -32,7 +32,10 @@ export const useCourses = () => {
           workloadDays: parseDuration(course.duracao),
           nextClass: getNextClassDate(), // Generate next class date
           badges: getBadges(course),
-          description: course.descricao || 'Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria.'
+          description: course.descricao || 'Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria.',
+          image: course.imagem_capa,
+          duration: course.duracao,
+          startDate: course.data_inicio
         }));
 
         setCourses(mappedCourses);
