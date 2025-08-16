@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { FeatureBanner } from "@/components/FeatureBanner";
 import { FilterSection } from "@/components/FilterSection";
 import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -99,8 +98,6 @@ const Index = () => {
         onCorporateLogin={handleCorporateLogin}
         onContractForCompany={handleContractForCompany}
       />
-      
-      <FeatureBanner />
       
       <FilterSection 
         onFiltersChange={setActiveFilters}
