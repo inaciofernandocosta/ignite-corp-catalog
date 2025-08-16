@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminStats } from './AdminStats';
 import { StudentCard } from './StudentCard';
+import { CreateUserDialog } from './CreateUserDialog';
 import { Search, UserPlus, Filter } from 'lucide-react';
 
 interface Student {
@@ -40,6 +41,7 @@ export const StudentManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -151,7 +153,7 @@ export const StudentManagement = () => {
                 Gerenciar Inscrições ({filteredStudents.length})
               </CardTitle>
             </div>
-            <Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Cadastrar Usuário
             </Button>
@@ -210,6 +212,13 @@ export const StudentManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Create User Dialog */}
+      <CreateUserDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onUserCreated={handleStudentUpdate}
+      />
     </div>
   );
 };
