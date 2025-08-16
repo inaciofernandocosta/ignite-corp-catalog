@@ -30,10 +30,14 @@ export const CourseDetails = () => {
   const { course, loading } = useCourseDetails(slug || '');
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
+  const handleLogin = () => {
+    navigate('/auth');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header userState="visitor" onLogin={() => {}} />
+        <Header userState="visitor" onLogin={handleLogin} />
         <div className="container mx-auto px-4 py-16">
           <div className="flex items-center justify-center">
             <div className="text-center">
@@ -50,7 +54,7 @@ export const CourseDetails = () => {
   if (!course) {
     return (
       <div className="min-h-screen">
-        <Header userState="visitor" onLogin={() => {}} />
+        <Header userState="visitor" onLogin={handleLogin} />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Curso não encontrado</h1>
@@ -80,20 +84,31 @@ export const CourseDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header userState="visitor" onLogin={() => {}} />
+        <Header userState="visitor" onLogin={handleLogin} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-            <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">
-              Início
-            </button>
-            <span>/</span>
-            <span>Cursos</span>
-            <span>/</span>
-            <span className="text-foreground">{course.titulo}</span>
+          {/* Breadcrumb e Botão Voltar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">
+                Início
+              </button>
+              <span>/</span>
+              <span>Cursos</span>
+              <span>/</span>
+              <span className="text-foreground">{course.titulo}</span>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar ao Catálogo
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
