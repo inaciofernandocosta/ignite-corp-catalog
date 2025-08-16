@@ -204,7 +204,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
                 <SelectContent>
                   <SelectItem value="active">Ativo</SelectItem>
                   <SelectItem value="draft">Rascunho</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="archived">Arquivado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
