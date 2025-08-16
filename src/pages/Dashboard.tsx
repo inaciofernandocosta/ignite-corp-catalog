@@ -2,32 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  LogOut,
-  BookOpen,
-  Award,
-  Download,
-  FileText,
-  Clock,
-  User,
-  Building,
-  Briefcase,
-  MapPin,
-  GraduationCap,
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { 
+  User, 
+  GraduationCap, 
+  Award, 
+  FileText, 
+  Clock, 
   Calendar,
-  CheckCircle,
   PlayCircle,
+  CheckCircle,
+  Download,
   Users,
   Settings,
+  LogOut,
+  Building,
+  MapPin,
+  Mail,
+  UserCheck,
   Home,
-} from 'lucide-react';
+  Briefcase,
+  BookOpen
+} from "lucide-react";
+import { formatDateWithoutTimezone } from "@/lib/dateUtils";
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 import { StudentManagement } from '@/components/admin/StudentManagement';
 import { EditCourseDialog } from '@/components/admin/EditCourseDialog';
@@ -432,12 +435,12 @@ export const Dashboard = () => {
                                        )}
                                      </div>
                                    </div>
-                                   {course.data_inicio && (
-                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                       <Calendar className="h-3 w-3" />
-                                       {new Date(course.data_inicio).toLocaleDateString('pt-BR')}
-                                     </div>
-                                   )}
+                                    {course.data_inicio && (
+                                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <Calendar className="h-3 w-3" />
+                                        {formatDateWithoutTimezone(course.data_inicio)}
+                                      </div>
+                                    )}
                                  </CardHeader>
                                 <CardContent>
                                   <div className="space-y-3">
@@ -508,7 +511,7 @@ export const Dashboard = () => {
                                      </div>
                                      <div className="flex items-center gap-1">
                                        <Calendar className="h-4 w-4" />
-                                       Iniciado em {new Date(enrollment.data_inscricao).toLocaleDateString('pt-BR')}
+                                       Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}
                                      </div>
                                    </div>
                                    
@@ -590,8 +593,8 @@ export const Dashboard = () => {
                                   </div>
                                   <div className="text-sm text-muted-foreground space-y-1">
                                     <p>Número: {certificate.numero_certificado}</p>
-                                    <p>Data de conclusão: {new Date(certificate.data_conclusao).toLocaleDateString('pt-BR')}</p>
-                                    <p>Data de emissão: {new Date(certificate.data_emissao).toLocaleDateString('pt-BR')}</p>
+                                     <p>Data de conclusão: {formatDateWithoutTimezone(certificate.data_conclusao)}</p>
+                                     <p>Data de emissão: {formatDateWithoutTimezone(certificate.data_emissao)}</p>
                                   </div>
                                 </div>
                                 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatDateShort } from "@/lib/dateUtils";
 
 interface Banner {
   id: string;
@@ -26,11 +27,7 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-    }).toUpperCase().replace('.', '');
+    return formatDateShort(dateString);
   };
 
   const calculateDaysUntil = (dateString: string | null) => {

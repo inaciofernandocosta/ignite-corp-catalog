@@ -1,7 +1,8 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, Users, Lock, CheckCircle, AlertTriangle, HelpCircle } from "lucide-react";
+import { Clock, Calendar, Lock, CheckCircle, HelpCircle } from 'lucide-react';
+import { formatDateWithoutTimezone } from "@/lib/dateUtils";
 
 interface Immersion {
   id: string;
@@ -145,7 +146,7 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           {immersion.startDate && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>Início: {new Date(immersion.startDate).toLocaleDateString('pt-BR')}</span>
+              <span>Início: {formatDateWithoutTimezone(immersion.startDate)}</span>
             </div>
           )}
         </div>
