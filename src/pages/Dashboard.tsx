@@ -405,21 +405,40 @@ export const Dashboard = () => {
                           </Card>
                         ) : (
                           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {allCourses.map((course) => (
-                              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                <CardHeader>
-                                  <div className="flex items-start justify-between">
-                                    <div className="space-y-1">
-                                      <CardTitle className="text-lg line-clamp-2">{course.titulo}</CardTitle>
-                                      <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
-                                        {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  <CardDescription className="line-clamp-2">
-                                    {course.descricao}
-                                  </CardDescription>
-                                </CardHeader>
+                             {allCourses.map((course) => (
+                               <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                 {course.imagem_capa && (
+                                   <div className="relative aspect-video overflow-hidden">
+                                     <img 
+                                       src={course.imagem_capa} 
+                                       alt={course.titulo}
+                                       className="w-full h-full object-cover"
+                                     />
+                                     <div className="absolute top-2 right-2">
+                                       <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
+                                         {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
+                                       </Badge>
+                                     </div>
+                                   </div>
+                                 )}
+                                 <CardHeader>
+                                   <div className="flex items-start justify-between">
+                                     <div className="space-y-1">
+                                       <CardTitle className="text-lg line-clamp-2">{course.titulo}</CardTitle>
+                                       {!course.imagem_capa && (
+                                         <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
+                                           {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
+                                         </Badge>
+                                       )}
+                                     </div>
+                                   </div>
+                                   {course.data_inicio && (
+                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                       <Calendar className="h-3 w-3" />
+                                       {new Date(course.data_inicio).toLocaleDateString('pt-BR')}
+                                     </div>
+                                   )}
+                                 </CardHeader>
                                 <CardContent>
                                   <div className="space-y-3">
                                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
