@@ -10,7 +10,7 @@ interface HeroProps {
 }
 
 export function Hero({ userState, onCorporateLogin, onContractForCompany }: HeroProps) {
-  const { stats, loading } = useStats();
+  const { stats, activeBanner, loading } = useStats();
   
   const getHeroContent = () => {
     switch (userState) {
@@ -18,13 +18,13 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
       case 'logged-personal':
       case 'logged-no-company':
         return {
-          title: "Imersões em IA & Tecnologia",
+          title: activeBanner?.message || "Imersões em IA & Tecnologia",
           subtitle: "Aprenda diretamente com especialistas da indústria as práticas e estratégias das empresas que mais crescem em tecnologia.",
           primaryCTA: "Quero me aplicar",
           primaryAction: onContractForCompany,
           stats: loading 
             ? "Carregando estatísticas..." 
-            : `+${stats.certificatesCount.toLocaleString('pt-BR')} colaboradores formados | +${stats.companiesCount} empresas participaram`
+            : `+${stats.certificatesCount.toLocaleString('pt-BR')} colaboradores formados`
         };
       
       case 'logged-corporate':
@@ -91,20 +91,20 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
                       <Building2 className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">Próxima Imersão</h3>
-                      <p className="text-sm text-muted-foreground">IA Aplicada ao Varejo</p>
+                      <h3 className="font-semibold text-foreground">17 SET</h3>
+                      <p className="text-sm text-muted-foreground">{activeBanner?.message || "Imersão em IA"}</p>
                     </div>
                   </div>
                   <Badge variant="new">Novo</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">2</div>
+                    <div className="text-2xl font-bold text-foreground">{activeBanner?.daysUntilStart || 0}</div>
                     <div className="text-xs text-muted-foreground">DIAS</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">15 SET</div>
-                    <div className="text-xs text-muted-foreground">PRÓXIMA TURMA</div>
+                    <div className="text-2xl font-bold text-foreground">17 SET</div>
+                    <div className="text-xs text-muted-foreground">17 de SET</div>
                   </div>
                 </div>
               </div>

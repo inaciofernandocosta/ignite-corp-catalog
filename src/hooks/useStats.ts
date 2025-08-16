@@ -6,8 +6,15 @@ interface Stats {
   companiesCount: number;
 }
 
+interface ActiveBanner {
+  message: string;
+  icon: string;
+  daysUntilStart: number;
+}
+
 export function useStats() {
   const [stats, setStats] = useState<Stats>({ certificatesCount: 0, companiesCount: 0 });
+  const [activeBanner, setActiveBanner] = useState<ActiveBanner | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,26 +31,35 @@ export function useStats() {
           throw certsError;
         }
 
-        // Buscar quantidade de empresas únicas nas inscrições
-        const { data: companiesData, error: companiesError } = await supabase
-          .from('inscricoes_mentoria')
-          .select('empresa', { head: false })
-          .not('empresa', 'is', null);
+        // Buscar banner ativo
+        const { data: bannerData, error: bannerError } = await supabase
+          .from('course_banners')
+          .select('message, icon')
+          .eq('is_active', true)
+          .single();
 
-        if (companiesError) {
-          console.error('Erro ao buscar empresas:', companiesError);
-          throw companiesError;
+        if (bannerError && bannerError.code !== 'PGRST116') {
+          console.error('Erro ao buscar banner:', bannerError);
         }
 
-        // Contar empresas únicas
-        const uniqueCompanies = new Set(
-          companiesData?.map(item => item.empresa?.trim().toLowerCase()).filter(Boolean) || []
-        );
+        // Calcular dias até 17 de setembro
+        const targetDate = new Date('2024-09-17');
+        const today = new Date();
+        const diffTime = targetDate.getTime() - today.getTime();
+        const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         setStats({
           certificatesCount: certificatesCount || 0,
-          companiesCount: uniqueCompanies.size
+          companiesCount: 0
         });
+
+        if (bannerData) {
+          setActiveBanner({
+            message: bannerData.message,
+            icon: bannerData.icon,
+            daysUntilStart: Math.max(0, daysUntilStart)
+          });
+        }
       } catch (err) {
         console.error('Erro ao carregar estatísticas:', err);
         setError(err instanceof Error ? err.message : 'Erro ao carregar estatísticas');
@@ -55,5 +71,5 @@ export function useStats() {
     fetchStats();
   }, []);
 
-  return { stats, loading, error };
+  return { stats, activeBanner, loading, error };
 }
