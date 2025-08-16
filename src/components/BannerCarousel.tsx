@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { formatDateShort } from "@/lib/dateUtils";
+import { formatDateShort, calculateDaysUntil } from "@/lib/dateUtils";
 
 interface Banner {
   id: string;
@@ -30,13 +30,9 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
     return formatDateShort(dateString);
   };
 
-  const calculateDaysUntil = (dateString: string | null) => {
+  const calculateDays = (dateString: string | null) => {
     if (!dateString) return 0;
-    const targetDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = targetDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
+    return calculateDaysUntil(dateString);
   };
 
   // Auto-play functionality
@@ -87,7 +83,7 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
                     <div className="flex items-center gap-4">
                       <div className="text-center">
                         <div className="text-xs opacity-75">NOVO</div>
-                        <div className="text-lg font-bold">{calculateDaysUntil(banner.data_imersao)}</div>
+                        <div className="text-lg font-bold">{calculateDays(banner.data_imersao)}</div>
                         <div className="text-xs opacity-75">DIAS</div>
                       </div>
                       <div className="text-center">

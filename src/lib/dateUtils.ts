@@ -68,3 +68,34 @@ export function formatDateShort(dateString: string | Date): string {
     month: 'short',
   }).toUpperCase().replace('.', '');
 }
+
+/**
+ * Calcula a diferença em dias entre duas datas sem considerar timezone
+ */
+export function calculateDaysUntil(dateString: string | Date): number {
+  if (!dateString) return 0;
+  
+  // Extrair apenas a parte da data (sem horário)
+  let targetDateOnly: string;
+  if (typeof dateString === 'string') {
+    targetDateOnly = dateString.split('T')[0];
+  } else {
+    targetDateOnly = dateString.toISOString().split('T')[0];
+  }
+  
+  // Obter data atual no formato YYYY-MM-DD
+  const today = new Date();
+  const todayOnly = today.toISOString().split('T')[0];
+  
+  // Criar datas localmente (sem timezone)
+  const [targetYear, targetMonth, targetDay] = targetDateOnly.split('-').map(Number);
+  const [todayYear, todayMonth, todayDay] = todayOnly.split('-').map(Number);
+  
+  const targetDate = new Date(targetYear, targetMonth - 1, targetDay);
+  const todayDate = new Date(todayYear, todayMonth - 1, todayDay);
+  
+  const diffTime = targetDate.getTime() - todayDate.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return Math.max(0, diffDays);
+}
