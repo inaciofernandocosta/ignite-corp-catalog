@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 import { StudentManagement } from '@/components/admin/StudentManagement';
+import { UserProfile } from '@/components/UserProfile';
 
 interface CourseEnrollment {
   id: string;
@@ -201,16 +202,17 @@ export const Dashboard = () => {
               </Badge>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>{profile.nome}</span>
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{profile.nome}</span>
+                </div>
+                <UserProfile />
+                <Button variant="outline" size="sm" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
           </div>
         </div>
       </header>
