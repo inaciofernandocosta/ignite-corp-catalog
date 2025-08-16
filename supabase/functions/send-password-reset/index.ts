@@ -53,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Usuário encontrado:', userExists.nome);
 
     // Gerar link de redefinição usando Supabase Auth
-    const redirectUrl = `https://preview--ignite-corp-catalog.lovable.app/auth?reset=true`;
+    const redirectUrl = `https://preview--ignite-corp-catalog.lovable.app/auth?type=recovery`;
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,

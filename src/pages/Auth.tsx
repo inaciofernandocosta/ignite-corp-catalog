@@ -101,10 +101,10 @@ export const Auth = () => {
 
   // Redirect if already authenticated (but not in recovery mode)
   useEffect(() => {
-    if (!loading && user && !isRecoveryMode) {
+    if (!loading && user && !isRecoveryMode && !showResetPassword) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate, isRecoveryMode]);
+  }, [user, loading, navigate, isRecoveryMode, showResetPassword]);
 
   const onLogin = async (data: LoginFormData) => {
     console.log('Auth - onLogin chamado:', data);
