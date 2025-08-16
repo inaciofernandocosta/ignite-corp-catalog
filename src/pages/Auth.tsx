@@ -58,30 +58,23 @@ export const Auth = () => {
   };
 
   const onForgotPassword = async (data: { email: string }) => {
+    console.log('onForgotPassword chamado com:', data);
     setIsLoading(true);
     try {
       const { error } = await resetPassword(data.email);
+      console.log('resetPassword resultado:', { error });
       if (!error) {
-        forgotPasswordForm.reset();
-        setTimeout(() => {
-          setShowForgotPassword(false);
-        }, 1000);
+        console.log('Reset enviado com sucesso, não limpando o formulário');
+        // NÃO limpar o formulário para permitir redigitação
+        // forgotPasswordForm.reset();
       }
     } catch (error) {
       console.error('Erro no formulário de reset:', error);
     } finally {
+      console.log('Finalizando loading');
       setIsLoading(false);
     }
   };
-
-  // Limpar formulários quando alternar entre login e esqueci senha
-  useEffect(() => {
-    if (showForgotPassword) {
-      forgotPasswordForm.reset();
-    } else {
-      loginForm.reset();
-    }
-  }, [showForgotPassword]);
 
   if (loading) {
     return (
@@ -144,7 +137,12 @@ export const Auth = () => {
                               type="email"
                               placeholder="seu@email.com"
                               className="pl-10"
+                              disabled={isLoading}
                               {...field}
+                              onChange={(e) => {
+                                console.log('Input onChange:', e.target.value);
+                                field.onChange(e);
+                              }}
                             />
                           </div>
                         </FormControl>
@@ -167,6 +165,8 @@ export const Auth = () => {
                       variant="ghost"
                       className="w-full"
                       onClick={() => {
+                        console.log('Voltando para login');
+                        setIsLoading(false);
                         forgotPasswordForm.reset();
                         setShowForgotPassword(false);
                       }}
