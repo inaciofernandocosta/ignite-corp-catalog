@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompanyData } from '@/hooks/useCompanyData';
-import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, CheckSquare } from 'lucide-react';
+import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, Eye, EyeOff } from 'lucide-react';
 
 const formSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -20,8 +20,16 @@ const formSchema = z.object({
   departamento_id: z.string().min(1, 'Selecione um departamento'),
   cargo: z.string().min(2, 'Cargo deve ter pelo menos 2 caracteres'),
   local_id: z.string().min(1, 'Selecione um local'),
-  senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  status: z.string().default('aprovado'),
+  senha: z.string()
+    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
+    .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
+    .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
+    .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial'),
+  confirmarSenha: z.string().min(1, 'Confirme sua senha'),
+}).refine((data) => data.senha === data.confirmarSenha, {
+  message: "As senhas não coincidem",
+  path: ["confirmarSenha"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -32,6 +40,8 @@ interface ApplicationFormProps {
 
 export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
 
@@ -46,7 +56,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
       cargo: '',
       local_id: '',
       senha: '',
-      status: 'aprovado',
+      confirmarSenha: '',
     },
   });
 
@@ -82,7 +92,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
           departamento: selectedDepartment?.nome || '',
           cargo: data.cargo,
           unidade: selectedLocation?.nome || '',
-          status: data.status,
+          status: 'aprovado',
           ativo: true,
           curso_nome: 'IA na Prática',
         });
@@ -311,16 +321,32 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                     <FormItem>
                       <FormLabel>Senha</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input 
-                            type="password" 
-                            placeholder="Senha para acesso" 
-                            className="pl-10" 
-                            {...field} 
-                          />
-                        </div>
+                         <div className="relative">
+                           <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                           <Input 
+                             type={showPassword ? "text" : "password"}
+                             placeholder="Senha para acesso" 
+                             className="pl-10 pr-10" 
+                             {...field} 
+                           />
+                           <Button
+                             type="button"
+                             variant="ghost"
+                             size="icon"
+                             className="absolute right-0 top-0 h-full w-10 hover:bg-transparent"
+                             onClick={() => setShowPassword(!showPassword)}
+                           >
+                             {showPassword ? (
+                               <EyeOff className="h-4 w-4 text-muted-foreground" />
+                             ) : (
+                               <Eye className="h-4 w-4 text-muted-foreground" />
+                             )}
+                           </Button>
+                         </div>
                       </FormControl>
+                      <div className="text-xs text-muted-foreground">
+                        Mínimo 6 caracteres, incluindo maiúscula, minúscula, número e caractere especial
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -328,25 +354,34 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="confirmarSenha"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <div className="flex items-center">
-                              <CheckSquare className="mr-2 h-4 w-4 text-muted-foreground" />
-                              <SelectValue />
-                            </div>
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="aprovado">Aprovado</SelectItem>
-                          <SelectItem value="pendente">Pendente</SelectItem>
-                          <SelectItem value="rejeitado">Rejeitado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Confirmar Senha</FormLabel>
+                      <FormControl>
+                         <div className="relative">
+                           <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                           <Input 
+                             type={showConfirmPassword ? "text" : "password"}
+                             placeholder="Confirme sua senha" 
+                             className="pl-10 pr-10" 
+                             {...field} 
+                           />
+                           <Button
+                             type="button"
+                             variant="ghost"
+                             size="icon"
+                             className="absolute right-0 top-0 h-full w-10 hover:bg-transparent"
+                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                           >
+                             {showConfirmPassword ? (
+                               <EyeOff className="h-4 w-4 text-muted-foreground" />
+                             ) : (
+                               <Eye className="h-4 w-4 text-muted-foreground" />
+                             )}
+                           </Button>
+                         </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
