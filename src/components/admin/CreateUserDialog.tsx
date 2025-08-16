@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { applyPhoneMask, removePhoneMask, validateEmailFormat, filterEmailInput } from '@/lib/inputMasks';
 import { 
   User, 
   Mail, 
@@ -22,18 +23,27 @@ import {
   Briefcase, 
   MapPin, 
   Lock,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 const createUserSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  telefone: z.string().optional(),
+  telefone: z.string()
+    .min(1, 'Telefone é obrigatório')
+    .refine((value) => {
+      const numbers = removePhoneMask(value);
+      return numbers.length >= 10 && numbers.length <= 11;
+    }, 'Telefone deve ter 10 ou 11 dígitos'),
   empresa: z.string().min(1, 'Empresa é obrigatória'),
   departamento: z.string().min(1, 'Departamento é obrigatório'),
   cargo: z.string().min(1, 'Cargo é obrigatório'),
   unidade: z.string().min(1, 'Local é obrigatório'),
-  senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  senha: z.string()
+    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+      'Senha deve conter ao menos: 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial'),
   status: z.string().default('aprovado'),
 });
 
@@ -67,6 +77,7 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
   const [departments, setDepartments] = useState<Department[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState<string>('');
   const { toast } = useToast();
 
   const form = useForm<CreateUserData>({
@@ -143,13 +154,16 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
       const department = departments.find(d => d.id === data.departamento);
       const location = locations.find(l => l.id === data.unidade);
 
+      // Clean phone number for storage
+      const cleanPhone = removePhoneMask(data.telefone);
+
       // Create user in inscricoes_mentoria
       const { error } = await supabase
         .from('inscricoes_mentoria')
         .insert({
           nome: data.nome,
           email: data.email,
-          telefone: data.telefone || null,
+          telefone: cleanPhone,
           empresa: company?.nome || '',
           departamento: department?.nome || '',
           cargo: data.cargo,
@@ -240,13 +254,41 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="email"
+                        type="text"
                         placeholder="email@exemplo.com"
-                        className="pl-10"
+                        className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
                         {...field}
+                        onChange={(e) => {
+                          const filteredValue = filterEmailInput(e.target.value);
+                          field.onChange(filteredValue);
+                          
+                          // Validação em tempo real
+                          if (filteredValue.length > 0) {
+                            if (!validateEmailFormat(filteredValue)) {
+                              setEmailError('Formato de e-mail inválido');
+                            } else {
+                              setEmailError('');
+                            }
+                          } else {
+                            setEmailError('');
+                          }
+                        }}
+                        onBlur={(e) => {
+                          field.onBlur();
+                          const value = e.target.value;
+                          if (value.length > 0 && !validateEmailFormat(value)) {
+                            setEmailError('Formato de e-mail inválido');
+                          }
+                        }}
                       />
+                      {emailError && (
+                        <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                      )}
                     </div>
                   </FormControl>
+                  {emailError && (
+                    <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -266,10 +308,18 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
                         placeholder="(00) 00000-0000"
                         className="pl-10"
                         {...field}
+                        onChange={(e) => {
+                          const maskedValue = applyPhoneMask(e.target.value);
+                          field.onChange(maskedValue);
+                        }}
+                        maxLength={15} // Limite para a máscara completa
                       />
                     </div>
                   </FormControl>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Digite apenas números. A máscara será aplicada automaticamente.
+                  </p>
                 </FormItem>
               )}
             />
@@ -400,19 +450,22 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
                 name="senha"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="password"
-                          placeholder="Senha para acesso"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
+                     <FormLabel>Senha</FormLabel>
+                     <FormControl>
+                       <div className="relative">
+                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                         <Input
+                           type="password"
+                           placeholder="Senha para acesso"
+                           className="pl-10"
+                           {...field}
+                         />
+                       </div>
+                     </FormControl>
+                     <p className="text-xs text-muted-foreground">
+                       Mínimo 6 caracteres, incluindo maiúscula, minúscula, número e caractere especial
+                     </p>
+                     <FormMessage />
                   </FormItem>
                 )}
               />
