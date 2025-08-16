@@ -57,6 +57,7 @@ export const useAuth = () => {
 
   const fetchUserProfile = async (email: string) => {
     try {
+      // Buscar dados da inscrição
       const { data: inscricao, error: inscricaoError } = await supabase
         .from('inscricoes_mentoria')
         .select('*')
@@ -64,16 +65,24 @@ export const useAuth = () => {
         .eq('ativo', true)
         .single();
 
-      if (inscricaoError) throw inscricaoError;
+      if (inscricaoError) {
+        console.error('Erro ao buscar inscrição:', inscricaoError);
+        return;
+      }
 
-      const { data: userRole, error: roleError } = await supabase
+      // Buscar role do usuário - usar array para permitir que não tenha role
+      const { data: userRoles, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', inscricao.id)
-        .eq('active', true)
-        .single();
+        .eq('active', true);
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Erro ao buscar role:', roleError);
+      }
+
+      // Usar a primeira role ativa ou 'aluno' como padrão
+      const userRole = userRoles && userRoles.length > 0 ? userRoles[0].role : 'aluno';
 
       setProfile({
         id: inscricao.id,
@@ -83,8 +92,10 @@ export const useAuth = () => {
         departamento: inscricao.departamento,
         cargo: inscricao.cargo,
         unidade: inscricao.unidade,
-        role: userRole.role,
+        role: userRole,
       });
+
+      console.log('Perfil carregado:', { email, role: userRole });
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }
@@ -107,23 +118,6 @@ export const useAuth = () => {
           variant: 'destructive',
         });
         return { error: { message: 'Usuário não encontrado' } };
-      }
-
-      // Verificar se tem role ativo
-      const { data: userRole, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', inscricao.id)
-        .eq('active', true)
-        .single();
-
-      if (roleError || !userRole) {
-        toast({
-          title: 'Acesso negado',
-          description: 'Usuário sem permissões ativas no sistema.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Sem permissões ativas' } };
       }
 
       // Tentar fazer login no Supabase Auth
