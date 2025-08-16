@@ -58,11 +58,17 @@ export const Auth = () => {
 
   const onForgotPassword = async (data: { email: string }) => {
     setIsLoading(true);
-    const { error } = await resetPassword(data.email);
-    if (!error) {
-      setShowForgotPassword(false);
+    try {
+      const { error } = await resetPassword(data.email);
+      if (!error) {
+        forgotPasswordForm.reset();
+        setShowForgotPassword(false);
+      }
+    } catch (error) {
+      console.error('Erro no formulário de reset:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (loading) {
