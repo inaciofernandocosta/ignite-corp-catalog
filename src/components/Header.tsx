@@ -1,5 +1,6 @@
 import { User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -7,6 +8,8 @@ interface HeaderProps {
 }
 
 export function Header({ userState, onLogin }: HeaderProps) {
+  const { profile, signOut } = useAuth();
+
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
@@ -41,8 +44,8 @@ export function Header({ userState, onLogin }: HeaderProps) {
           <div className="flex items-center space-x-4">
             {userState === 'visitor' ? (
               <div className="flex items-center space-x-3">
-                <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary" asChild>
-                  <a href="/auth">Entrar</a>
+                <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary">
+                  Entrar
                 </Button>
                 <Button size="sm" className="bg-primary hover:bg-primary-hover font-semibold">
                   Aplique-se
@@ -51,12 +54,23 @@ export function Header({ userState, onLogin }: HeaderProps) {
             ) : (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-muted-foreground">
-                  {userState === 'logged-corporate' && "colaborador@empresa.com.br"}
-                  {userState === 'logged-personal' && "usuario@gmail.com"}
-                  {userState === 'logged-no-company' && "colaborador@naoregistrada.com"}
+                  {profile?.email || 'usuário@email.com'}
                 </span>
-                <Button variant="outline" size="sm" className="border-border">
-                  <User className="w-4 h-4" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-border"
+                  onClick={() => window.location.href = '/dashboard'}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={signOut}
+                >
+                  Sair
                 </Button>
               </div>
             )}

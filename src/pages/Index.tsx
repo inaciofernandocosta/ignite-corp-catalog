@@ -9,7 +9,9 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { type UserState, type AccessState } from "@/data/mockData";
 import { useCourses } from "@/hooks/useCourses";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Filter {
   id: string;
@@ -18,32 +20,42 @@ interface Filter {
 }
 
 const Index = () => {
-  const [userState, setUserState] = useState<UserState>('visitor');
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   // Filter courses based on filters (simplified since filters were removed)
   const filteredImmersions = courses;
 
-  const handleLogin = () => {
-    // Simulate different login states for demonstration
-    const states: UserState[] = ['logged-corporate', 'logged-personal', 'logged-no-company'];
-    const randomState = states[Math.floor(Math.random() * states.length)];
-    setUserState(randomState);
+  // Determine user state based on authentication
+  const getUserState = (): UserState => {
+    if (!user || !profile) return 'visitor';
     
-    toast({
-      title: "Login realizado",
-      description: `Estado: ${randomState}`,
-    });
+    // Check if user has corporate email
+    const email = profile.email.toLowerCase();
+    const corporateDomains = ['mentoriafutura.com.br', 'empresa.com', 'corp.com'];
+    const hasCorporateEmail = corporateDomains.some(domain => email.includes(domain));
+    
+    if (hasCorporateEmail) return 'logged-corporate';
+    
+    // Check if user's company is in our database
+    if (profile.empresa && profile.empresa !== '') {
+      return 'logged-corporate';
+    }
+    
+    return 'logged-personal';
+  };
+
+  const userState = getUserState();
+
+  const handleLogin = () => {
+    navigate('/auth');
   };
 
   const handleCorporateLogin = () => {
-    setUserState('logged-corporate');
-    toast({
-      title: "Login corporativo",
-      description: "Acesso liberado com e-mail corporativo",
-    });
+    navigate('/auth');
   };
 
   const handleContractForCompany = () => {
