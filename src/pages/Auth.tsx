@@ -42,6 +42,23 @@ export const Auth = () => {
   // Check for password recovery mode
   useEffect(() => {
     const checkRecoveryMode = async () => {
+      // Verificar se há erro na URL (token expirado, etc.)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const error = hashParams.get('error');
+      const errorCode = hashParams.get('error_code');
+      const errorDescription = hashParams.get('error_description');
+
+      if (error === 'access_denied' && errorCode === 'otp_expired') {
+        console.log('Auth - Token de recovery expirado');
+        // Mostrar mensagem de erro e redirecionar para form de esqueci senha
+        setShowForgotPassword(true);
+        setIsRecoveryMode(false);
+        setShowResetPassword(false);
+        // Limpar hash da URL e adicionar parâmetro expired
+        window.history.replaceState(null, '', '/auth?expired=true');
+        return;
+      }
+
       // Verificar se tem sessão de recovery
       if (session && searchParams.get('type') === 'recovery') {
         console.log('Auth - Modo de recovery detectado');
@@ -51,7 +68,6 @@ export const Auth = () => {
       }
 
       // Verificar se é um link de recovery via hash fragment
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
       const type = hashParams.get('type');
@@ -70,7 +86,7 @@ export const Auth = () => {
             setIsRecoveryMode(true);
             setShowResetPassword(true);
             // Limpar hash da URL
-            window.history.replaceState(null, '', window.location.pathname);
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
           } else {
             console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
           }
@@ -111,6 +127,10 @@ export const Auth = () => {
     setShowResetPassword(false);
     setIsRecoveryMode(false);
     loginForm.reset();
+    // Remover parâmetro expired se existir
+    if (searchParams.get('expired')) {
+      window.history.replaceState(null, '', '/auth');
+    }
   };
 
   const handleResetSuccess = () => {
@@ -168,7 +188,7 @@ export const Auth = () => {
             {showResetPassword ? (
               <ResetPasswordForm onSuccess={handleResetSuccess} onBack={handleBackToLogin} />
             ) : showForgotPassword ? (
-              <ForgotPasswordForm onBack={handleBackToLogin} />
+              <ForgotPasswordForm onBack={handleBackToLogin} showExpiredMessage={searchParams.get('expired') === 'true'} />
             ) : (
               // Formulário de Login
               <Form {...loginForm}>

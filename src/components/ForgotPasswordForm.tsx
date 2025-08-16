@@ -5,8 +5,9 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Por favor, digite um email válido'),
@@ -16,9 +17,10 @@ type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
+  showExpiredMessage?: boolean;
 }
 
-export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
+export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: ForgotPasswordFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -113,6 +115,15 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {showExpiredMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              O link de recuperação expirou. Por favor, solicite um novo link de redefinição de senha.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <FormField
           control={form.control}
           name="email"
