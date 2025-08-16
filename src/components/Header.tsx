@@ -68,7 +68,10 @@ export function Header({ userState, onLogin }: HeaderProps) {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={signOut}
+                  onClick={() => {
+                    signOut();
+                    window.location.href = '/';
+                  }}
                 >
                   Sair
                 </Button>
