@@ -6,6 +6,7 @@ import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
 import { FAQ } from "@/components/FAQ";
 import { Footer } from "@/components/Footer";
+import { ApplicationForm } from "@/components/ApplicationForm";
 import { Button } from "@/components/ui/button";
 import { type UserState, type AccessState } from "@/data/mockData";
 import { useCourses } from "@/hooks/useCourses";
@@ -21,6 +22,8 @@ interface Filter {
 
 const Index = () => {
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
   const { user, profile } = useAuth();
@@ -72,10 +75,17 @@ const Index = () => {
   };
 
   const handleCTAClick = (immersionId: string, action: string) => {
-    toast({
-      title: "Ação registrada",
-      description: `${action} - ${immersionId}`,
-    });
+    const course = courses.find(c => c.id === immersionId);
+    
+    if (action === "Quero me aplicar" && course) {
+      setSelectedCourse(course);
+      setShowApplicationForm(true);
+    } else {
+      toast({
+        title: "Ação registrada",
+        description: `${action} - ${immersionId}`,
+      });
+    }
   };
 
   const getAccessState = (immersionId: string): AccessState => {
@@ -159,6 +169,10 @@ const Index = () => {
       <FAQ />
       
       <Footer />
+      
+      {showApplicationForm && (
+        <ApplicationForm onClose={() => setShowApplicationForm(false)} />
+      )}
     </div>
   );
 };
