@@ -155,9 +155,33 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
     return data.publicUrl;
   };
 
+  const generateUniqueSlug = async (baseSlug: string): Promise<string> => {
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (true) {
+      const { data: existingCourse } = await supabase
+        .from('cursos')
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      
+      if (!existingCourse) {
+        return slug;
+      }
+      
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     try {
       setLoading(true);
+
+      // Gerar slug único
+      const baseSlug = data.slug || generateSlug(data.titulo);
+      const uniqueSlug = await generateUniqueSlug(baseSlug);
 
       // Primeiro criar o curso para obter o ID
       const courseData = {
@@ -168,7 +192,7 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
         status: data.status,
         certificacao: data.certificacao,
         preco: data.preco,
-        slug: data.slug || generateSlug(data.titulo),
+        slug: uniqueSlug,
         data_inicio: data.data_inicio ? data.data_inicio.toISOString().split('T')[0] : null,
         data_fim: data.data_fim ? data.data_fim.toISOString().split('T')[0] : null,
         local_id: data.local_id || null,
