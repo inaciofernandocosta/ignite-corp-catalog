@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { ForgotPasswordForm } from '@/components/ForgotPasswordForm';
+import { ResetPasswordForm } from '@/components/ResetPasswordForm';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -22,9 +24,12 @@ export const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   
   const navigate = useNavigate();
-  const { signIn, user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { signIn, user, loading, session } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -34,12 +39,56 @@ export const Auth = () => {
     },
   });
 
-  // Redirect if already authenticated
+  // Check for password recovery mode
   useEffect(() => {
-    if (!loading && user) {
+    const checkRecoveryMode = async () => {
+      // Verificar se tem sessão de recovery
+      if (session && searchParams.get('type') === 'recovery') {
+        console.log('Auth - Modo de recovery detectado');
+        setIsRecoveryMode(true);
+        setShowResetPassword(true);
+        return;
+      }
+
+      // Verificar se é um link de recovery via hash fragment
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+
+      if (accessToken && refreshToken && type === 'recovery') {
+        console.log('Auth - Link de recovery detectado via hash');
+        try {
+          // Estabelecer sessão com os tokens do link
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (!error) {
+            console.log('Auth - Sessão de recovery estabelecida');
+            setIsRecoveryMode(true);
+            setShowResetPassword(true);
+            // Limpar hash da URL
+            window.history.replaceState(null, '', window.location.pathname);
+          } else {
+            console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
+          }
+        } catch (error) {
+          console.error('Auth - Erro ao processar link de recovery:', error);
+        }
+      }
+    };
+
+    checkRecoveryMode();
+  }, [session, searchParams]);
+
+  // Redirect if already authenticated (but not in recovery mode)
+  useEffect(() => {
+    if (!loading && user && !isRecoveryMode) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isRecoveryMode]);
 
   const onLogin = async (data: LoginFormData) => {
     console.log('Auth - onLogin chamado:', data);
@@ -59,7 +108,16 @@ export const Auth = () => {
   const handleBackToLogin = () => {
     console.log('Auth - Voltando para login');
     setShowForgotPassword(false);
+    setShowResetPassword(false);
+    setIsRecoveryMode(false);
     loginForm.reset();
+  };
+
+  const handleResetSuccess = () => {
+    console.log('Auth - Reset de senha realizado com sucesso');
+    setShowResetPassword(false);
+    setIsRecoveryMode(false);
+    navigate('/dashboard');
   };
 
   if (loading) {
@@ -96,17 +154,20 @@ export const Auth = () => {
         <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl">
-              {showForgotPassword ? 'Recuperar Senha' : 'Área do Aluno'}
+              {showResetPassword ? 'Redefinir Senha' :
+               showForgotPassword ? 'Recuperar Senha' : 
+               'Área do Aluno'}
             </CardTitle>
             <CardDescription>
-              {showForgotPassword 
-                ? 'Digite seu email para recuperar sua senha'
-                : 'Entre com sua conta'
-              }
+              {showResetPassword ? 'Digite sua nova senha' :
+               showForgotPassword ? 'Digite seu email para recuperar sua senha' :
+               'Entre com sua conta'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showForgotPassword ? (
+            {showResetPassword ? (
+              <ResetPasswordForm onSuccess={handleResetSuccess} onBack={handleBackToLogin} />
+            ) : showForgotPassword ? (
               <ForgotPasswordForm onBack={handleBackToLogin} />
             ) : (
               // Formulário de Login
