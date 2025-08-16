@@ -9,10 +9,14 @@ export function applyPhoneMask(value: string): string {
   const limitedNumbers = numbers.slice(0, 11);
   
   // Aplica a máscara baseada no tamanho
-  if (limitedNumbers.length <= 2) {
+  if (limitedNumbers.length === 0) {
+    return '';
+  } else if (limitedNumbers.length <= 2) {
     return `(${limitedNumbers}`;
-  } else if (limitedNumbers.length <= 7) {
+  } else if (limitedNumbers.length <= 6) {
     return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2)}`;
+  } else if (limitedNumbers.length <= 10) {
+    return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2, 6)}-${limitedNumbers.slice(6)}`;
   } else {
     return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2, 7)}-${limitedNumbers.slice(7)}`;
   }

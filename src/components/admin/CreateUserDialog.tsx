@@ -307,12 +307,22 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
                       <Input
                         placeholder="(00) 00000-0000"
                         className="pl-10"
-                        {...field}
+                        value={field.value}
                         onChange={(e) => {
+                          // Aplica a máscara e limita a entrada
                           const maskedValue = applyPhoneMask(e.target.value);
                           field.onChange(maskedValue);
                         }}
-                        maxLength={15} // Limite para a máscara completa
+                        onKeyDown={(e) => {
+                          // Permite apenas números, backspace, delete, tab, enter, setas
+                          const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                          const isNumber = /^[0-9]$/.test(e.key);
+                          
+                          if (!isNumber && !allowedKeys.includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        maxLength={15} // Limite para a máscara completa: (00) 00000-0000
                       />
                     </div>
                   </FormControl>
