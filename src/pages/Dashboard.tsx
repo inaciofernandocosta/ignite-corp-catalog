@@ -24,8 +24,11 @@ import {
   Calendar,
   CheckCircle,
   PlayCircle,
+  Users,
+  Settings,
 } from 'lucide-react';
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
+import { StudentManagement } from '@/components/admin/StudentManagement';
 
 interface CourseEnrollment {
   id: string;
@@ -74,7 +77,7 @@ export const Dashboard = () => {
   const [courseEnrollments, setCourseEnrollments] = useState<CourseEnrollment[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [courseMaterials, setCourseMaterials] = useState<CourseMaterial[]>([]);
-  const [activeTab, setActiveTab] = useState('cursos');
+  const [activeTab, setActiveTab] = useState(profile?.role === 'admin' ? 'gerenciar' : 'cursos');
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -265,10 +268,16 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                {profile?.role === 'admin' && (
+                  <TabsTrigger value="gerenciar" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Gerenciar Alunos
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="cursos" className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
-                  Meus Cursos
+                  {profile?.role === 'admin' ? 'Cursos' : 'Meus Cursos'}
                 </TabsTrigger>
                 <TabsTrigger value="certificados" className="flex items-center gap-2">
                   <Award className="h-4 w-4" />
@@ -287,6 +296,13 @@ export const Dashboard = () => {
                 </div>
               ) : (
                 <>
+                  {/* Admin Tab - Gerenciar Alunos */}
+                  {profile?.role === 'admin' && (
+                    <TabsContent value="gerenciar" className="space-y-6">
+                      <StudentManagement />
+                    </TabsContent>
+                  )}
+
                   {/* Cursos Tab */}
                   <TabsContent value="cursos" className="space-y-6">
                     {courseEnrollments.length === 0 ? (
