@@ -32,13 +32,13 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
     },
     {
       icon: <Users className="w-5 h-5" />,
-      title: "Especialistas da Indústria",
-      description: "Professores com experiência em empresas líderes"
+      title: "Especialistas do Varejo",
+      description: "Instrutores com experiência em práticas"
     },
     {
       icon: <TrendingUp className="w-5 h-5" />,
       title: "Resultados Comprovados",
-      description: "Mais de 1000 profissionais transformados"
+      description: "Mais de 20 profissionais mentorados"
     }
   ];
 
@@ -50,7 +50,7 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
         return {
           title: "Transforme seu Futuro com",
           highlight: "Educação Corporativa de Elite",
-          subtitle: "Acelere sua carreira e a de sua equipe com metodologias inovadoras, cases reais e aplicação prática. Conecte-se com especialistas da indústria e empresas que mais crescem em tecnologia.",
+          subtitle: "Acelere sua carreira e a de sua equipe com metodologias inovadoras, cases reais e aplicação prática. Conecte-se com especialistas do varejo e empresas que mais crescem em tecnologia.",
           primaryCTA: "Quero me aplicar",
           secondaryCTA: "Contratar para empresa",
           primaryAction: () => setShowApplicationForm(true),
@@ -166,12 +166,12 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
             {/* Stats Row */}
             <div className="flex justify-center items-center gap-8 pt-4 animate-fade-in" style={{ animationDelay: '1s' }}>
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">1000+</div>
+                <div className="text-3xl font-bold text-primary">20+</div>
                 <div className="text-sm text-muted-foreground">Profissionais Transformados</div>
               </div>
               <div className="w-px h-10 bg-border"></div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-accent">95%</div>
+                <div className="text-3xl font-bold text-accent">100%</div>
                 <div className="text-sm text-muted-foreground">Taxa de Satisfação</div>
               </div>
             </div>
