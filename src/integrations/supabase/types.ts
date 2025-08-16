@@ -111,6 +111,7 @@ export type Database = {
           border_color: string
           course_slug: string
           created_at: string | null
+          data_imersao: string | null
           icon: string | null
           id: string
           is_active: boolean
@@ -123,6 +124,7 @@ export type Database = {
           border_color?: string
           course_slug: string
           created_at?: string | null
+          data_imersao?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
@@ -135,6 +137,7 @@ export type Database = {
           border_color?: string
           course_slug?: string
           created_at?: string | null
+          data_imersao?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
