@@ -25,6 +25,7 @@ import {
   CheckCircle,
   PlayCircle,
 } from 'lucide-react';
+import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 
 interface CourseEnrollment {
   id: string;
@@ -48,8 +49,11 @@ interface Certificate {
   data_emissao: string;
   data_conclusao: string;
   status: string;
-  certificado_pdf: string;
+  certificado_pdf: string | null;
   inscricao_curso_id: string;
+  aprovado_por?: string;
+  observacoes?: string;
+  aluno_nome?: string;
 }
 
 interface CourseMaterial {
@@ -110,7 +114,14 @@ export const Dashboard = () => {
         .in('inscricao_curso_id', (enrollments || []).map(e => e.id));
 
       if (certsError) throw certsError;
-      setCertificates(certs || []);
+      
+      // Adicionar o nome do aluno aos certificados
+      const certificatesWithNames = (certs || []).map(cert => ({
+        ...cert,
+        aluno_nome: profile.nome
+      }));
+      
+      setCertificates(certificatesWithNames);
 
       // Buscar materiais dos cursos
       if (enrollments && enrollments.length > 0) {
@@ -343,18 +354,23 @@ export const Dashboard = () => {
                                   )}
                                 </div>
                                 
-                                <div className="space-y-2 mt-4">
-                                  <Button className="w-full" size="sm">
-                                    <PlayCircle className="h-4 w-4 mr-2" />
-                                    Continuar Curso
-                                  </Button>
-                                  {Number(enrollment.progresso) >= 100 && (
-                                    <Button variant="outline" className="w-full" size="sm">
-                                      <Award className="h-4 w-4 mr-2" />
-                                      Ver Certificado
-                                    </Button>
-                                  )}
-                                </div>
+                                 <div className="space-y-2 mt-4">
+                                   <Button className="w-full" size="sm">
+                                     <PlayCircle className="h-4 w-4 mr-2" />
+                                     Continuar Curso
+                                   </Button>
+                                   {Number(enrollment.progresso) >= 100 && (() => {
+                                     const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                     return certificate ? (
+                                       <StorageCertificateViewer certificate={certificate} />
+                                     ) : (
+                                       <Button variant="outline" className="w-full" size="sm" disabled>
+                                         <Award className="h-4 w-4 mr-2" />
+                                         Certificado não encontrado
+                                       </Button>
+                                     );
+                                   })()}
+                                 </div>
                               </div>
                             </div>
                           </Card>
