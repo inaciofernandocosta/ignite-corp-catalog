@@ -51,7 +51,13 @@ const Index = () => {
   const userState = getUserState();
 
   const handleLogin = () => {
-    navigate('/auth');
+    if (user && profile) {
+      // Se já está logado, redirecionar para dashboard
+      navigate('/dashboard');
+    } else {
+      // Se não está logado, ir para tela de auth
+      navigate('/auth');
+    }
   };
 
   const handleCorporateLogin = () => {

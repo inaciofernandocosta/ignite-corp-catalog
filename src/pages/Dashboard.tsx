@@ -26,6 +26,7 @@ import {
   PlayCircle,
   Users,
   Settings,
+  Home,
 } from 'lucide-react';
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 import { StudentManagement } from '@/components/admin/StudentManagement';
@@ -240,28 +241,38 @@ export const Dashboard = () => {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Mentoria Futura
-              </h1>
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                {profile.role === 'aluno' ? 'Área do Aluno' : profile.role}
-              </Badge>
-            </div>
-            
-              <div className="flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{profile.nome}</span>
-                </div>
-                <UserProfile />
-                <Button variant="outline" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </Button>
-              </div>
-          </div>
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-4">
+               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                 Mentoria Futura
+               </h1>
+               <Badge variant="secondary" className="hidden sm:inline-flex">
+                 {profile.role === 'aluno' ? 'Área do Aluno' : profile.role}
+               </Badge>
+             </div>
+
+             <div className="flex items-center gap-4">
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 onClick={() => navigate('/')}
+                 className="text-muted-foreground hover:text-foreground"
+               >
+                 <Home className="h-4 w-4 mr-2" />
+                 Catálogo
+               </Button>
+               
+               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                 <User className="h-4 w-4" />
+                 <span>{profile.nome}</span>
+               </div>
+               <UserProfile />
+               <Button variant="outline" size="sm" onClick={signOut}>
+                 <LogOut className="h-4 w-4 mr-2" />
+                 Sair
+               </Button>
+             </div>
+           </div>
         </div>
       </header>
 
