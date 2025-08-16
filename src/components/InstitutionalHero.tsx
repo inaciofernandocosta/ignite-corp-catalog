@@ -63,9 +63,9 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
           title: "Bem-vindo ao seu",
           highlight: "Portal de Desenvolvimento",
           subtitle: "Acesse suas imersões exclusivas e acelere o crescimento da sua equipe com conteúdos personalizados para sua empresa.",
-          primaryCTA: "Ver Meus Cursos",
+          primaryCTA: null,
           secondaryCTA: null,
-          primaryAction: () => {}, // Navigate to courses
+          primaryAction: null,
           secondaryAction: null,
           showBadge: false
         };
