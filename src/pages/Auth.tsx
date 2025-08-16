@@ -39,7 +39,7 @@ export const Auth = () => {
     },
   });
 
-  // Check for password recovery mode
+  // Check for password recovery mode FIRST - before any redirects
   useEffect(() => {
     const checkRecoveryMode = async () => {
       // Verificar se há erro na URL (token expirado, etc.)
@@ -59,9 +59,9 @@ export const Auth = () => {
         return;
       }
 
-      // Verificar se tem sessão de recovery
-      if (session && searchParams.get('type') === 'recovery') {
-        console.log('Auth - Modo de recovery detectado');
+      // Verificar se tem parâmetro type=recovery na URL
+      if (searchParams.get('type') === 'recovery') {
+        console.log('Auth - Modo de recovery detectado via URL params');
         setIsRecoveryMode(true);
         setShowResetPassword(true);
         return;
@@ -86,7 +86,7 @@ export const Auth = () => {
             setIsRecoveryMode(true);
             setShowResetPassword(true);
             // Limpar hash da URL
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
           } else {
             console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
           }
@@ -94,16 +94,32 @@ export const Auth = () => {
           console.error('Auth - Erro ao processar link de recovery:', error);
         }
       }
+
+      // Verificar se tem sessão de recovery (fallback)
+      if (session && !isRecoveryMode && !showResetPassword) {
+        const currentUrl = window.location.href;
+        if (currentUrl.includes('type=recovery') || currentUrl.includes('#type=recovery')) {
+          console.log('Auth - Detectando recovery via session + URL');
+          setIsRecoveryMode(true);
+          setShowResetPassword(true);
+        }
+      }
     };
 
     checkRecoveryMode();
-  }, [session, searchParams]);
+  }, [searchParams]); // Removido session da dependência para evitar loops
 
-  // Redirect if already authenticated (but not in recovery mode)
+  // Redirect if already authenticated (but not in recovery mode) - RUNS AFTER recovery check
   useEffect(() => {
-    if (!loading && user && !isRecoveryMode && !showResetPassword) {
-      navigate('/dashboard');
-    }
+    // Aguardar um tick para garantir que a verificação de recovery foi processada
+    const timer = setTimeout(() => {
+      if (!loading && user && !isRecoveryMode && !showResetPassword) {
+        console.log('Auth - Redirecionando para dashboard');
+        navigate('/dashboard');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [user, loading, navigate, isRecoveryMode, showResetPassword]);
 
   const onLogin = async (data: LoginFormData) => {
