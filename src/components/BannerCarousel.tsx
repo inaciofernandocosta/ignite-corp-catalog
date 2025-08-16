@@ -22,8 +22,6 @@ interface BannerCarouselProps {
 export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!banners.length) return null;
-
   const singleBanner = banners.length === 1;
 
   const formatDate = (dateString: string | null) => {
@@ -46,7 +44,7 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
 
   // Auto-play functionality
   useEffect(() => {
-    if (singleBanner) return;
+    if (singleBanner || !banners.length) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
@@ -54,6 +52,9 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
 
     return () => clearInterval(interval);
   }, [banners.length, singleBanner]);
+
+  // Early return AFTER all hooks are declared
+  if (!banners.length) return null;
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
