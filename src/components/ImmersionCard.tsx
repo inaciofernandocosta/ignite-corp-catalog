@@ -123,25 +123,6 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        {/* Stats Section - G4 Style */}
-        <div className="grid grid-cols-3 gap-4 py-4 border-t border-border/50">
-          <div className="text-center">
-            <div className="text-lg font-bold text-foreground">{immersion.workloadDays}</div>
-            <div className="text-xs text-muted-foreground">{immersion.workloadDays === 1 ? 'DIA' : 'DIAS'}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-foreground">
-              {new Date(immersion.nextClass).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()}
-            </div>
-            <div className="text-xs text-muted-foreground">PRÓXIMA TURMA</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-foreground">SP</div>
-            <div className="text-xs text-muted-foreground">PRESENCIAL</div>
-          </div>
-        </div>
-      </CardContent>
 
       <CardFooter className="pt-0">
         <Button
