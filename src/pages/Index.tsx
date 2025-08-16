@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
+import { InstitutionalHero } from "@/components/InstitutionalHero";
 import { FilterSection } from "@/components/FilterSection";
 import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -103,8 +103,8 @@ const Index = () => {
         onLogin={handleLogin}
       />
       
-      <Hero 
-        userState={userState}
+      <InstitutionalHero 
+        userState={userState} 
         onCorporateLogin={handleCorporateLogin}
         onContractForCompany={handleContractForCompany}
       />
