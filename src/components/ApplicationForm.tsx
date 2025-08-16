@@ -10,12 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompanyData } from '@/hooks/useCompanyData';
-import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, Eye, EyeOff } from 'lucide-react';
+import { applyPhoneMask, removePhoneMask, validateEmailFormat, filterEmailInput } from '@/lib/inputMasks';
+import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  telefone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
+  telefone: z.string()
+    .min(1, 'Telefone é obrigatório')
+    .refine((value) => {
+      const numbers = removePhoneMask(value);
+      return numbers.length >= 10 && numbers.length <= 11;
+    }, 'Telefone deve ter 10 ou 11 dígitos'),
   empresa_id: z.string().min(1, 'Selecione uma empresa'),
   departamento_id: z.string().min(1, 'Selecione um departamento'),
   cargo: z.string().min(2, 'Cargo deve ter pelo menos 2 caracteres'),
@@ -42,6 +48,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string>('');
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
 
@@ -81,13 +88,16 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
       const selectedDepartment = availableDepartments.find(d => d.id === data.departamento_id);
       const selectedLocation = availableLocations.find(l => l.id === data.local_id);
 
-      // Inserir na tabela inscricoes_mentoria
-      const { error } = await supabase
-        .from('inscricoes_mentoria')
-        .insert({
-          nome: data.nome,
-          email: data.email,
-          telefone: data.telefone,
+          // Clean phone number for storage
+          const cleanPhone = removePhoneMask(data.telefone);
+
+          // Inserir na tabela inscricoes_mentoria
+          const { error } = await supabase
+            .from('inscricoes_mentoria')
+            .insert({
+              nome: data.nome,
+              email: data.email,
+              telefone: cleanPhone,
           empresa: selectedCompany?.nome || '',
           departamento: selectedDepartment?.nome || '',
           cargo: data.cargo,
@@ -175,9 +185,42 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="email@exemplo.com" className="pl-10" {...field} />
+                        <Input 
+                          type="text"
+                          placeholder="email@exemplo.com" 
+                          className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
+                          {...field}
+                          onChange={(e) => {
+                            const filteredValue = filterEmailInput(e.target.value);
+                            field.onChange(filteredValue);
+                            
+                            // Validação em tempo real
+                            if (filteredValue.length > 0) {
+                              if (!validateEmailFormat(filteredValue)) {
+                                setEmailError('Formato de e-mail inválido');
+                              } else {
+                                setEmailError('');
+                              }
+                            } else {
+                              setEmailError('');
+                            }
+                          }}
+                          onBlur={(e) => {
+                            field.onBlur();
+                            const value = e.target.value;
+                            if (value.length > 0 && !validateEmailFormat(value)) {
+                              setEmailError('Formato de e-mail inválido');
+                            }
+                          }}
+                        />
+                        {emailError && (
+                          <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                        )}
                       </div>
                     </FormControl>
+                    {emailError && (
+                      <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -192,10 +235,32 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                     <FormControl>
                       <div className="relative">
                         <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="(00) 00000-0000" className="pl-10" {...field} />
+                        <Input 
+                          placeholder="(00) 00000-0000" 
+                          className="pl-10"
+                          value={field.value}
+                          onChange={(e) => {
+                            // Aplica a máscara e limita a entrada
+                            const maskedValue = applyPhoneMask(e.target.value);
+                            field.onChange(maskedValue);
+                          }}
+                          onKeyDown={(e) => {
+                            // Permite apenas números, backspace, delete, tab, enter, setas
+                            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                            const isNumber = /^[0-9]$/.test(e.key);
+                            
+                            if (!isNumber && !allowedKeys.includes(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          maxLength={15} // Limite para a máscara completa: (00) 00000-0000
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
+                    <p className="text-xs text-muted-foreground">
+                      Digite apenas números. A máscara será aplicada automaticamente.
+                    </p>
                   </FormItem>
                 )}
               />
