@@ -35,6 +35,7 @@ export const Auth = () => {
 
   const forgotPasswordForm = useForm<{ email: string }>({
     resolver: zodResolver(z.object({ email: z.string().email('Email inválido') })),
+    mode: 'onSubmit', // Só valida quando submeter
     defaultValues: {
       email: '',
     },
