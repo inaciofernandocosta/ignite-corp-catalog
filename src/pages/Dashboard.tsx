@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 import { StudentManagement } from '@/components/admin/StudentManagement';
+import { EditCourseDialog } from '@/components/admin/EditCourseDialog';
+import { CourseStudentsDialog } from '@/components/admin/CourseStudentsDialog';
 import { CreateCourseDialog } from '@/components/admin/CreateCourseDialog';
 import { UserProfile } from '@/components/UserProfile';
 
@@ -120,7 +122,6 @@ export const Dashboard = () => {
 
     try {
       setDataLoading(true);
-      console.log('Profile role:', profile.role);
 
       // Buscar inscrições em cursos
       const { data: enrollments, error: enrollmentsError } = await supabase
@@ -133,21 +134,15 @@ export const Dashboard = () => {
 
       if (enrollmentsError) throw enrollmentsError;
       setCourseEnrollments(enrollments || []);
-      console.log('Course enrollments:', enrollments);
 
       // Para admins, buscar todos os cursos disponíveis
       if (profile.role === 'admin') {
-        console.log('Buscando todos os cursos para admin...');
         const { data: allCoursesData, error: allCoursesError } = await supabase
           .from('cursos')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (allCoursesError) {
-          console.error('Erro ao buscar cursos:', allCoursesError);
-          throw allCoursesError;
-        }
-        console.log('Todos os cursos encontrados:', allCoursesData);
+        if (allCoursesError) throw allCoursesError;
         setAllCourses(allCoursesData || []);
       }
 
@@ -396,78 +391,65 @@ export const Dashboard = () => {
                        </div>
                      )}
                      
-                     {profile?.role === 'admin' ? (
+                      {profile?.role === 'admin' ? (
                         // Visualização em grade para administradores
-                        (() => {
-                          console.log('Renderizando cursos para admin. Total de cursos:', allCourses.length);
-                          console.log('Array allCourses:', allCourses);
-                          return allCourses.length === 0 ? (
-                            <Card>
-                              <CardContent className="text-center py-12">
-                                <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
-                                <p className="text-muted-foreground">
-                                  Crie seu primeiro curso usando o botão "Novo Curso" acima.
-                                </p>
-                              </CardContent>
-                            </Card>
-                          ) : (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {allCourses.map((course) => {
-                                console.log('Renderizando curso:', course.titulo);
-                                return (
-                                  <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                    <CardHeader>
-                                      <div className="flex items-start justify-between">
-                                        <div className="space-y-1">
-                                          <CardTitle className="text-lg line-clamp-2">{course.titulo}</CardTitle>
-                                          <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
-                                            {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
-                                          </Badge>
-                                        </div>
+                        allCourses.length === 0 ? (
+                          <Card>
+                            <CardContent className="text-center py-12">
+                              <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
+                              <p className="text-muted-foreground">
+                                Crie seu primeiro curso usando o botão "Novo Curso" acima.
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {allCourses.map((course) => (
+                              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <div className="space-y-1">
+                                      <CardTitle className="text-lg line-clamp-2">{course.titulo}</CardTitle>
+                                      <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
+                                        {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <CardDescription className="line-clamp-2">
+                                    {course.descricao}
+                                  </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-3">
+                                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {course.duracao}
                                       </div>
-                                      <CardDescription className="line-clamp-2">
-                                        {course.descricao}
-                                      </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="space-y-3">
-                                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                                          <div className="flex items-center gap-1">
-                                            <Clock className="h-3 w-3" />
-                                            {course.duracao}
-                                          </div>
-                                          <div className="flex items-center gap-1">
-                                            <GraduationCap className="h-3 w-3" />
-                                            {course.nivel}
-                                          </div>
-                                        </div>
-                                        
-                                        {course.preco && (
-                                          <div className="text-sm">
-                                            <span className="text-muted-foreground">Preço: </span>
-                                            <span className="font-semibold">R$ {Number(course.preco).toFixed(2)}</span>
-                                          </div>
-                                        )}
-                                        
-                                        <div className="flex gap-2 mt-4">
-                                          <Button size="sm" variant="outline" className="flex-1">
-                                            <Settings className="h-3 w-3 mr-1" />
-                                            Editar
-                                          </Button>
-                                          <Button size="sm" className="flex-1">
-                                            <User className="h-3 w-3 mr-1" />
-                                            Ver Alunos
-                                          </Button>
-                                        </div>
+                                      <div className="flex items-center gap-1">
+                                        <GraduationCap className="h-3 w-3" />
+                                        {course.nivel}
                                       </div>
-                                    </CardContent>
-                                  </Card>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()
+                                    </div>
+                                    
+                                    {course.preco && (
+                                      <div className="text-sm">
+                                        <span className="text-muted-foreground">Preço: </span>
+                                        <span className="font-semibold">R$ {Number(course.preco).toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    
+                                    <div className="flex gap-2 mt-4">
+                                      <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
+                                      <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )
                       ) : (
                        // Visualização original para alunos
                        courseEnrollments.length === 0 ? (
