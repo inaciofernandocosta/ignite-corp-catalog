@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Upload } from 'lucide-react';
+import { CalendarIcon, Upload, ImageIcon, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLocais } from '@/hooks/useLocais';
@@ -51,7 +51,7 @@ const formSchema = z.object({
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   duracao: z.string().min(1, 'Duração é obrigatória'),
   nivel: z.enum(['Básico', 'Intermediário', 'Avançado']),
-  status: z.enum(['draft', 'active', 'inactive']),
+  status: z.enum(['draft', 'active', 'archived']),
   certificacao: z.boolean(),
   preco: z.number().default(0),
   slug: z.string().optional(),
@@ -74,6 +74,8 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
   const [newObjetivo, setNewObjetivo] = useState('');
   const [newPreRequisito, setNewPreRequisito] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { toast } = useToast();
   const { locais, loading: locaisLoading } = useLocais();
 
@@ -128,31 +130,76 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Arquivo inválido',
+          description: 'Por favor, selecione uma imagem.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'Por favor, selecione uma imagem menor que 5MB.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const uploadImage = async (courseId: string): Promise<string | null> => {
     if (!imageFile) return null;
 
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${courseId}.${fileExt}`;
-    const filePath = `${fileName}`;
+    try {
+      setUploadingImage(true);
 
-    const { error: uploadError } = await supabase.storage
-      .from('course-images')
-      .upload(filePath, imageFile);
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${courseId}.${fileExt}`;
+      const filePath = `courses/${fileName}`;
 
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+      const { error: uploadError } = await supabase.storage
+        .from('course-images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('course-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: 'Erro ao fazer upload da imagem',
+        description: 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
       return null;
+    } finally {
+      setUploadingImage(false);
     }
-
-    const { data } = supabase.storage
-      .from('course-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
   };
 
   const generateUniqueSlug = async (baseSlug: string): Promise<string> => {
@@ -232,6 +279,7 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
       setObjetivos([]);
       setPreRequisitos([]);
       setImageFile(null);
+      setImagePreview(null);
       setOpen(false);
       onCourseCreated?.();
     } catch (error) {
@@ -264,6 +312,56 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Image Upload Section */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Imagem do Curso</label>
+                
+                {imagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview do curso" 
+                      className="w-full h-48 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={removeImage}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-sm text-gray-600 mb-2">Nenhuma imagem selecionada</p>
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="flex-1"
+                    disabled={uploadingImage}
+                  />
+                  {uploadingImage && (
+                    <Button disabled className="min-w-24">
+                      <Upload className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB.
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -357,7 +455,7 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
                       <SelectContent>
                         <SelectItem value="draft">Rascunho</SelectItem>
                         <SelectItem value="active">Ativo</SelectItem>
-                        <SelectItem value="inactive">Inativo</SelectItem>
+                        <SelectItem value="archived">Arquivado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -534,86 +632,67 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
               )}
             />
 
-            <FormItem>
-              <FormLabel>Imagem de Capa</FormLabel>
-              <FormControl>
-                <div className="flex items-center gap-4">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
-                  {imageFile && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Upload className="h-4 w-4" />
-                      {imageFile.name}
-                    </div>
-                  )}
-                </div>
-              </FormControl>
-              <FormDescription>
-                Faça upload da imagem que será exibida como capa do curso
-              </FormDescription>
-            </FormItem>
-
             {/* Objetivos */}
             <div className="space-y-3">
-              <FormLabel>Objetivos do Curso</FormLabel>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Adicionar objetivo..."
-                  value={newObjetivo}
-                  onChange={(e) => setNewObjetivo(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addObjetivo())}
-                />
-                <Button type="button" onClick={addObjetivo} size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {objetivos.map((objetivo, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {objetivo}
-                    <button
-                      type="button"
-                      onClick={() => removeObjetivo(index)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Objetivos do Curso</label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Adicionar objetivo..."
+                    value={newObjetivo}
+                    onChange={(e) => setNewObjetivo(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addObjetivo())}
+                  />
+                  <Button type="button" onClick={addObjetivo} size="sm">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {objetivos.map((objetivo, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {objetivo}
+                      <button
+                        type="button"
+                        onClick={() => removeObjetivo(index)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Pré-requisitos */}
             <div className="space-y-3">
-              <FormLabel>Pré-requisitos</FormLabel>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Adicionar pré-requisito..."
-                  value={newPreRequisito}
-                  onChange={(e) => setNewPreRequisito(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPreRequisito())}
-                />
-                <Button type="button" onClick={addPreRequisito} size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {preRequisitos.map((requisito, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {requisito}
-                    <button
-                      type="button"
-                      onClick={() => removePreRequisito(index)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pré-requisitos</label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Adicionar pré-requisito..."
+                    value={newPreRequisito}
+                    onChange={(e) => setNewPreRequisito(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPreRequisito())}
+                  />
+                  <Button type="button" onClick={addPreRequisito} size="sm">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {preRequisitos.map((requisito, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {requisito}
+                      <button
+                        type="button"
+                        onClick={() => removePreRequisito(index)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -625,8 +704,8 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Criando...' : 'Criar Curso'}
+              <Button type="submit" disabled={loading || uploadingImage}>
+                {loading ? 'Criando...' : uploadingImage ? 'Processando imagem...' : 'Criar Curso'}
               </Button>
             </DialogFooter>
           </form>
