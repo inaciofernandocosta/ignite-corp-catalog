@@ -799,6 +799,10 @@ export type Database = {
         Args: { admin_email: string }
         Returns: string
       }
+      generate_slug: {
+        Args: { title: string }
+        Returns: string
+      }
       gerar_numero_certificado: {
         Args: Record<PropertyKey, never>
         Returns: string
