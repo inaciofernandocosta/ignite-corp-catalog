@@ -42,8 +42,8 @@ export function useStats() {
           console.error('Erro ao buscar banner:', bannerError);
         }
 
-        // Calcular dias até 17 de setembro
-        const targetDate = new Date('2024-09-17');
+        // Calcular dias até 03 de setembro
+        const targetDate = new Date('2024-09-03');
         const today = new Date();
         const diffTime = targetDate.getTime() - today.getTime();
         const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
