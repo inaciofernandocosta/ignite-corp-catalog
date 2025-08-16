@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminStats } from './AdminStats';
 import { StudentCard } from './StudentCard';
 import { CreateUserDialog } from './CreateUserDialog';
-import { Search, UserPlus, Filter } from 'lucide-react';
+import { Search, UserPlus, Filter, Download } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -126,6 +126,80 @@ export const StudentManagement = () => {
     fetchStudentsAndStats();
   };
 
+  const exportStudents = () => {
+    if (filteredStudents.length === 0) {
+      toast({
+        title: 'Nenhum dado para exportar',
+        description: 'Não há alunos nos filtros atuais para exportar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Cabeçalhos do CSV
+    const headers = [
+      'Nome',
+      'Email', 
+      'Telefone',
+      'Empresa',
+      'Departamento',
+      'Cargo',
+      'Unidade',
+      'Status',
+      'Ativo',
+      'Data de Cadastro'
+    ];
+
+    // Converter dados para CSV
+    const csvData = filteredStudents.map(student => [
+      student.nome || '',
+      student.email || '',
+      student.telefone || '',
+      student.empresa || '',
+      student.departamento || '',
+      student.cargo || '',
+      student.unidade || '',
+      student.status || '',
+      student.ativo ? 'Sim' : 'Não',
+      new Date(student.created_at).toLocaleDateString('pt-BR')
+    ]);
+
+    // Criar conteúdo CSV
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    
+    // Nome do arquivo com filtros aplicados
+    const currentDate = new Date().toISOString().split('T')[0];
+    let fileName = `alunos_${currentDate}`;
+    
+    if (searchTerm.trim()) {
+      fileName += `_busca-${searchTerm.trim().replace(/\s+/g, '_')}`;
+    }
+    
+    if (statusFilter !== 'todos') {
+      fileName += `_status-${statusFilter}`;
+    }
+    
+    link.setAttribute('download', `${fileName}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Exportação concluída',
+      description: `${filteredStudents.length} alunos exportados com sucesso.`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -153,10 +227,20 @@ export const StudentManagement = () => {
                 Gerenciar Inscrições ({filteredStudents.length})
               </CardTitle>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Cadastrar Usuário
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={exportStudents}
+                disabled={filteredStudents.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar ({filteredStudents.length})
+              </Button>
+              <Button onClick={() => setShowCreateDialog(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Cadastrar Usuário
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
