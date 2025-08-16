@@ -50,7 +50,7 @@ const formSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   duracao: z.string().min(1, 'Duração é obrigatória'),
-  nivel: z.enum(['básico', 'intermediário', 'avançado']),
+  nivel: z.enum(['Básico', 'Intermediário', 'Avançado']),
   status: z.enum(['draft', 'active', 'inactive']),
   certificacao: z.boolean(),
   preco: z.number().default(0),
@@ -83,7 +83,7 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
       titulo: '',
       descricao: '',
       duracao: '',
-      nivel: 'básico',
+      nivel: 'Básico',
       status: 'draft',
       certificacao: false,
       preco: 0,
@@ -308,9 +308,9 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="básico">Básico</SelectItem>
-                        <SelectItem value="intermediário">Intermediário</SelectItem>
-                        <SelectItem value="avançado">Avançado</SelectItem>
+                        <SelectItem value="Básico">Básico</SelectItem>
+                        <SelectItem value="Intermediário">Intermediário</SelectItem>
+                        <SelectItem value="Avançado">Avançado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
