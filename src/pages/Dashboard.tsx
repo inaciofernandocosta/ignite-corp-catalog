@@ -70,6 +70,25 @@ interface CourseMaterial {
   arquivo_nome: string;
   arquivo_tamanho: number;
   ordem: number;
+  modulo_id?: string;
+}
+
+interface CourseModule {
+  id: string;
+  titulo: string;
+  descricao: string;
+  ordem: number;
+  materiais: CourseMaterial[];
+}
+
+interface CourseWithModules {
+  id: string;
+  titulo: string;
+  descricao: string;
+  duracao: string;
+  nivel: string;
+  imagem_capa: string;
+  modulos: CourseModule[];
 }
 
 export const Dashboard = () => {
@@ -77,7 +96,7 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const [courseEnrollments, setCourseEnrollments] = useState<CourseEnrollment[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [courseMaterials, setCourseMaterials] = useState<CourseMaterial[]>([]);
+  const [coursesWithModules, setCoursesWithModules] = useState<CourseWithModules[]>([]);
   const [activeTab, setActiveTab] = useState(profile?.role === 'admin' ? 'gerenciar' : 'cursos');
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -127,21 +146,33 @@ export const Dashboard = () => {
       
       setCertificates(certificatesWithNames);
 
-      // Buscar materiais dos cursos
+      // Buscar cursos com módulos e materiais organizados
       if (enrollments && enrollments.length > 0) {
         const courseIds = enrollments.map(e => e.curso_id);
         
+        // Buscar cursos
+        const { data: courses, error: coursesError } = await supabase
+          .from('cursos')
+          .select('*')
+          .in('id', courseIds);
+
+        if (coursesError) throw coursesError;
+
+        // Buscar módulos dos cursos
         const { data: modules, error: modulesError } = await supabase
           .from('curso_modulos')
-          .select('id')
-          .in('curso_id', courseIds);
+          .select('*')
+          .in('curso_id', courseIds)
+          .order('ordem');
 
         if (modulesError) throw modulesError;
 
+        // Buscar materiais dos módulos
+        let materials: CourseMaterial[] = [];
         if (modules && modules.length > 0) {
           const moduleIds = modules.map(m => m.id);
           
-          const { data: materials, error: materialsError } = await supabase
+          const { data: materialsData, error: materialsError } = await supabase
             .from('modulo_materiais')
             .select('*')
             .in('modulo_id', moduleIds)
@@ -149,8 +180,25 @@ export const Dashboard = () => {
             .order('ordem');
 
           if (materialsError) throw materialsError;
-          setCourseMaterials(materials || []);
+          materials = materialsData || [];
         }
+
+        // Organizar dados hierarquicamente
+        const coursesWithModules: CourseWithModules[] = (courses || []).map(course => {
+          const courseModules = (modules || [])
+            .filter(module => module.curso_id === course.id)
+            .map(module => ({
+              ...module,
+              materiais: materials.filter(material => material.modulo_id === module.id)
+            }));
+
+          return {
+            ...course,
+            modulos: courseModules
+          };
+        });
+
+        setCoursesWithModules(coursesWithModules);
       }
     } catch (error) {
       console.error('Erro ao buscar dados do usuário:', error);
@@ -446,7 +494,7 @@ export const Dashboard = () => {
 
                   {/* Materiais Tab */}
                   <TabsContent value="materiais" className="space-y-6">
-                    {courseMaterials.length === 0 ? (
+                    {coursesWithModules.length === 0 ? (
                       <Card>
                         <CardContent className="text-center py-12">
                           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -457,37 +505,96 @@ export const Dashboard = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <div className="grid gap-4">
-                        {courseMaterials.map((material) => (
-                          <Card key={material.id}>
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <FileText className="h-5 w-5 text-blue-500" />
-                                    <h3 className="font-semibold">{material.titulo}</h3>
-                                    <Badge variant="outline">{material.tipo}</Badge>
-                                  </div>
-                                  {material.descricao && (
-                                    <p className="text-sm text-muted-foreground">{material.descricao}</p>
-                                  )}
-                                  <div className="flex gap-4 text-xs text-muted-foreground">
-                                    {material.formato && <span>Formato: {material.formato.toUpperCase()}</span>}
-                                    {material.arquivo_tamanho && (
-                                      <span>Tamanho: {formatFileSize(material.arquivo_tamanho)}</span>
-                                    )}
-                                  </div>
+                      <div className="space-y-8">
+                        {coursesWithModules.map((course) => (
+                          <Card key={course.id}>
+                            <CardHeader>
+                              <div className="flex items-center gap-3">
+                                <GraduationCap className="h-6 w-6 text-primary" />
+                                <div>
+                                  <CardTitle className="text-xl">{course.titulo}</CardTitle>
+                                  <CardDescription>{course.descricao}</CardDescription>
                                 </div>
-                                
-                                {material.url && (
-                                  <Button size="sm" asChild>
-                                    <a href={material.url} target="_blank" rel="noopener noreferrer">
-                                      <Download className="h-4 w-4 mr-2" />
-                                      Baixar
-                                    </a>
-                                  </Button>
-                                )}
                               </div>
+                            </CardHeader>
+                            <CardContent>
+                              {course.modulos.length === 0 ? (
+                                <div className="text-center py-8">
+                                  <BookOpen className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                                  <p className="text-muted-foreground">
+                                    Nenhum módulo encontrado para este curso.
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="space-y-6">
+                                  {course.modulos.map((module) => (
+                                    <div key={module.id} className="border-l-4 border-primary/20 pl-4">
+                                      <div className="mb-4">
+                                        <h4 className="font-semibold text-lg flex items-center gap-2">
+                                          <BookOpen className="h-5 w-5 text-secondary" />
+                                          {module.titulo}
+                                        </h4>
+                                        {module.descricao && (
+                                          <p className="text-sm text-muted-foreground mt-1">
+                                            {module.descricao}
+                                          </p>
+                                        )}
+                                      </div>
+
+                                      {module.materiais.length === 0 ? (
+                                        <div className="ml-6 py-4 text-center border border-dashed border-muted-foreground/30 rounded-lg">
+                                          <FileText className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                                          <p className="text-sm text-muted-foreground">
+                                            Nenhum material disponível neste módulo.
+                                          </p>
+                                        </div>
+                                      ) : (
+                                        <div className="ml-6 grid gap-3">
+                                          {module.materiais.map((material) => (
+                                            <Card key={material.id} className="border-l-4 border-l-secondary/50">
+                                              <CardContent className="p-4">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="space-y-2 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                      <FileText className="h-4 w-4 text-blue-500" />
+                                                      <h5 className="font-medium">{material.titulo}</h5>
+                                                      <Badge variant="outline" className="text-xs">
+                                                        {material.tipo}
+                                                      </Badge>
+                                                    </div>
+                                                    {material.descricao && (
+                                                      <p className="text-sm text-muted-foreground">
+                                                        {material.descricao}
+                                                      </p>
+                                                    )}
+                                                    <div className="flex gap-4 text-xs text-muted-foreground">
+                                                      {material.formato && (
+                                                        <span>Formato: {material.formato.toUpperCase()}</span>
+                                                      )}
+                                                      {material.arquivo_tamanho && (
+                                                        <span>Tamanho: {formatFileSize(material.arquivo_tamanho)}</span>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  {material.url && (
+                                                    <Button size="sm" asChild>
+                                                      <a href={material.url} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="h-4 w-4 mr-2" />
+                                                        Baixar
+                                                      </a>
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              </CardContent>
+                                            </Card>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
