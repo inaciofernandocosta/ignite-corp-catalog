@@ -64,7 +64,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
   };
 
   const handleToggleStatus = async () => {
-    const newStatus = student.status === 'ativo' ? 'rejeitado' : 'ativo';
+    const newStatus = student.status === 'aprovado' ? 'rejeitado' : 'aprovado';
     
     try {
       const { error } = await supabase
@@ -76,7 +76,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
 
       toast({
         title: 'Status atualizado',
-        description: `${student.nome} foi ${newStatus === 'ativo' ? 'aprovado' : 'rejeitado'}.`,
+        description: `${student.nome} foi ${newStatus === 'aprovado' ? 'aprovado' : 'rejeitado'}.`,
       });
 
       onStudentUpdate();
@@ -92,8 +92,8 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
 
   const getStatusBadge = () => {
     switch (student.status) {
-      case 'ativo':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Ativo</Badge>;
+      case 'aprovado':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Aprovado</Badge>;
       case 'rejeitado':
         return <Badge variant="destructive">Rejeitado</Badge>;
       case 'pendente':
@@ -177,7 +177,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
             onClick={handleToggleStatus}
             className="flex-1"
           >
-            {student.status === 'ativo' ? (
+            {student.status === 'aprovado' ? (
               <>
                 <UserX className="h-4 w-4 mr-2" />
                 Rejeitar

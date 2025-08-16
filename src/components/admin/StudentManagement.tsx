@@ -77,7 +77,7 @@ export const StudentManagement = () => {
       if (coursesError) console.error('Erro ao buscar cursos:', coursesError);
       if (certificatesError) console.error('Erro ao buscar certificados:', certificatesError);
 
-      const activeStudents = studentsData?.filter(s => s.ativo && s.status === 'ativo') || [];
+      const activeStudents = studentsData?.filter(s => s.ativo && s.status === 'aprovado') || [];
 
       setAdminStats({
         totalStudents: activeStudents.length,
@@ -176,7 +176,7 @@ export const StudentManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="aprovado">Aprovado</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="rejeitado">Rejeitado</SelectItem>
               </SelectContent>
