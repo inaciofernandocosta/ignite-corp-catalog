@@ -38,16 +38,12 @@ const Index = () => {
         case 'nivel':
           const levelMap = { 'intro': 'intro', 'intermediario': 'intermediate', 'avancado': 'advanced' };
           return immersion.level === levelMap[filter.id as keyof typeof levelMap];
-        case 'formato':
-          const formatMap = { 'ao-vivo': 'live', 'on-demand': 'on-demand' };
-          return immersion.format === formatMap[filter.id as keyof typeof formatMap];
         case 'carga':
-          const hours = immersion.workloadHours;
+          const days = immersion.workloadDays;
           switch (filter.id) {
-            case '4h': return hours <= 4;
-            case '8h': return hours <= 8 && hours > 4;
-            case '16h': return hours <= 16 && hours > 8;
-            case '24h+': return hours > 24;
+            case '1-dia': return days === 1;
+            case '2-dias': return days === 2;
+            case '3-dias': return days >= 3;
             default: return true;
           }
         default:

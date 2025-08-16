@@ -26,19 +26,10 @@ const FILTER_OPTIONS = {
     { id: "intermediario", label: "Intermediário", category: "nivel" },
     { id: "avancado", label: "Avançado", category: "nivel" }
   ],
-  formato: [
-    { id: "ao-vivo", label: "Ao vivo", category: "formato" },
-    { id: "on-demand", label: "On-demand", category: "formato" }
-  ],
   carga: [
-    { id: "4h", label: "4 horas", category: "carga" },
-    { id: "8h", label: "8 horas", category: "carga" },
-    { id: "16h", label: "16 horas", category: "carga" },
-    { id: "24h+", label: "24h+", category: "carga" }
-  ],
-  idioma: [
-    { id: "portugues", label: "Português", category: "idioma" },
-    { id: "ingles", label: "Inglês", category: "idioma" }
+    { id: "1-dia", label: "1 dia", category: "carga" },
+    { id: "2-dias", label: "2 dias", category: "carga" },
+    { id: "3-dias", label: "3+ dias", category: "carga" }
   ]
 };
 
@@ -125,9 +116,7 @@ export function FilterSection({ onFiltersChange, resultCount }: FilterSectionPro
               >
                 {category === 'tema' && 'Tema'}
                 {category === 'nivel' && 'Nível'}
-                {category === 'formato' && 'Formato'}
-                {category === 'carga' && 'Carga horária'}
-                {category === 'idioma' && 'Idioma'}
+                {category === 'carga' && 'Duração'}
                 {activeFilters.filter(f => f.category === category).length > 0 && (
                   <Badge variant="secondary" className="ml-2 px-1 py-0 text-xs">
                     {activeFilters.filter(f => f.category === category).length}

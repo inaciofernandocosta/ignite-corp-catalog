@@ -8,9 +8,8 @@ interface Immersion {
   title: string;
   tags: string[];
   level: 'intro' | 'intermediate' | 'advanced';
-  format: 'live' | 'on-demand';
-  workloadHours: number;
-  nextClass?: string;
+  workloadDays: number;
+  nextClass: string;
   badges?: ('new' | 'popular')[];
   description?: string;
 }
@@ -156,18 +155,16 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/50">
           <div className="flex items-center text-xs text-muted-foreground">
             <Clock className="w-3 h-3 mr-1" />
-            {immersion.workloadHours}h
+            {immersion.workloadDays} {immersion.workloadDays === 1 ? 'dia' : 'dias'}
           </div>
           <div className="flex items-center text-xs text-muted-foreground">
             <Users className="w-3 h-3 mr-1" />
-            {immersion.format === 'live' ? 'Ao vivo' : 'On-demand'}
+            Presencial
           </div>
-          {immersion.nextClass && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar className="w-3 h-3 mr-1" />
-              {new Date(immersion.nextClass).toLocaleDateString('pt-BR')}
-            </div>
-          )}
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Calendar className="w-3 h-3 mr-1" />
+            {new Date(immersion.nextClass).toLocaleDateString('pt-BR')}
+          </div>
         </div>
       </CardContent>
 
