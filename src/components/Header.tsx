@@ -49,9 +49,6 @@ export function Header({ userState, onLogin }: HeaderProps) {
                 <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary">
                   Entrar
                 </Button>
-                <Button size="sm" className="bg-primary hover:bg-primary-hover font-semibold">
-                  Aplique-se
-                </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
@@ -111,9 +108,6 @@ export function Header({ userState, onLogin }: HeaderProps) {
                   <div className="flex flex-col space-y-3">
                     <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary w-full">
                       Entrar
-                    </Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary-hover font-semibold w-full">
-                      Aplique-se
                     </Button>
                   </div>
                 ) : (
