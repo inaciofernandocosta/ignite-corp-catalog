@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Building2, Users } from "lucide-react";
+import { useStats } from "@/hooks/useStats";
 
 interface HeroProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -9,6 +10,8 @@ interface HeroProps {
 }
 
 export function Hero({ userState, onCorporateLogin, onContractForCompany }: HeroProps) {
+  const { stats, loading } = useStats();
+  
   const getHeroContent = () => {
     switch (userState) {
       case 'visitor':
@@ -19,7 +22,9 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
           subtitle: "Aprenda diretamente com especialistas da indústria as práticas e estratégias das empresas que mais crescem em tecnologia.",
           primaryCTA: "Quero me aplicar",
           primaryAction: onContractForCompany,
-          stats: "+15.000 executivos formados | +800 empresas participaram"
+          stats: loading 
+            ? "Carregando estatísticas..." 
+            : `+${stats.certificatesCount.toLocaleString('pt-BR')} colaboradores formados | +${stats.companiesCount} empresas participaram`
         };
       
       case 'logged-corporate':
