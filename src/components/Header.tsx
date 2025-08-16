@@ -20,11 +20,7 @@ export function Header({ userState, onLogin }: HeaderProps) {
           <button 
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             onClick={() => {
-              if (userState === 'visitor') {
-                window.location.href = '/';
-              } else {
-                window.location.href = '/dashboard';
-              }
+              window.location.href = '/';
             }}
           >
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
