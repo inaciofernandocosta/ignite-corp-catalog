@@ -91,54 +91,130 @@ export const useAuth = () => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // Primeiro verificar se o usuário existe na tabela inscricoes_mentoria
+      const { data: inscricao, error: inscricaoError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('*')
+        .eq('email', email)
+        .eq('ativo', true)
+        .single();
 
-    if (error) {
+      if (inscricaoError || !inscricao) {
+        toast({
+          title: 'Usuário não encontrado',
+          description: 'Email não cadastrado ou não ativo no sistema.',
+          variant: 'destructive',
+        });
+        return { error: { message: 'Usuário não encontrado' } };
+      }
+
+      // Verificar se tem role ativo
+      const { data: userRole, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', inscricao.id)
+        .eq('active', true)
+        .single();
+
+      if (roleError || !userRole) {
+        toast({
+          title: 'Acesso negado',
+          description: 'Usuário sem permissões ativas no sistema.',
+          variant: 'destructive',
+        });
+        return { error: { message: 'Sem permissões ativas' } };
+      }
+
+      // Tentar fazer login no Supabase Auth
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: 'Erro ao fazer login',
+          description: 'Email ou senha incorretos.',
+          variant: 'destructive',
+        });
+        return { error };
+      }
+
       toast({
-        title: 'Erro ao fazer login',
-        description: error.message,
+        title: 'Login realizado com sucesso!',
+        description: `Bem-vindo(a), ${inscricao.nome}!`,
+      });
+
+      return { error: null };
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast({
+        title: 'Erro no sistema',
+        description: 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
       return { error };
     }
-
-    toast({
-      title: 'Login realizado com sucesso!',
-      description: 'Bem-vindo de volta!',
-    });
-
-    return { error: null };
   };
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
+    // Funcionalidade removida - apenas login é permitido
+    toast({
+      title: 'Funcionalidade não disponível',
+      description: 'Para ter acesso, entre em contato com o administrador.',
+      variant: 'destructive',
     });
+    return { error: { message: 'Signup não disponível' } };
+  };
 
-    if (error) {
+  const resetPassword = async (email: string) => {
+    try {
+      // Verificar se o usuário existe no sistema
+      const { data: inscricao, error: inscricaoError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('email, nome')
+        .eq('email', email)
+        .eq('ativo', true)
+        .single();
+
+      if (inscricaoError || !inscricao) {
+        toast({
+          title: 'Email não encontrado',
+          description: 'Este email não está cadastrado no sistema.',
+          variant: 'destructive',
+        });
+        return { error: { message: 'Email não encontrado' } };
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        toast({
+          title: 'Erro ao enviar email',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return { error };
+      }
+
       toast({
-        title: 'Erro ao criar conta',
-        description: error.message,
+        title: 'Email enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+      });
+
+      return { error: null };
+    } catch (error) {
+      console.error('Erro ao solicitar reset de senha:', error);
+      toast({
+        title: 'Erro no sistema',
+        description: 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
       return { error };
     }
-
-    toast({
-      title: 'Conta criada com sucesso!',
-      description: 'Verifique seu email para confirmar a conta.',
-    });
-
-    return { error: null };
   };
 
   const signOut = async () => {
@@ -166,5 +242,6 @@ export const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    resetPassword,
   };
 };
