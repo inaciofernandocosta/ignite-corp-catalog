@@ -767,6 +767,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: string
       }
+      criar_conta_auth_segura: {
+        Args: { user_email: string; user_password?: string }
+        Returns: string
+      }
       criar_token_ativacao_admin: {
         Args: { admin_email: string }
         Returns: string
