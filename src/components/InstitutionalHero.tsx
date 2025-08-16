@@ -95,9 +95,9 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
       </div>
       
       <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-32 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-6xl mx-auto">
           {/* Content */}
-          <div className="text-left space-y-8">
+          <div className="text-center space-y-8">
             {content.showBadge && (
               <div className="animate-fade-in">
                 <Badge variant="outline" className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-colors">
@@ -107,8 +107,8 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
               </div>
             )}
             
-            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading font-bold leading-tight">
+            <div className="space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <h1 className="text-4xl sm:text-6xl lg:text-8xl font-heading font-bold leading-tight max-w-5xl mx-auto">
                 <span className="text-foreground">{content.title}</span>
                 <br />
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -117,20 +117,20 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
               </h1>
             </div>
             
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '0.4s' }}>
               {content.subtitle}
             </p>
             
             {(content.primaryCTA || content.secondaryCTA) && (
-              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
                 {content.primaryCTA && (
                   <Button 
                     size="lg" 
-                    className="text-lg px-8 py-4 bg-primary hover:bg-primary/90 font-semibold min-w-64 group hover-scale"
+                    className="text-xl px-12 py-6 bg-primary hover:bg-primary/90 font-semibold min-w-72 group hover-scale"
                     onClick={content.primaryAction}
                   >
                     {content.primaryCTA}
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 )}
                 
@@ -138,84 +138,42 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="text-lg px-8 py-4 font-semibold min-w-64 hover-scale"
+                    className="text-xl px-12 py-6 font-semibold min-w-72 hover-scale"
                     onClick={content.secondaryAction}
                   >
-                    <Building2 className="w-5 h-5 mr-2" />
+                    <Building2 className="w-6 h-6 mr-3" />
                     {content.secondaryCTA}
                   </Button>
                 )}
               </div>
             )}
             
-            {/* Features */}
-            <div className="grid sm:grid-cols-3 gap-6 pt-8 animate-fade-in" style={{ animationDelay: '0.8s' }}>
+            {/* Features Grid - Horizontal Layout */}
+            <div className="grid sm:grid-cols-3 gap-8 pt-12 max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '0.8s' }}>
               {features.map((feature, index) => (
-                <div key={index} className="flex items-start space-x-3 group hover-scale">
-                  <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
+                <div key={index} className="flex flex-col items-center space-y-4 group hover-scale">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
                     {feature.icon}
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-sm">{feature.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <div className="text-center">
+                    <h3 className="font-bold text-foreground text-lg mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Visual Element */}
-          <div className="hidden lg:flex justify-center animate-fade-in" style={{ animationDelay: '1s' }}>
-            <div className="relative">
-              {/* Main Card */}
-              <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-2xl p-8 max-w-sm hover-scale">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-foreground">Mentoria Futura</h3>
-                        <p className="text-sm text-muted-foreground">Educação Corporativa</p>
-                      </div>
-                    </div>
-                    <Badge variant="new" className="animate-pulse">
-                      Novo
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-foreground">Metodologia Comprovada</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-foreground">Cases Reais da Indústria</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-foreground">Aplicação Imediata</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">1000+</div>
-                      <div className="text-xs text-muted-foreground">Profissionais</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">95%</div>
-                      <div className="text-xs text-muted-foreground">Satisfação</div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-              
-              {/* Floating Elements */}
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-primary rounded-full animate-bounce" style={{ animationDelay: '2s' }} />
-              <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-accent rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+            {/* Stats Row */}
+            <div className="flex justify-center items-center gap-12 pt-8 animate-fade-in" style={{ animationDelay: '1s' }}>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary">1000+</div>
+                <div className="text-sm text-muted-foreground">Profissionais Transformados</div>
+              </div>
+              <div className="w-px h-12 bg-border"></div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-accent">95%</div>
+                <div className="text-sm text-muted-foreground">Taxa de Satisfação</div>
+              </div>
             </div>
           </div>
         </div>
