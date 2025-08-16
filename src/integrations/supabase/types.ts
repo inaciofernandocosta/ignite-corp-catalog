@@ -189,10 +189,13 @@ export type Database = {
         Row: {
           certificacao: boolean | null
           created_at: string
+          data_fim: string | null
+          data_inicio: string | null
           descricao: string
           duracao: string
           id: string
           imagem_capa: string | null
+          local_id: string | null
           nivel: string
           objetivos: string[] | null
           pre_requisitos: string[] | null
@@ -205,10 +208,13 @@ export type Database = {
         Insert: {
           certificacao?: boolean | null
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
           descricao: string
           duracao: string
           id?: string
           imagem_capa?: string | null
+          local_id?: string | null
           nivel: string
           objetivos?: string[] | null
           pre_requisitos?: string[] | null
@@ -221,10 +227,13 @@ export type Database = {
         Update: {
           certificacao?: boolean | null
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
           descricao?: string
           duracao?: string
           id?: string
           imagem_capa?: string | null
+          local_id?: string | null
           nivel?: string
           objetivos?: string[] | null
           pre_requisitos?: string[] | null
@@ -234,7 +243,15 @@ export type Database = {
           titulo?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cursos_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       departamentos: {
         Row: {

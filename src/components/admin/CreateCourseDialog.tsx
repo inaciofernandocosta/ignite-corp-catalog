@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { format } from 'date-fns';
+import { CalendarIcon, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useLocais } from '@/hooks/useLocais';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +38,12 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Plus, X } from 'lucide-react';
 
 const formSchema = z.object({
@@ -45,7 +55,9 @@ const formSchema = z.object({
   certificacao: z.boolean(),
   preco: z.number().default(0),
   slug: z.string().optional(),
-  imagem_capa: z.string().optional(),
+  data_inicio: z.date().optional(),
+  data_fim: z.date().optional(),
+  local_id: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -61,7 +73,9 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
   const [preRequisitos, setPreRequisitos] = useState<string[]>([]);
   const [newObjetivo, setNewObjetivo] = useState('');
   const [newPreRequisito, setNewPreRequisito] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { locais, loading: locaisLoading } = useLocais();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -74,7 +88,9 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
       certificacao: false,
       preco: 0,
       slug: '',
-      imagem_capa: '',
+      data_inicio: undefined,
+      data_fim: undefined,
+      local_id: '',
     },
   });
 
@@ -109,10 +125,41 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
     setPreRequisitos(preRequisitos.filter((_, i) => i !== index));
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+    }
+  };
+
+  const uploadImage = async (courseId: string): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${courseId}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('course-images')
+      .upload(filePath, imageFile);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('course-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const onSubmit = async (data: FormData) => {
     try {
       setLoading(true);
 
+      // Primeiro criar o curso para obter o ID
       const courseData = {
         titulo: data.titulo,
         descricao: data.descricao,
@@ -122,16 +169,35 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
         certificacao: data.certificacao,
         preco: data.preco,
         slug: data.slug || generateSlug(data.titulo),
-        imagem_capa: data.imagem_capa || null,
+        data_inicio: data.data_inicio ? data.data_inicio.toISOString().split('T')[0] : null,
+        data_fim: data.data_fim ? data.data_fim.toISOString().split('T')[0] : null,
+        local_id: data.local_id || null,
         objetivos: objetivos.length > 0 ? objetivos : null,
         pre_requisitos: preRequisitos.length > 0 ? preRequisitos : null,
       };
 
-      const { error } = await supabase
+      const { data: insertedCourse, error } = await supabase
         .from('cursos')
-        .insert(courseData);
+        .insert(courseData)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Se há imagem, fazer upload e atualizar o curso
+      if (imageFile && insertedCourse) {
+        const imageUrl = await uploadImage(insertedCourse.id);
+        if (imageUrl) {
+          const { error: updateError } = await supabase
+            .from('cursos')
+            .update({ imagem_capa: imageUrl })
+            .eq('id', insertedCourse.id);
+
+          if (updateError) {
+            console.error('Error updating course image:', updateError);
+          }
+        }
+      }
 
       toast({
         title: 'Curso criado com sucesso!',
@@ -141,6 +207,7 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
       form.reset();
       setObjetivos([]);
       setPreRequisitos([]);
+      setImageFile(null);
       setOpen(false);
       onCourseCreated?.();
     } catch (error) {
@@ -336,25 +403,135 @@ export const CreateCourseDialog = ({ onCourseCreated }: CreateCourseDialogProps)
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="data_inicio"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data de Início</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "dd/MM/yyyy")
+                            ) : (
+                              <span>Selecione a data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="data_fim"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data de Fim</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "dd/MM/yyyy")
+                            ) : (
+                              <span>Selecione a data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="imagem_capa"
+              name="local_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL da Imagem de Capa</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://exemplo.com/imagem.jpg" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    URL da imagem que será exibida como capa do curso
-                  </FormDescription>
+                  <FormLabel>Local do Curso</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um local" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {locais.map((local) => (
+                        <SelectItem key={local.id} value={local.id}>
+                          {local.nome} - {local.cidade}, {local.estado}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <FormItem>
+              <FormLabel>Imagem de Capa</FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                  {imageFile && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Upload className="h-4 w-4" />
+                      {imageFile.name}
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormDescription>
+                Faça upload da imagem que será exibida como capa do curso
+              </FormDescription>
+            </FormItem>
 
             {/* Objetivos */}
             <div className="space-y-3">
