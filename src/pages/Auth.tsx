@@ -35,7 +35,7 @@ export const Auth = () => {
 
   const forgotPasswordForm = useForm<{ email: string }>({
     resolver: zodResolver(z.object({ email: z.string().email('Email inválido') })),
-    mode: 'onSubmit', // Só valida quando submeter
+    mode: 'onSubmit',
     defaultValues: {
       email: '',
     },
@@ -63,7 +63,9 @@ export const Auth = () => {
       const { error } = await resetPassword(data.email);
       if (!error) {
         forgotPasswordForm.reset();
-        setShowForgotPassword(false);
+        setTimeout(() => {
+          setShowForgotPassword(false);
+        }, 1000);
       }
     } catch (error) {
       console.error('Erro no formulário de reset:', error);
@@ -71,6 +73,15 @@ export const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  // Limpar formulários quando alternar entre login e esqueci senha
+  useEffect(() => {
+    if (showForgotPassword) {
+      forgotPasswordForm.reset();
+    } else {
+      loginForm.reset();
+    }
+  }, [showForgotPassword]);
 
   if (loading) {
     return (
@@ -155,7 +166,10 @@ export const Auth = () => {
                       type="button"
                       variant="ghost"
                       className="w-full"
-                      onClick={() => setShowForgotPassword(false)}
+                      onClick={() => {
+                        forgotPasswordForm.reset();
+                        setShowForgotPassword(false);
+                      }}
                     >
                       Voltar ao Login
                     </Button>
@@ -236,7 +250,10 @@ export const Auth = () => {
                       type="button"
                       variant="ghost"
                       className="w-full text-sm"
-                      onClick={() => setShowForgotPassword(true)}
+                      onClick={() => {
+                        loginForm.reset();
+                        setShowForgotPassword(true);
+                      }}
                     >
                       Esqueci minha senha
                     </Button>
