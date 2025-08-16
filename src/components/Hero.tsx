@@ -84,39 +84,6 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
             </div>
           </div>
 
-          {/* Visual Element - Placeholder for now */}
-          <div className="hidden lg:block">
-            <div className="bg-gradient-card rounded-2xl p-8 border border-border shadow-float">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">03 DE SET.</h3>
-                      <p className="text-sm text-muted-foreground">{activeBanner?.message || "Imersão em IA"}</p>
-                    </div>
-                  </div>
-                  <Badge variant="new">Novo</Badge>
-                </div>
-                <div className="grid grid-cols-3 gap-4 pt-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">{activeBanner?.daysUntilStart || 0}</div>
-                    <div className="text-xs text-muted-foreground">DIAS</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">03 DE SET.</div>
-                    <div className="text-xs text-muted-foreground">PRÓXIMA TURMA</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-foreground">POÇOS DE CALDAS</div>
-                    <div className="text-xs text-muted-foreground">PRESENCIAL</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       
