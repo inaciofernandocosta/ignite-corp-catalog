@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { BannerCarousel } from "@/components/BannerCarousel";
 import { FilterSection } from "@/components/FilterSection";
 import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -98,6 +99,13 @@ const Index = () => {
         onCorporateLogin={handleCorporateLogin}
         onContractForCompany={handleContractForCompany}
       />
+      
+      {/* Banner Section */}
+      <section className="py-8 bg-background">
+        <div className="container mx-auto px-6">
+          <BannerCarousel />
+        </div>
+      </section>
       
       <FilterSection 
         onFiltersChange={setActiveFilters}
