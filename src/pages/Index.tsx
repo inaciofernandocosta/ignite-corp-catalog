@@ -7,7 +7,8 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { FAQ } from "@/components/FAQ";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { mockImmersions, type UserState, type AccessState } from "@/data/mockData";
+import { type UserState, type AccessState } from "@/data/mockData";
+import { useCourses } from "@/hooks/useCourses";
 import { useToast } from "@/hooks/use-toast";
 
 interface Filter {
@@ -20,9 +21,10 @@ const Index = () => {
   const [userState, setUserState] = useState<UserState>('visitor');
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const { toast } = useToast();
+  const { courses, loading, error } = useCourses();
 
-  // Filter immersions based on filters only  
-  const filteredImmersions = mockImmersions.filter(immersion => {
+  // Filter courses based on filters
+  const filteredImmersions = courses.filter(immersion => {
     // Category filters
     const matchesFilters = activeFilters.length === 0 || activeFilters.every(filter => {
       switch (filter.category) {
@@ -111,7 +113,22 @@ const Index = () => {
       
       <main className="py-16">
         <div className="container mx-auto px-6">
-          {filteredImmersions.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-20">
+              <h3 className="text-2xl font-heading font-semibold text-foreground mb-4">
+                Carregando cursos...
+              </h3>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <h3 className="text-2xl font-heading font-semibold text-foreground mb-4">
+                Erro ao carregar cursos
+              </h3>
+              <p className="text-muted-foreground mb-8">
+                {error}
+              </p>
+            </div>
+          ) : filteredImmersions.length === 0 ? (
             <div className="text-center py-20">
               <h3 className="text-2xl font-heading font-semibold text-foreground mb-4">
                 Nenhuma imersão encontrada
