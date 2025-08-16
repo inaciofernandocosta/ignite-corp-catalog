@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Lock, CheckCircle, HelpCircle } from 'lucide-react';
 import { formatDateWithoutTimezone } from "@/lib/dateUtils";
+import { useNavigate } from "react-router-dom";
+import { generateSlug } from "@/hooks/useCourseDetails";
 
 interface Immersion {
   id: string;
@@ -38,6 +40,13 @@ const levelColors = {
 } as const;
 
 export function ImmersionCard({ immersion, userState, accessState, onCTAClick }: ImmersionCardProps) {
+  const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    // Generate slug from title
+    const slug = generateSlug(immersion.title);
+    navigate(`/curso/${slug}`);
+  };
   const getAccessInfo = () => {
     if (userState === 'visitor' || userState === 'logged-personal' || userState === 'logged-no-company') {
       return {
@@ -89,7 +98,10 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
   const accessInfo = getAccessInfo();
 
   return (
-    <Card className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden">
+    <Card 
+      className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Course Image */}
       {immersion.image ? (
         <div className="relative h-48 overflow-hidden">
@@ -169,7 +181,10 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           variant={accessInfo.ctaVariant}
           size="lg"
           className="w-full font-semibold py-3"
-          onClick={() => onCTAClick(immersion.id, accessInfo.ctaText)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click when button is clicked
+            onCTAClick(immersion.id, accessInfo.ctaText);
+          }}
         >
           {accessInfo.ctaText}
         </Button>
