@@ -41,8 +41,8 @@ export function Header({ userState, onLogin }: HeaderProps) {
           <div className="flex items-center space-x-4">
             {userState === 'visitor' ? (
               <div className="flex items-center space-x-3">
-                <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary">
-                  Entrar
+                <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary" asChild>
+                  <a href="/auth">Entrar</a>
                 </Button>
                 <Button size="sm" className="bg-primary hover:bg-primary-hover font-semibold">
                   Aplique-se
