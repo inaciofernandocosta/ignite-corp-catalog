@@ -1,6 +1,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Banner {
+  id: string;
+  message: string;
+  course_slug: string;
+  background_color: string;
+  text_color: string;
+  border_color: string;
+  icon: string;
+  is_active: boolean;
+  data_imersao: string | null;
+  daysUntilStart?: number;
+  formattedDate?: string;
+}
+
 interface Stats {
   certificatesCount: number;
   companiesCount: number;
@@ -10,6 +24,7 @@ interface ActiveBanner {
   message: string;
   icon: string;
   daysUntilStart: number;
+  formattedDate: string;
 }
 
 export function useStats() {
@@ -34,19 +49,33 @@ export function useStats() {
         // Buscar banner ativo
         const { data: bannerData, error: bannerError } = await supabase
           .from('course_banners')
-          .select('message, icon')
+          .select('*')
           .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .single();
 
         if (bannerError && bannerError.code !== 'PGRST116') {
           console.error('Erro ao buscar banner:', bannerError);
         }
 
-        // Calcular dias até 03 de setembro
-        const targetDate = new Date('2024-09-03');
-        const today = new Date();
-        const diffTime = targetDate.getTime() - today.getTime();
-        const daysUntilStart = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const formatDate = (dateString: string | null) => {
+          if (!dateString) return '03 DE SET.';
+          const date = new Date(dateString);
+          return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'short',
+          }).toUpperCase().replace('.', '');
+        };
+
+        const calculateDaysUntil = (dateString: string | null) => {
+          if (!dateString) return 0;
+          const targetDate = new Date(dateString);
+          const today = new Date();
+          const diffTime = targetDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return Math.max(0, diffDays);
+        };
 
         setStats({
           certificatesCount: certificatesCount || 0,
@@ -57,7 +86,8 @@ export function useStats() {
           setActiveBanner({
             message: bannerData.message,
             icon: bannerData.icon,
-            daysUntilStart: Math.max(0, daysUntilStart)
+            daysUntilStart: calculateDaysUntil(bannerData.data_imersao),
+            formattedDate: formatDate(bannerData.data_imersao)
           });
         }
       } catch (err) {

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { BannerCarousel } from "@/components/BannerCarousel";
 import { FilterSection } from "@/components/FilterSection";
 import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -10,7 +9,6 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { type UserState, type AccessState } from "@/data/mockData";
 import { useCourses } from "@/hooks/useCourses";
-import { useBanners } from "@/hooks/useBanners";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +23,6 @@ const Index = () => {
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
-  const { banners } = useBanners();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
@@ -101,8 +98,6 @@ const Index = () => {
         onCorporateLogin={handleCorporateLogin}
         onContractForCompany={handleContractForCompany}
       />
-      
-      <BannerCarousel banners={banners} />
       
       <FilterSection 
         onFiltersChange={setActiveFilters}
