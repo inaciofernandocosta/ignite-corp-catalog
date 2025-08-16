@@ -9,6 +9,7 @@ import { AdminStats } from './AdminStats';
 import { StudentCard } from './StudentCard';
 import { CreateUserDialog } from './CreateUserDialog';
 import { Search, UserPlus, Filter, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface Student {
   id: string;
@@ -136,67 +137,110 @@ export const StudentManagement = () => {
       return;
     }
 
-    // Cabeçalhos do CSV
-    const headers = [
-      'Nome',
-      'Email', 
-      'Telefone',
-      'Empresa',
-      'Departamento',
-      'Cargo',
-      'Unidade',
-      'Status',
-      'Ativo',
-      'Data de Cadastro'
+    // Preparar dados para Excel
+    const excelData = filteredStudents.map(student => ({
+      'Nome': student.nome || '',
+      'E-mail': student.email || '',
+      'Telefone': student.telefone || '',
+      'Empresa': student.empresa || '',
+      'Departamento': student.departamento || '',
+      'Cargo': student.cargo || '',
+      'Unidade': student.unidade || '',
+      'Status': student.status || '',
+      'Situação': student.ativo ? 'Ativo' : 'Inativo',
+      'Data de Cadastro': new Date(student.created_at).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+      })
+    }));
+
+    // Criar workbook e worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Definir larguras das colunas
+    const columnWidths = [
+      { wch: 25 }, // Nome
+      { wch: 30 }, // E-mail
+      { wch: 15 }, // Telefone
+      { wch: 20 }, // Empresa
+      { wch: 20 }, // Departamento
+      { wch: 25 }, // Cargo
+      { wch: 20 }, // Unidade
+      { wch: 12 }, // Status
+      { wch: 10 }, // Situação
+      { wch: 15 }  // Data de Cadastro
     ];
+    worksheet['!cols'] = columnWidths;
 
-    // Converter dados para CSV
-    const csvData = filteredStudents.map(student => [
-      student.nome || '',
-      student.email || '',
-      student.telefone || '',
-      student.empresa || '',
-      student.departamento || '',
-      student.cargo || '',
-      student.unidade || '',
-      student.status || '',
-      student.ativo ? 'Sim' : 'Não',
-      new Date(student.created_at).toLocaleDateString('pt-BR')
-    ]);
+    // Aplicar estilos aos cabeçalhos
+    const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellAddress]) continue;
+      
+      worksheet[cellAddress].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '1e40af' } }, // Azul profissional
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+    }
 
-    // Criar conteúdo CSV
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.map(field => `"${field}"`).join(','))
-    ].join('\n');
+    // Aplicar bordas às células de dados
+    for (let row = 1; row <= headerRange.e.r; row++) {
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!worksheet[cellAddress]) continue;
+        
+        worksheet[cellAddress].s = {
+          border: {
+            top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+            bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+            left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+            right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+          },
+          alignment: { vertical: 'center' }
+        };
+      }
+    }
 
-    // Criar e baixar arquivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    
-    // Nome do arquivo com filtros aplicados
+    // Adicionar informações de contexto na planilha
+    let sheetName = 'Alunos';
+    if (searchTerm.trim() || statusFilter !== 'todos') {
+      const filters = [];
+      if (searchTerm.trim()) filters.push(`Busca: ${searchTerm.trim()}`);
+      if (statusFilter !== 'todos') filters.push(`Status: ${statusFilter}`);
+      sheetName = `Alunos (${filters.join(', ')})`;
+    }
+
+    // Adicionar worksheet ao workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    // Nome do arquivo
     const currentDate = new Date().toISOString().split('T')[0];
-    let fileName = `alunos_${currentDate}`;
+    let fileName = `Relatorio_Alunos_${currentDate}`;
     
     if (searchTerm.trim()) {
-      fileName += `_busca-${searchTerm.trim().replace(/\s+/g, '_')}`;
+      fileName += `_${searchTerm.trim().replace(/\s+/g, '_')}`;
     }
     
     if (statusFilter !== 'todos') {
-      fileName += `_status-${statusFilter}`;
+      fileName += `_${statusFilter}`;
     }
-    
-    link.setAttribute('download', `${fileName}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    // Salvar arquivo
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
 
     toast({
       title: 'Exportação concluída',
-      description: `${filteredStudents.length} alunos exportados com sucesso.`,
+      description: `${filteredStudents.length} alunos exportados em Excel com sucesso.`,
     });
   };
 
