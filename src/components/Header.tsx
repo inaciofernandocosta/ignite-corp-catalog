@@ -18,9 +18,9 @@ export function Header({ userState, onLogin }: HeaderProps) {
             </div>
             <div>
               <h1 className="font-heading font-bold text-xl text-foreground">
-                EduTech Pro
+                Mentoria Futura
               </h1>
-              <p className="text-xs text-muted-foreground font-medium">Para Empresas</p>
+              <p className="text-xs text-muted-foreground font-medium">Educação Corporativa</p>
             </div>
           </div>
 

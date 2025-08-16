@@ -8,19 +8,19 @@ interface HowItWorksProps {
 
 const steps = [
   {
-    icon: <Building2 className="w-8 h-8 text-primary" />,
-    title: "Empresa se cadastra",
-    description: "Sua empresa contrata o acesso e define os colaboradores elegíveis."
+    icon: <Users className="w-8 h-8 text-primary" />,
+    title: "Colaborador se cadastra",
+    description: "O colaborador se inscreve na plataforma e solicita acesso aos cursos."
   },
   {
-    icon: <Users className="w-8 h-8 text-primary" />,
-    title: "Colaboradores acessam",
-    description: "Funcionários fazem login com e-mail corporativo e escolhem as imersões."
+    icon: <Building2 className="w-8 h-8 text-primary" />,
+    title: "Empresa recebe a inscrição",
+    description: "A empresa analisa e valida a solicitação do colaborador."
   },
   {
     icon: <BookOpen className="w-8 h-8 text-primary" />,
-    title: "Aprendizado contínuo",
-    description: "Certificações, relatórios de progresso e acompanhamento do desenvolvimento."
+    title: "Colaborador é aprovado",
+    description: "Após aprovação, o colaborador tem acesso completo aos cursos e certificações."
   }
 ];
 
@@ -30,10 +30,10 @@ export function HowItWorks({ onContractClick }: HowItWorksProps) {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
-            Como funciona para empresas
+            Como funciona para colaboradores
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Um processo simples para transformar o conhecimento da sua equipe em tecnologia
+            Um processo simples para você acessar o desenvolvimento profissional
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export function HowItWorks({ onContractClick }: HowItWorksProps) {
 
         <div className="text-center">
           <Button size="lg" onClick={onContractClick} className="min-w-64">
-            Contratar para minha empresa
+            Solicitar acesso
           </Button>
         </div>
       </div>

@@ -15,22 +15,7 @@ interface FilterSectionProps {
 }
 
 const FILTER_OPTIONS = {
-  tema: [
-    { id: "ia-aplicada", label: "IA Aplicada", category: "tema" },
-    { id: "data-analytics", label: "Data & Analytics", category: "tema" },
-    { id: "seguranca", label: "Segurança/Compliance", category: "tema" },
-    { id: "dev-mlops", label: "Dev & MLOps", category: "tema" }
-  ],
-  nivel: [
-    { id: "intro", label: "Introdutório", category: "nivel" },
-    { id: "intermediario", label: "Intermediário", category: "nivel" },
-    { id: "avancado", label: "Avançado", category: "nivel" }
-  ],
-  carga: [
-    { id: "1-dia", label: "1 dia", category: "carga" },
-    { id: "2-dias", label: "2 dias", category: "carga" },
-    { id: "3-dias", label: "3+ dias", category: "carga" }
-  ]
+  // Filters removed as per user request
 };
 
 export function FilterSection({ onFiltersChange, resultCount }: FilterSectionProps) {
@@ -64,28 +49,7 @@ export function FilterSection({ onFiltersChange, resultCount }: FilterSectionPro
   return (
     <section className="bg-secondary/30 border-b border-border py-8">
       <div className="container mx-auto px-6">
-        {/* Filter Categories */}
-        <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
-          {Object.entries(FILTER_OPTIONS).map(([category, options]) => (
-            <div key={category} className="flex flex-wrap gap-2">
-              {options.map((option) => (
-                <Button
-                  key={option.id}
-                  variant={activeFilters.some(f => f.id === option.id) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleFilter(option)}
-                  className={`transition-all ${
-                    activeFilters.some(f => f.id === option.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'border-border hover:bg-secondary hover:border-primary/50'
-                  }`}
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-          ))}
-        </div>
+        {/* Filter Categories - Removed as per user request */}
 
         {/* Active Filters & Clear */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

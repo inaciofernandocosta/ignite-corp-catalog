@@ -23,33 +23,8 @@ const Index = () => {
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
 
-  // Filter courses based on filters
-  const filteredImmersions = courses.filter(immersion => {
-    // Category filters
-    const matchesFilters = activeFilters.length === 0 || activeFilters.every(filter => {
-      switch (filter.category) {
-        case 'tema':
-          return immersion.tags.some(tag => 
-            tag.toLowerCase().includes(filter.id.replace('-', ' '))
-          );
-        case 'nivel':
-          const levelMap = { 'intro': 'intro', 'intermediario': 'intermediate', 'avancado': 'advanced' };
-          return immersion.level === levelMap[filter.id as keyof typeof levelMap];
-        case 'carga':
-          const days = immersion.workloadDays;
-          switch (filter.id) {
-            case '1-dia': return days === 1;
-            case '2-dias': return days === 2;
-            case '3-dias': return days >= 3;
-            default: return true;
-          }
-        default:
-          return true;
-      }
-    });
-
-    return matchesFilters;
-  });
+  // Filter courses based on filters (simplified since filters were removed)
+  const filteredImmersions = courses;
 
   const handleLogin = () => {
     // Simulate different login states for demonstration
