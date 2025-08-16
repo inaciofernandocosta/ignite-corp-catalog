@@ -330,7 +330,7 @@ export const Dashboard = () => {
                               
                               <div className="flex flex-col justify-between">
                                 <div className="space-y-2">
-                                  {enrollment.progresso === 100 ? (
+                                  {Number(enrollment.progresso) >= 100 ? (
                                     <Badge variant="default" className="w-fit">
                                       <CheckCircle className="h-3 w-3 mr-1" />
                                       Concluído
@@ -348,7 +348,7 @@ export const Dashboard = () => {
                                     <PlayCircle className="h-4 w-4 mr-2" />
                                     Continuar Curso
                                   </Button>
-                                  {enrollment.progresso === 100 && (
+                                  {Number(enrollment.progresso) >= 100 && (
                                     <Button variant="outline" className="w-full" size="sm">
                                       <Award className="h-4 w-4 mr-2" />
                                       Ver Certificado
