@@ -26,18 +26,18 @@ const steps = [
 
 export function HowItWorks({ onContractClick }: HowItWorksProps) {
   return (
-    <section className="py-16 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
+    <section className="py-12 sm:py-16 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-4">
             Como funciona para colaboradores
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Um processo simples para você acessar o desenvolvimento profissional
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-12">
           {steps.map((step, index) => (
             <Card key={index} className="text-center border-0 bg-background/50 backdrop-blur">
               <CardContent className="pt-8 pb-6">
@@ -58,7 +58,7 @@ export function HowItWorks({ onContractClick }: HowItWorksProps) {
         </div>
 
         <div className="text-center">
-          <Button size="lg" onClick={onContractClick} className="min-w-64">
+          <Button onClick={onContractClick} size="lg" className="min-w-48 sm:min-w-64">
             Solicitar acesso
           </Button>
         </div>

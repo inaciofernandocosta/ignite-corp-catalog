@@ -1,6 +1,7 @@
-import { User, Building2 } from "lucide-react";
+import { User, Building2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
 
 interface HeaderProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -9,10 +10,11 @@ interface HeaderProps {
 
 export function Header({ userState, onLogin }: HeaderProps) {
   const { profile, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
@@ -23,11 +25,11 @@ export function Header({ userState, onLogin }: HeaderProps) {
               <h1 className="font-heading font-bold text-xl text-foreground">
                 Mentoria Futura
               </h1>
-              <p className="text-xs text-muted-foreground font-medium">Educação Corporativa</p>
+              <p className="text-xs text-muted-foreground font-medium hidden sm:block">Educação Corporativa</p>
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Programas
@@ -40,8 +42,8 @@ export function Header({ userState, onLogin }: HeaderProps) {
             </a>
           </nav>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Desktop User Actions */}
+          <div className="hidden md:flex items-center space-x-4">
             {userState === 'visitor' ? (
               <div className="flex items-center space-x-3">
                 <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary">
@@ -78,7 +80,73 @@ export function Header({ userState, onLogin }: HeaderProps) {
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 border-t border-border">
+            <nav className="flex flex-col space-y-4 mt-4">
+              <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                Programas
+              </a>
+              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Experiências
+              </a>
+              <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Sobre Nós
+              </a>
+              
+              <div className="pt-4 border-t border-border">
+                {userState === 'visitor' ? (
+                  <div className="flex flex-col space-y-3">
+                    <Button onClick={onLogin} variant="outline" size="sm" className="border-border hover:bg-secondary w-full">
+                      Entrar
+                    </Button>
+                    <Button size="sm" className="bg-primary hover:bg-primary-hover font-semibold w-full">
+                      Aplique-se
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-3">
+                    <div className="text-sm text-muted-foreground">
+                      {profile?.email || 'usuário@email.com'}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-border w-full"
+                      onClick={() => window.location.href = '/dashboard'}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        signOut();
+                        window.location.href = '/';
+                      }}
+                    >
+                      Sair
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

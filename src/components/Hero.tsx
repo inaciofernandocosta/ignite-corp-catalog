@@ -53,16 +53,16 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
   const content = getHeroContent();
 
   return (
-    <section className="bg-gradient-hero py-20 lg:py-32">
-      <div className="container mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <section className="bg-gradient-hero py-16 sm:py-20 lg:py-32">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* Content */}
-          <div className="text-left">
-            <h1 className="text-4xl lg:text-6xl font-heading font-bold text-foreground mb-6 leading-tight">
+            <div className="text-left">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-heading font-bold text-foreground mb-6 leading-tight">
               {content.title}
             </h1>
             
-            <p className="text-lg lg:text-xl text-muted-foreground mb-8 leading-relaxed max-w-lg">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 leading-relaxed max-w-lg">
               {content.subtitle}
             </p>
             
@@ -70,7 +70,7 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button 
                   size="lg" 
-                  className="text-lg px-8 py-4 bg-primary hover:bg-primary-hover font-semibold min-w-64"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-primary hover:bg-primary-hover font-semibold min-w-48 sm:min-w-64"
                   onClick={content.primaryAction}
                 >
                   {content.primaryCTA}

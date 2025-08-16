@@ -100,11 +100,11 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           </div>
         </div>
 
-        <h3 className="font-heading font-bold text-xl lg:text-2xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
+        <h3 className="font-heading font-bold text-lg sm:text-xl lg:text-2xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
           {immersion.title}
         </h3>
 
-        <p className="text-sm lg:text-base text-muted-foreground leading-relaxed mb-4">
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           {accessInfo.showTeaser 
             ? "Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria."
             : immersion.description

@@ -200,7 +200,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="empresa_id"
@@ -262,7 +262,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="cargo"
@@ -313,7 +313,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="senha"
@@ -388,7 +388,7 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 />
               </div>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button type="button" variant="outline" onClick={onClose}>
                   Cancelar
                 </Button>

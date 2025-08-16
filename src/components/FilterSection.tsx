@@ -47,8 +47,8 @@ export function FilterSection({ onFiltersChange, resultCount }: FilterSectionPro
   };
 
   return (
-    <section className="bg-secondary/30 border-b border-border py-8">
-      <div className="container mx-auto px-6">
+    <section className="bg-secondary/30 border-b border-border py-6 sm:py-8">
+      <div className="container mx-auto px-4 sm:px-6">
         {/* Filter Categories - Removed as per user request */}
 
         {/* Active Filters & Clear */}
