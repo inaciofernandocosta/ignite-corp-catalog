@@ -65,14 +65,24 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
     setLoading(true);
 
     try {
+      // Preparar dados para update
+      const updateData = {
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        duracao: formData.duracao,
+        nivel: formData.nivel,
+        status: formData.status,
+        certificacao: formData.certificacao,
+        preco: formData.preco,
+        data_inicio: formData.data_inicio || null,
+        data_fim: formData.data_fim || null,
+        objetivos: objetivos.length > 0 ? objetivos : null,
+        pre_requisitos: preRequisitos.length > 0 ? preRequisitos : null,
+      };
+
       const { error } = await supabase
         .from('cursos')
-        .update({
-          ...formData,
-          objetivos: objetivos.length > 0 ? objetivos : null,
-          pre_requisitos: preRequisitos.length > 0 ? preRequisitos : null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', course.id);
 
       if (error) throw error;
@@ -126,7 +136,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
           Editar
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle>Editar Curso</DialogTitle>
           <DialogDescription>
@@ -135,7 +145,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="titulo">Título do Curso *</Label>
               <Input
@@ -170,7 +180,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="nivel">Nível *</Label>
               <Select value={formData.nivel} onValueChange={(value) => setFormData({ ...formData, nivel: value })}>
@@ -212,7 +222,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="data_inicio">Data de Início</Label>
               <Input
@@ -246,14 +256,15 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
           {/* Objetivos */}
           <div className="space-y-2">
             <Label>Objetivos do Curso</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder="Digite um objetivo..."
                 value={novoObjetivo}
                 onChange={(e) => setNovoObjetivo(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), adicionarObjetivo())}
+                className="flex-1"
               />
-              <Button type="button" onClick={adicionarObjetivo}>
+              <Button type="button" onClick={adicionarObjetivo} className="sm:w-auto">
                 Adicionar
               </Button>
             </div>
@@ -272,14 +283,15 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
           {/* Pré-requisitos */}
           <div className="space-y-2">
             <Label>Pré-requisitos</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder="Digite um pré-requisito..."
                 value={novoPreRequisito}
                 onChange={(e) => setNovoPreRequisito(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), adicionarPreRequisito())}
+                className="flex-1"
               />
-              <Button type="button" onClick={adicionarPreRequisito}>
+              <Button type="button" onClick={adicionarPreRequisito} className="sm:w-auto">
                 Adicionar
               </Button>
             </div>
@@ -295,11 +307,11 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="order-2 sm:order-1">
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="order-1 sm:order-2">
               {loading ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </DialogFooter>

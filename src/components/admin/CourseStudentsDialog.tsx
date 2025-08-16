@@ -127,7 +127,7 @@ export const CourseStudentsDialog: React.FC<CourseStudentsDialogProps> = ({ cour
           Ver Alunos
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh] w-[95vw] sm:w-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -184,7 +184,7 @@ export const CourseStudentsDialog: React.FC<CourseStudentsDialogProps> = ({ cour
                             </Badge>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Mail className="h-3 w-3" />
                               {enrollment.aluno.email}
@@ -203,7 +203,7 @@ export const CourseStudentsDialog: React.FC<CourseStudentsDialogProps> = ({ cour
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 p-3 bg-muted/30 rounded-lg">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3 p-3 bg-muted/30 rounded-lg">
                             <div className="flex items-center gap-2">
                               <BarChart3 className={`h-4 w-4 ${getProgressColor(enrollment.progresso)}`} />
                               <div>

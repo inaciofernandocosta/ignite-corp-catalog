@@ -440,10 +440,10 @@ export const Dashboard = () => {
                                       </div>
                                     )}
                                     
-                                    <div className="flex gap-2 mt-4">
-                                      <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
-                                      <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
-                                    </div>
+                                     <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                                       <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
+                                       <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
+                                     </div>
                                   </div>
                                 </CardContent>
                               </Card>
