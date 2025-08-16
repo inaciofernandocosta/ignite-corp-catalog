@@ -6,6 +6,7 @@ import { ImmersionCard } from "@/components/ImmersionCard";
 import { HowItWorks } from "@/components/HowItWorks";
 import { FAQ } from "@/components/FAQ";
 import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
 import { mockImmersions, type UserState, type AccessState } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,17 +18,11 @@ interface Filter {
 
 const Index = () => {
   const [userState, setUserState] = useState<UserState>('visitor');
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const { toast } = useToast();
 
-  // Filter immersions based on search and filters
+  // Filter immersions based on filters only  
   const filteredImmersions = mockImmersions.filter(immersion => {
-    // Search filter
-    const matchesSearch = searchQuery === '' || 
-      immersion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      immersion.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
     // Category filters
     const matchesFilters = activeFilters.length === 0 || activeFilters.every(filter => {
       switch (filter.category) {
@@ -51,16 +46,8 @@ const Index = () => {
       }
     });
 
-    return matchesSearch && matchesFilters;
+    return matchesFilters;
   });
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    toast({
-      title: "Busca realizada",
-      description: `Buscando por: "${query}"`,
-    });
-  };
 
   const handleLogin = () => {
     // Simulate different login states for demonstration
@@ -84,7 +71,7 @@ const Index = () => {
 
   const handleContractForCompany = () => {
     toast({
-      title: "Interesse registrado",
+      title: "Interesse registrado", 
       description: "Nossa equipe entrará em contato em breve!",
     });
   };
@@ -108,7 +95,6 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header 
         userState={userState}
-        onSearch={handleSearch}
         onLogin={handleLogin}
       />
       
@@ -123,28 +109,27 @@ const Index = () => {
         resultCount={filteredImmersions.length}
       />
       
-      <main className="py-12">
-        <div className="container mx-auto px-4">
+      <main className="py-16">
+        <div className="container mx-auto px-6">
           {filteredImmersions.length === 0 ? (
-            <div className="text-center py-16">
+            <div className="text-center py-20">
               <h3 className="text-2xl font-heading font-semibold text-foreground mb-4">
                 Nenhuma imersão encontrada
               </h3>
-              <p className="text-muted-foreground mb-6">
-                Tente ajustar os filtros ou entre em contato com o suporte.
+              <p className="text-muted-foreground mb-8">
+                Tente ajustar os filtros ou entre em contato com nosso suporte.
               </p>
-              <button 
+              <Button 
+                variant="outline"
                 onClick={() => {
                   setActiveFilters([]);
-                  setSearchQuery('');
                 }}
-                className="text-primary hover:underline"
               >
                 Limpar filtros
-              </button>
+              </Button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredImmersions.map((immersion) => (
                 <ImmersionCard
                   key={immersion.id}

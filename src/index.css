@@ -8,55 +8,55 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Base colors */
-    --background: 0 0% 100%;
-    --foreground: 220 9% 15%;
+    /* Base G4-inspired dark theme */
+    --background: 220 30% 5%;
+    --foreground: 0 0% 98%;
 
-    /* Card system */
-    --card: 0 0% 100%;
-    --card-foreground: 220 9% 15%;
-    --card-hover: 220 10% 98%;
+    /* Card system - darker cards on dark bg */
+    --card: 220 25% 8%;
+    --card-foreground: 0 0% 95%;
+    --card-hover: 220 25% 10%;
 
     /* Popover system */
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 9% 15%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Primary brand - Tech blue */
-    --primary: 221 83% 53%;
+    /* Primary - G4 Orange/Coral CTA */
+    --primary: 14 100% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 221 83% 48%;
-    --primary-light: 221 100% 96%;
+    --primary-hover: 14 100% 60%;
+    --primary-light: 14 100% 95%;
 
-    /* Secondary system */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 9% 15%;
-    --secondary-hover: 220 14% 93%;
+    /* Secondary - Subtle contrast */
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 0 0% 85%;
+    --secondary-hover: 220 20% 18%;
 
-    /* Muted tones */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted tones - darker for contrast */
+    --muted: 220 20% 12%;
+    --muted-foreground: 220 10% 65%;
 
     /* Accent - Success green */
     --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 142 76% 96%;
+    --accent-light: 142 76% 15%;
 
     /* Status colors */
-    --success: 142 76% 36%;
+    --success: 142 76% 50%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 76% 96%;
+    --success-light: 142 76% 15%;
 
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 100%;
-    --warning-light: 45 93% 96%;
+    --warning-light: 45 93% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     /* Interactive elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 220 20% 20%;
+    --input: 220 20% 15%;
+    --ring: 14 100% 65%;
 
     /* Badge colors */
     --badge-new: 280 100% 70%;
@@ -64,15 +64,15 @@ All colors MUST be HSL.
     --badge-popular: 32 95% 56%;
     --badge-popular-foreground: 0 0% 100%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 48%));
-    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53% / 0.1), hsl(142 76% 36% / 0.1));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    /* G4-style gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 35% 8%), hsl(220 30% 5%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 40% 12%), hsl(220 35% 8%));
+    --gradient-card: linear-gradient(145deg, hsl(220 25% 8%), hsl(220 20% 10%));
 
-    /* Shadows */
-    --shadow-card: 0 2px 8px hsl(220 9% 15% / 0.08);
-    --shadow-card-hover: 0 4px 16px hsl(220 9% 15% / 0.12);
-    --shadow-float: 0 8px 32px hsl(220 9% 15% / 0.16);
+    /* Premium shadows */
+    --shadow-card: 0 4px 20px hsl(220 30% 2% / 0.5);
+    --shadow-card-hover: 0 8px 30px hsl(220 30% 2% / 0.7);
+    --shadow-float: 0 12px 40px hsl(220 30% 2% / 0.8);
 
     /* Layout */
     --radius: 0.75rem;

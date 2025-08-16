@@ -35,36 +35,15 @@ const levelColors = {
 
 export function ImmersionCard({ immersion, userState, accessState, onCTAClick }: ImmersionCardProps) {
   const getAccessInfo = () => {
-    if (userState === 'visitor') {
+    if (userState === 'visitor' || userState === 'logged-personal' || userState === 'logged-no-company') {
       return {
         icon: <Lock className="w-4 h-4" />,
-        label: "Somente empresas cadastradas",
-        badgeVariant: "locked" as const,
-        ctaText: "Ver preview",
-        ctaVariant: "outline" as const,
-        showTeaser: true
-      };
-    }
-
-    if (userState === 'logged-personal') {
-      return {
-        icon: <Lock className="w-4 h-4" />,
-        label: "Use e-mail corporativo",
-        badgeVariant: "locked" as const,
-        ctaText: "Entrar com e-mail corporativo",
-        ctaVariant: "outline" as const,
-        showTeaser: true
-      };
-    }
-
-    if (userState === 'logged-no-company') {
-      return {
-        icon: <Lock className="w-4 h-4" />,
-        label: "Empresa não cadastrada",
-        badgeVariant: "locked" as const,
-        ctaText: "Contratar para minha empresa",
+        label: "Programa Presencial",
+        badgeVariant: "outline" as const,
+        ctaText: "Quero me aplicar",
         ctaVariant: "default" as const,
-        showTeaser: true
+        showTeaser: true,
+        isLocked: true
       };
     }
 
@@ -72,46 +51,47 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
       if (accessState === 'not-in-plan') {
         return {
           icon: <HelpCircle className="w-4 h-4" />,
-          label: "Não incluído no seu plano",
-          badgeVariant: "warning" as const,
-          ctaText: "Solicitar liberação ao RH/TI",
+          label: "Não incluído no plano",
+          badgeVariant: "outline" as const,
+          ctaText: "Solicitar liberação",
           ctaVariant: "outline" as const,
-          showTeaser: false
+          showTeaser: false,
+          isLocked: false
         };
       }
 
       return {
         icon: <CheckCircle className="w-4 h-4" />,
-        label: "Disponível pela sua empresa",
-        badgeVariant: "available" as const,
-        ctaText: "Inscrever-se",
+        label: "Programa Presencial",
+        badgeVariant: "outline" as const,
+        ctaText: "Quero me aplicar",
         ctaVariant: "default" as const,
-        showTeaser: false
+        showTeaser: false,
+        isLocked: false
       };
     }
 
     return {
       icon: <Lock className="w-4 h-4" />,
-      label: "Acesso restrito",
-      badgeVariant: "locked" as const,
-      ctaText: "Verificar acesso",
+      label: "Programa Presencial",
+      badgeVariant: "outline" as const,
+      ctaText: "Ver detalhes",
       ctaVariant: "outline" as const,
-      showTeaser: true
+      showTeaser: true,
+      isLocked: true
     };
   };
 
   const accessInfo = getAccessInfo();
 
   return (
-    <Card className="group hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 bg-gradient-card border-border/50">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <h3 className="font-heading font-semibold text-lg leading-tight text-card-foreground group-hover:text-primary transition-colors">
-              {immersion.title}
-            </h3>
-          </div>
-          <div className="flex flex-col items-end gap-1 ml-4">
+    <Card className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-xs font-medium border-border">
+              {accessInfo.label}
+            </Badge>
             {immersion.badges?.map((badge) => (
               <Badge key={badge} variant={badge === 'new' ? 'new' : 'popular'} className="text-xs">
                 {badge === 'new' ? 'Novo' : 'Mais procurado'}
@@ -120,8 +100,19 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {immersion.tags.map((tag) => (
+        <h3 className="font-heading font-bold text-xl lg:text-2xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
+          {immersion.title}
+        </h3>
+
+        <p className="text-sm lg:text-base text-muted-foreground leading-relaxed mb-4">
+          {accessInfo.showTeaser 
+            ? "Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria."
+            : immersion.description
+          }
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {immersion.tags.slice(0, 2).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
             </Badge>
@@ -132,60 +123,35 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         </div>
       </CardHeader>
 
-      <CardContent className="pb-4">
-        {accessInfo.showTeaser ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {immersion.description || "Uma imersão prática e especializada para acelerar sua carreira em tecnologia..."}
-            </p>
-            <div className="bg-muted/50 backdrop-blur p-3 rounded-lg border-l-4 border-muted-foreground/20">
-              <p className="text-xs text-muted-foreground">
-                Conteúdo completo disponível apenas para empresas cadastradas
-              </p>
+      <CardContent className="pt-0">
+        {/* Stats Section - G4 Style */}
+        <div className="grid grid-cols-3 gap-4 py-4 border-t border-border/50">
+          <div className="text-center">
+            <div className="text-lg font-bold text-foreground">{immersion.workloadDays}</div>
+            <div className="text-xs text-muted-foreground">{immersion.workloadDays === 1 ? 'DIA' : 'DIAS'}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-foreground">
+              {new Date(immersion.nextClass).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()}
             </div>
+            <div className="text-xs text-muted-foreground">PRÓXIMA TURMA</div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-card-foreground">
-              {immersion.description || "Uma imersão prática e especializada que combina teoria e aplicação real, desenvolvida por especialistas da indústria."}
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border/50">
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Clock className="w-3 h-3 mr-1" />
-            {immersion.workloadDays} {immersion.workloadDays === 1 ? 'dia' : 'dias'}
-          </div>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Users className="w-3 h-3 mr-1" />
-            Presencial
-          </div>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="w-3 h-3 mr-1" />
-            {new Date(immersion.nextClass).toLocaleDateString('pt-BR')}
+          <div className="text-center">
+            <div className="text-lg font-bold text-foreground">SP</div>
+            <div className="text-xs text-muted-foreground">PRESENCIAL</div>
           </div>
         </div>
       </CardContent>
 
       <CardFooter className="pt-0">
-        <div className="w-full space-y-3">
-          <div className="flex items-center gap-2">
-            {accessInfo.icon}
-            <Badge variant={accessInfo.badgeVariant} className="text-xs">
-              {accessInfo.label}
-            </Badge>
-          </div>
-          
-          <Button
-            variant={accessInfo.ctaVariant}
-            size="sm"
-            className="w-full transition-smooth"
-            onClick={() => onCTAClick(immersion.id, accessInfo.ctaText)}
-          >
-            {accessInfo.ctaText}
-          </Button>
-        </div>
+        <Button
+          variant={accessInfo.ctaVariant}
+          size="lg"
+          className="w-full font-semibold py-3"
+          onClick={() => onCTAClick(immersion.id, accessInfo.ctaText)}
+        >
+          {accessInfo.ctaText}
+        </Button>
       </CardFooter>
     </Card>
   );

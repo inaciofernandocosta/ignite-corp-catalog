@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, Building2, Users } from "lucide-react";
 
 interface HeroProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -11,48 +12,23 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
   const getHeroContent = () => {
     switch (userState) {
       case 'visitor':
-        return {
-          title: "Imersões em IA & Tecnologia",
-          subtitle: "Acesse com seu e-mail corporativo para ver o catálogo completo.",
-          primaryCTA: "Entrar com e-mail corporativo",
-          primaryAction: onCorporateLogin,
-          secondaryCTA: "Sou decisor e quero contratar",
-          secondaryAction: onContractForCompany,
-          showAlert: false
-        };
-      
       case 'logged-personal':
-        return {
-          title: "Imersões em IA & Tecnologia",
-          subtitle: "Use seu e-mail corporativo para acessar o catálogo completo.",
-          primaryCTA: "Entrar com e-mail corporativo",
-          primaryAction: onCorporateLogin,
-          secondaryCTA: "Contratar para minha empresa",
-          secondaryAction: onContractForCompany,
-          showAlert: true,
-          alertMessage: "Use seu e-mail corporativo para acessar as imersões"
-        };
-      
       case 'logged-no-company':
         return {
           title: "Imersões em IA & Tecnologia",
-          subtitle: "Sua empresa ainda não tem acesso. Solicite a contratação para liberar o catálogo.",
-          primaryCTA: "Contratar para minha empresa",
+          subtitle: "Aprenda diretamente com especialistas da indústria as práticas e estratégias das empresas que mais crescem em tecnologia.",
+          primaryCTA: "Quero me aplicar",
           primaryAction: onContractForCompany,
-          secondaryCTA: null,
-          secondaryAction: null,
-          showAlert: false
+          stats: "+15.000 executivos formados | +800 empresas participaram"
         };
       
       case 'logged-corporate':
         return {
           title: "Imersões em IA & Tecnologia",
-          subtitle: "Escolha sua próxima imersão e acelere sua carreira em tecnologia.",
+          subtitle: "Escolha sua próxima imersão e acelere sua carreira com metodologia prática e aplicação imediata.",
           primaryCTA: null,
           primaryAction: null,
-          secondaryCTA: null,
-          secondaryAction: null,
-          showAlert: false
+          stats: "Disponível através do seu convênio corporativo"
         };
       
       default:
@@ -61,9 +37,7 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
           subtitle: "Acelere sua carreira com imersões práticas e especializadas.",
           primaryCTA: null,
           primaryAction: null,
-          secondaryCTA: null,
-          secondaryAction: null,
-          showAlert: false
+          stats: ""
         };
     }
   };
@@ -71,45 +45,66 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
   const content = getHeroContent();
 
   return (
-    <section className="bg-gradient-hero py-16">
-      <div className="container mx-auto px-4 text-center">
-        {content.showAlert && (
-          <div className="mb-6 inline-flex items-center space-x-2 bg-warning-light text-warning-foreground px-4 py-2 rounded-lg border border-warning/20">
-            <AlertCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">{content.alertMessage}</span>
+    <section className="bg-gradient-hero py-20 lg:py-32">
+      <div className="container mx-auto px-6">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Content */}
+          <div className="text-left">
+            <h1 className="text-4xl lg:text-6xl font-heading font-bold text-foreground mb-6 leading-tight">
+              {content.title}
+            </h1>
+            
+            <p className="text-lg lg:text-xl text-muted-foreground mb-8 leading-relaxed max-w-lg">
+              {content.subtitle}
+            </p>
+            
+            {content.primaryCTA && (
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-4 bg-primary hover:bg-primary-hover font-semibold min-w-64"
+                  onClick={content.primaryAction}
+                >
+                  {content.primaryCTA}
+                </Button>
+              </div>
+            )}
+            
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Users className="w-4 h-4 mr-2" />
+              {content.stats}
+            </div>
           </div>
-        )}
-        
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-4">
-          {content.title}
-        </h1>
-        
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          {content.subtitle}
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          {content.primaryCTA && (
-            <Button 
-              size="lg" 
-              className="min-w-48"
-              onClick={content.primaryAction}
-            >
-              <Building2 className="w-5 h-5 mr-2" />
-              {content.primaryCTA}
-            </Button>
-          )}
-          
-          {content.secondaryCTA && (
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="min-w-48"
-              onClick={content.secondaryAction}
-            >
-              {content.secondaryCTA}
-            </Button>
-          )}
+
+          {/* Visual Element - Placeholder for now */}
+          <div className="hidden lg:block">
+            <div className="bg-gradient-card rounded-2xl p-8 border border-border shadow-float">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Próxima Imersão</h3>
+                      <p className="text-sm text-muted-foreground">IA Aplicada ao Varejo</p>
+                    </div>
+                  </div>
+                  <Badge variant="new">Novo</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">2</div>
+                    <div className="text-xs text-muted-foreground">DIAS</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">15 SET</div>
+                    <div className="text-xs text-muted-foreground">PRÓXIMA TURMA</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
