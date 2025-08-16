@@ -164,34 +164,29 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      // Verificar se o usuário existe no sistema
-      const { data: inscricao, error: inscricaoError } = await supabase
-        .from('inscricoes_mentoria')
-        .select('email, nome')
-        .eq('email', email)
-        .eq('ativo', true)
-        .single();
-
-      if (inscricaoError || !inscricao) {
-        toast({
-          title: 'Email não encontrado',
-          description: 'Este email não está cadastrado no sistema.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Email não encontrado' } };
-      }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+      // Chamar nossa edge function personalizada para envio de email
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
       });
 
       if (error) {
+        console.error('Erro na edge function:', error);
         toast({
           title: 'Erro ao enviar email',
-          description: error.message,
+          description: 'Erro interno. Tente novamente mais tarde.',
           variant: 'destructive',
         });
-        return { error };
+        return { error: { message: 'Erro interno do servidor' } };
+      }
+
+      if (!data?.success) {
+        console.error('Falha na edge function:', data?.error);
+        toast({
+          title: 'Erro ao enviar email',
+          description: data?.error || 'Erro desconhecido.',
+          variant: 'destructive',
+        });
+        return { error: { message: data?.error || 'Erro desconhecido' } };
       }
 
       toast({
