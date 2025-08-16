@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
+import { ForgotPasswordForm } from '@/components/ForgotPasswordForm';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -23,21 +24,13 @@ export const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
   const navigate = useNavigate();
-  const { signIn, resetPassword, user, loading } = useAuth();
+  const { signIn, user, loading } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
-    },
-  });
-
-  const forgotPasswordForm = useForm<{ email: string }>({
-    resolver: zodResolver(z.object({ email: z.string().email('Email inválido') })),
-    mode: 'onSubmit',
-    defaultValues: {
-      email: '',
     },
   });
 
@@ -49,31 +42,24 @@ export const Auth = () => {
   }, [user, loading, navigate]);
 
   const onLogin = async (data: LoginFormData) => {
-    setIsLoading(true);
-    const { error } = await signIn(data.email, data.password);
-    if (!error) {
-      navigate('/dashboard');
-    }
-    setIsLoading(false);
-  };
-
-  const onForgotPassword = async (data: { email: string }) => {
-    console.log('onForgotPassword chamado com:', data);
+    console.log('Auth - onLogin chamado:', data);
     setIsLoading(true);
     try {
-      const { error } = await resetPassword(data.email);
-      console.log('resetPassword resultado:', { error });
+      const { error } = await signIn(data.email, data.password);
       if (!error) {
-        console.log('Reset enviado com sucesso, não limpando o formulário');
-        // NÃO limpar o formulário para permitir redigitação
-        // forgotPasswordForm.reset();
+        navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Erro no formulário de reset:', error);
+      console.error('Auth - Erro no login:', error);
     } finally {
-      console.log('Finalizando loading');
       setIsLoading(false);
     }
+  };
+
+  const handleBackToLogin = () => {
+    console.log('Auth - Voltando para login');
+    setShowForgotPassword(false);
+    loginForm.reset();
   };
 
   if (loading) {
@@ -121,61 +107,7 @@ export const Auth = () => {
           </CardHeader>
           <CardContent>
             {showForgotPassword ? (
-              // Formulário de Esqueci Senha
-              <Form {...forgotPasswordForm}>
-                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="space-y-4">
-                  <FormField
-                    control={forgotPasswordForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              type="email"
-                              placeholder="seu@email.com"
-                              className="pl-10"
-                              disabled={isLoading}
-                              {...field}
-                              onChange={(e) => {
-                                console.log('Input onChange:', e.target.value);
-                                field.onChange(e);
-                              }}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="space-y-3">
-                    <Button
-                      type="submit"
-                      className="w-full bg-primary hover:bg-primary/90"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="w-full"
-                      onClick={() => {
-                        console.log('Voltando para login');
-                        setIsLoading(false);
-                        forgotPasswordForm.reset();
-                        setShowForgotPassword(false);
-                      }}
-                    >
-                      Voltar ao Login
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+              <ForgotPasswordForm onBack={handleBackToLogin} />
             ) : (
               // Formulário de Login
               <Form {...loginForm}>
@@ -251,7 +183,7 @@ export const Auth = () => {
                       variant="ghost"
                       className="w-full text-sm"
                       onClick={() => {
-                        loginForm.reset();
+                        console.log('Auth - Indo para esqueci senha');
                         setShowForgotPassword(true);
                       }}
                     >
