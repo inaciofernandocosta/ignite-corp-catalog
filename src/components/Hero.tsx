@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Building2, Users } from "lucide-react";
 import { useStats } from "@/hooks/useStats";
+import { ApplicationForm } from "./ApplicationForm";
+import { useState } from "react";
 
 interface HeroProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -11,6 +13,7 @@ interface HeroProps {
 
 export function Hero({ userState, onCorporateLogin, onContractForCompany }: HeroProps) {
   const { stats, activeBanner, loading } = useStats();
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
   
   const getHeroContent = () => {
     switch (userState) {
@@ -21,7 +24,7 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
           title: activeBanner?.message || "Imersões em IA & Tecnologia",
           subtitle: "Aprenda diretamente com especialistas da indústria as práticas e estratégias das empresas que mais crescem em tecnologia.",
           primaryCTA: "Quero me aplicar",
-          primaryAction: onContractForCompany,
+          primaryAction: () => setShowApplicationForm(true),
           stats: loading 
             ? "Carregando estatísticas..." 
             : `+${stats.certificatesCount.toLocaleString('pt-BR')} colaboradores formados`
@@ -116,6 +119,10 @@ export function Hero({ userState, onCorporateLogin, onContractForCompany }: Hero
           </div>
         </div>
       </div>
+      
+      {showApplicationForm && (
+        <ApplicationForm onClose={() => setShowApplicationForm(false)} />
+      )}
     </section>
   );
 }
