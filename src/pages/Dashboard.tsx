@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
 import { StudentManagement } from '@/components/admin/StudentManagement';
+import { CreateCourseDialog } from '@/components/admin/CreateCourseDialog';
 import { UserProfile } from '@/components/UserProfile';
 
 interface CourseEnrollment {
@@ -364,9 +365,19 @@ export const Dashboard = () => {
                     </TabsContent>
                   )}
 
-                  {/* Cursos Tab */}
-                  <TabsContent value="cursos" className="space-y-6">
-                    {courseEnrollments.length === 0 ? (
+                   {/* Cursos Tab */}
+                   <TabsContent value="cursos" className="space-y-6">
+                     {profile?.role === 'admin' && (
+                       <div className="flex justify-between items-center">
+                         <div>
+                           <h2 className="text-2xl font-bold">Gerenciar Cursos</h2>
+                           <p className="text-muted-foreground">Crie e gerencie os cursos da plataforma</p>
+                         </div>
+                         <CreateCourseDialog onCourseCreated={fetchUserData} />
+                       </div>
+                     )}
+                     
+                     {courseEnrollments.length === 0 ? (
                       <Card>
                         <CardContent className="text-center py-12">
                           <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
