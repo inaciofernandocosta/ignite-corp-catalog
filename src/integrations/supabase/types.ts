@@ -14,114 +14,631 @@ export type Database = {
   }
   public: {
     Tables: {
-      nps_evaluations: {
+      admin_action_tokens: {
         Row: {
-          comment: string | null
+          action_type: string
           created_at: string
+          expires_at: string
           id: string
-          score: number
-          updated_at: string
-          user_agent: string | null
-          user_ip: string | null
+          inscricao_id: string
+          token: string
+          used_at: string | null
+          used_by: string | null
         }
         Insert: {
-          comment?: string | null
+          action_type: string
           created_at?: string
+          expires_at?: string
           id?: string
-          score: number
-          updated_at?: string
-          user_agent?: string | null
-          user_ip?: string | null
+          inscricao_id: string
+          token: string
+          used_at?: string | null
+          used_by?: string | null
         }
         Update: {
-          comment?: string | null
+          action_type?: string
           created_at?: string
+          expires_at?: string
           id?: string
-          score?: number
+          inscricao_id?: string
+          token?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_action_tokens_inscricao_id_fkey"
+            columns: ["inscricao_id"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_mentoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificados_conclusao: {
+        Row: {
+          aprovado_por: string | null
+          certificado_pdf: string | null
+          created_at: string
+          data_conclusao: string
+          data_emissao: string
+          id: string
+          inscricao_curso_id: string
+          numero_certificado: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          certificado_pdf?: string | null
+          created_at?: string
+          data_conclusao: string
+          data_emissao?: string
+          id?: string
+          inscricao_curso_id: string
+          numero_certificado: string
+          observacoes?: string | null
+          status?: string
           updated_at?: string
-          user_agent?: string | null
-          user_ip?: string | null
+        }
+        Update: {
+          aprovado_por?: string | null
+          certificado_pdf?: string | null
+          created_at?: string
+          data_conclusao?: string
+          data_emissao?: string
+          id?: string
+          inscricao_curso_id?: string
+          numero_certificado?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificados_conclusao_inscricao_curso_id_fkey"
+            columns: ["inscricao_curso_id"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_banners: {
+        Row: {
+          background_color: string
+          border_color: string
+          course_slug: string
+          created_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          message: string
+          text_color: string
+          updated_at: string | null
+        }
+        Insert: {
+          background_color?: string
+          border_color?: string
+          course_slug: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          text_color?: string
+          updated_at?: string | null
+        }
+        Update: {
+          background_color?: string
+          border_color?: string
+          course_slug?: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          text_color?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
-      posts: {
+      curso_modulos: {
         Row: {
-          content: string
           created_at: string
+          curso_id: string
+          descricao: string | null
+          duracao_estimada: string | null
           id: string
-          image_storage_path: string | null
-          image_url: string | null
-          images: Json | null
-          published_at: string
-          scheduled_for: string | null
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          curso_id: string
+          descricao?: string | null
+          duracao_estimada?: string | null
+          id?: string
+          ordem: number
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          curso_id?: string
+          descricao?: string | null
+          duracao_estimada?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curso_modulos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cursos: {
+        Row: {
+          certificacao: boolean | null
+          created_at: string
+          descricao: string
+          duracao: string
+          id: string
+          imagem_capa: string | null
+          nivel: string
+          objetivos: string[] | null
+          pre_requisitos: string[] | null
+          preco: number | null
+          slug: string | null
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          certificacao?: boolean | null
+          created_at?: string
+          descricao: string
+          duracao: string
+          id?: string
+          imagem_capa?: string | null
+          nivel: string
+          objetivos?: string[] | null
+          pre_requisitos?: string[] | null
+          preco?: number | null
+          slug?: string | null
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          certificacao?: boolean | null
+          created_at?: string
+          descricao?: string
+          duracao?: string
+          id?: string
+          imagem_capa?: string | null
+          nivel?: string
+          objetivos?: string[] | null
+          pre_requisitos?: string[] | null
+          preco?: number | null
+          slug?: string | null
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inscricoes_cursos: {
+        Row: {
+          aluno_id: string
+          curso_id: string
+          data_inscricao: string
+          id: string
+          progresso: number | null
           status: string | null
-          updated_at: string
-          user_id: string
-          webhook_url: string | null
+          ultima_atividade: string | null
         }
         Insert: {
-          content: string
-          created_at?: string
+          aluno_id: string
+          curso_id: string
+          data_inscricao?: string
           id?: string
-          image_storage_path?: string | null
-          image_url?: string | null
-          images?: Json | null
-          published_at?: string
-          scheduled_for?: string | null
+          progresso?: number | null
           status?: string | null
-          updated_at?: string
-          user_id: string
-          webhook_url?: string | null
+          ultima_atividade?: string | null
         }
         Update: {
-          content?: string
-          created_at?: string
+          aluno_id?: string
+          curso_id?: string
+          data_inscricao?: string
           id?: string
-          image_storage_path?: string | null
-          image_url?: string | null
-          images?: Json | null
-          published_at?: string
-          scheduled_for?: string | null
+          progresso?: number | null
           status?: string | null
-          updated_at?: string
-          user_id?: string
-          webhook_url?: string | null
+          ultima_atividade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inscricoes_cursos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_mentoria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inscricoes_cursos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inscricoes_mentoria: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          created_at: string | null
+          curso_nome: string
+          data_aprovacao: string | null
+          departamento: string | null
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          origem: string | null
+          senha_hash: string | null
+          status: string | null
+          telefone: string | null
+          token_validacao: string | null
+          unidade: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: string | null
+          created_at?: string | null
+          curso_nome?: string
+          data_aprovacao?: string | null
+          departamento?: string | null
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          origem?: string | null
+          senha_hash?: string | null
+          status?: string | null
+          telefone?: string | null
+          token_validacao?: string | null
+          unidade?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: string | null
+          created_at?: string | null
+          curso_nome?: string
+          data_aprovacao?: string | null
+          departamento?: string | null
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          origem?: string | null
+          senha_hash?: string | null
+          status?: string | null
+          telefone?: string | null
+          token_validacao?: string | null
+          unidade?: string | null
         }
         Relationships: []
       }
-      profiles: {
+      modulo_aulas: {
         Row: {
-          avatar_url: string | null
+          conteudo_url: string | null
+          created_at: string
+          descricao: string | null
+          duracao: string | null
+          id: string
+          modulo_id: string
+          ordem: number
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          modulo_id: string
+          ordem: number
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          conteudo_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao?: string | null
+          id?: string
+          modulo_id?: string
+          ordem?: number
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modulo_aulas_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "curso_modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modulo_materiais: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          formato: string | null
+          id: string
+          modulo_id: string
+          ordem: number
+          tipo: string
+          titulo: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          formato?: string | null
+          id?: string
+          modulo_id: string
+          ordem?: number
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          formato?: string | null
+          id?: string
+          modulo_id?: string
+          ordem?: number
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modulo_materiais_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "curso_modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nome_da_tabela: {
+        Row: {
+          ativo: boolean | null
           created_at: string
           email: string | null
-          first_name: string | null
           id: string
-          job_title: string | null
-          last_name: string | null
+          idade: number | null
+          nome: string
           updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          idade?: number | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          idade?: number | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      progresso_aulas: {
+        Row: {
+          aula_id: string
+          concluida: boolean | null
+          data_conclusao: string | null
+          id: string
+          inscricao_curso_id: string
+          tempo_assistido: number | null
+        }
+        Insert: {
+          aula_id: string
+          concluida?: boolean | null
+          data_conclusao?: string | null
+          id?: string
+          inscricao_curso_id: string
+          tempo_assistido?: number | null
+        }
+        Update: {
+          aula_id?: string
+          concluida?: boolean | null
+          data_conclusao?: string | null
+          id?: string
+          inscricao_curso_id?: string
+          tempo_assistido?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progresso_aulas_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "modulo_aulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progresso_aulas_inscricao_curso_id_fkey"
+            columns: ["inscricao_curso_id"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_admin: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          email: string
+          id: string
+          nome: string | null
+          primeiro_acesso: boolean
+          senha_hash: string | null
+          token_ativacao: string | null
+          token_expira_em: string | null
+          token_recuperacao: string | null
+          ultimo_login: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          nome?: string | null
+          primeiro_acesso?: boolean
+          senha_hash?: string | null
+          token_ativacao?: string | null
+          token_expira_em?: string | null
+          token_recuperacao?: string | null
+          ultimo_login?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string | null
+          primeiro_acesso?: boolean
+          senha_hash?: string | null
+          token_ativacao?: string | null
+          token_expira_em?: string | null
+          token_recuperacao?: string | null
+          ultimo_login?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          active: boolean
+          created_at: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: string
           user_id: string
         }
         Insert: {
-          avatar_url?: string | null
+          active?: boolean
           created_at?: string
-          email?: string | null
-          first_name?: string | null
+          granted_at?: string
+          granted_by?: string | null
           id?: string
-          job_title?: string | null
-          last_name?: string | null
-          updated_at?: string
+          role?: string
           user_id: string
         }
         Update: {
-          avatar_url?: string | null
+          active?: boolean
           created_at?: string
-          email?: string | null
-          first_name?: string | null
+          granted_at?: string
+          granted_by?: string | null
           id?: string
-          job_title?: string | null
-          last_name?: string | null
-          updated_at?: string
+          role?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_mentoria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "inscricoes_mentoria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vagas_curso: {
+        Row: {
+          created_at: string
+          curso_nome: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          id: string
+          local: string
+          status: string
+          turma: string
+          updated_at: string
+          vagas_ocupadas: number
+          vagas_totais: number
+        }
+        Insert: {
+          created_at?: string
+          curso_nome: string
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          local?: string
+          status?: string
+          turma?: string
+          updated_at?: string
+          vagas_ocupadas?: number
+          vagas_totais: number
+        }
+        Update: {
+          created_at?: string
+          curso_nome?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          local?: string
+          status?: string
+          turma?: string
+          updated_at?: string
+          vagas_ocupadas?: number
+          vagas_totais?: number
         }
         Relationships: []
       }
@@ -130,16 +647,165 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      approve_scheduled_posts: {
+      bytea_to_text: {
+        Args: { data: string }
+        Returns: string
+      }
+      call_edge_function: {
+        Args: { function_name: string; payload?: Json }
+        Returns: undefined
+      }
+      check_user_role: {
+        Args: { required_role: string; user_email: string }
+        Returns: boolean
+      }
+      create_first_admin: {
+        Args: { admin_email: string }
+        Returns: Json
+      }
+      criar_conta_auth_para_inscrito: {
+        Args: { user_email: string }
+        Returns: string
+      }
+      criar_token_ativacao_admin: {
+        Args: { admin_email: string }
+        Returns: string
+      }
+      criar_token_recuperacao_admin: {
+        Args: { admin_email: string }
+        Returns: string
+      }
+      gerar_numero_certificado: {
         Args: Record<PropertyKey, never>
-        Returns: number
+        Returns: string
+      }
+      gerar_token_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      gerar_token_unico: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      http: {
+        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_delete: {
+        Args:
+          | { content: string; content_type: string; uri: string }
+          | { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_get: {
+        Args: { data: Json; uri: string } | { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_head: {
+        Args: { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_header: {
+        Args: { field: string; value: string }
+        Returns: Database["public"]["CompositeTypes"]["http_header"]
+      }
+      http_list_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          curlopt: string
+          value: string
+        }[]
+      }
+      http_patch: {
+        Args: { content: string; content_type: string; uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_post: {
+        Args:
+          | { content: string; content_type: string; uri: string }
+          | { data: Json; uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_put: {
+        Args: { content: string; content_type: string; uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_reset_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      http_set_curlopt: {
+        Args: { curlopt: string; value: string }
+        Returns: boolean
+      }
+      limpar_tokens_expirados: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      promote_user_to_admin: {
+        Args: { promoted_by_email: string; user_email: string }
+        Returns: Json
+      }
+      registrar_log_inscricao: {
+        Args: {
+          p_acao: string
+          p_detalhes?: Json
+          p_inscricao_id: number
+          p_ip_origem?: unknown
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      send_test_email: {
+        Args: {
+          email_body: string
+          email_subject: string
+          recipient_email: string
+        }
+        Returns: string
+      }
+      text_to_bytea: {
+        Args: { data: string }
+        Returns: string
+      }
+      urlencode: {
+        Args: { data: Json } | { string: string } | { string: string }
+        Returns: string
+      }
+      validar_email: {
+        Args: { email_input: string }
+        Returns: boolean
+      }
+      validar_token_admin: {
+        Args: { nova_senha_hash: string; token_input: string }
+        Returns: Json
+      }
+      verificar_vagas_disponiveis: {
+        Args: { p_curso_nome: string }
+        Returns: boolean
       }
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      http_header: {
+        field: string | null
+        value: string | null
+      }
+      http_request: {
+        method: unknown | null
+        uri: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content_type: string | null
+        content: string | null
+      }
+      http_response: {
+        status: number | null
+        content_type: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content: string | null
+      }
     }
   }
 }
