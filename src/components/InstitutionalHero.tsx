@@ -51,10 +51,10 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
           title: "Transforme seu Futuro com",
           highlight: "Educação Corporativa de Elite",
           subtitle: "Acelere sua carreira e a de sua equipe com metodologias inovadoras, cases reais e aplicação prática. Conecte-se com especialistas do varejo e empresas que mais crescem em tecnologia.",
-          primaryCTA: "Quero me aplicar",
-          secondaryCTA: "Contratar para empresa",
-          primaryAction: () => setShowApplicationForm(true),
-          secondaryAction: onContractForCompany,
+          primaryCTA: null,
+          secondaryCTA: null,
+          primaryAction: null,
+          secondaryAction: null,
           showBadge: true
         };
       
