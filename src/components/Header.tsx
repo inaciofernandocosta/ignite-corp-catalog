@@ -17,7 +17,16 @@ export function Header({ userState, onLogin }: HeaderProps) {
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <button 
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            onClick={() => {
+              if (userState === 'visitor') {
+                window.location.href = '/';
+              } else {
+                window.location.href = '/dashboard';
+              }
+            }}
+          >
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
               <Building2 className="w-6 h-6 text-primary-foreground" />
             </div>
@@ -27,7 +36,7 @@ export function Header({ userState, onLogin }: HeaderProps) {
               </h1>
               <p className="text-xs text-muted-foreground font-medium hidden sm:block">Educação Corporativa</p>
             </div>
-          </div>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
