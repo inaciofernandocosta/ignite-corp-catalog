@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Building2, Mail, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
@@ -13,8 +14,8 @@ export function Footer() {
                 <Building2 className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-xl">EduTech Pro</h3>
-                <p className="text-xs text-background/70">Para Empresas</p>
+                <h3 className="font-heading font-bold text-xl">Mentoria Futura</h3>
+                <p className="text-xs text-background/70">Educação Corporativa</p>
               </div>
             </div>
             <p className="text-background/80 text-sm leading-relaxed max-w-md">
@@ -29,7 +30,7 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-center text-sm text-background/80">
                 <Mail className="w-4 h-4 mr-2" />
-                empresas@edutechpro.com.br
+                contato@mentoriafutura.com.br
               </div>
               <div className="flex items-center text-sm text-background/80">
                 <Phone className="w-4 h-4 mr-2" />
@@ -45,18 +46,15 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold mb-4 text-background">Legal</h4>
             <div className="space-y-2">
-              <a href="#" className="block text-sm text-background/80 hover:text-background transition-colors">
+              <Link to="/termos-de-uso" className="block text-sm text-background/80 hover:text-background transition-colors">
                 Termos de Uso
-              </a>
-              <a href="#" className="block text-sm text-background/80 hover:text-background transition-colors">
+              </Link>
+              <Link to="/politica-de-privacidade" className="block text-sm text-background/80 hover:text-background transition-colors">
                 Política de Privacidade
-              </a>
-              <a href="#" className="block text-sm text-background/80 hover:text-background transition-colors">
+              </Link>
+              <Link to="/lgpd" className="block text-sm text-background/80 hover:text-background transition-colors">
                 LGPD
-              </a>
-              <a href="#" className="block text-sm text-background/80 hover:text-background transition-colors">
-                Suporte Técnico
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -64,7 +62,7 @@ export function Footer() {
         <div className="border-t border-background/20 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-background/60 text-sm">
-              © 2024 EduTech Pro. Todos os direitos reservados.
+              © 2025 Mentoria Futura. Todos os direitos reservados.
             </p>
             <p className="text-background/60 text-sm mt-2 md:mt-0">
               CNPJ: 00.000.000/0001-00

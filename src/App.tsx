@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { CourseDetails } from "./pages/CourseDetails";
+import { TermsOfUse } from "./pages/TermsOfUse";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { LGPD } from "./pages/LGPD";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/curso/:slug" element={<CourseDetails />} />
+            <Route path="/termos-de-uso" element={<TermsOfUse />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+            <Route path="/lgpd" element={<LGPD />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
