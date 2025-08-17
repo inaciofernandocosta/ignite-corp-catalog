@@ -353,23 +353,20 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'} h-auto p-1`}>
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-3' : 'grid-cols-2'} h-auto p-1 gap-1`}>
                 {profile?.role === 'admin' && (
-                  <TabsTrigger value="gerenciar" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
-                    <Users className="h-3 sm:h-4 w-3 sm:w-4" />
-                    <span className="hidden sm:inline">Gerenciar Alunos</span>
-                    <span className="sm:hidden">Alunos</span>
+                  <TabsTrigger value="gerenciar" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
+                    <Users className="h-3 w-3" />
+                    <span className="hidden xs:inline text-xs">Alunos</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="cursos" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
-                  <BookOpen className="h-3 sm:h-4 w-3 sm:w-4" />
-                  <span className="hidden sm:inline">{profile?.role === 'admin' ? 'Cursos' : 'Meus Cursos'}</span>
-                  <span className="sm:hidden">Cursos</span>
+                <TabsTrigger value="cursos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
+                  <BookOpen className="h-3 w-3" />
+                  <span className="hidden xs:inline text-xs">Cursos</span>
                 </TabsTrigger>
-                <TabsTrigger value="certificados" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
-                  <Award className="h-3 sm:h-4 w-3 sm:w-4" />
-                  <span className="hidden sm:inline">Certificados</span>
-                  <span className="sm:hidden">Certs</span>
+                <TabsTrigger value="certificados" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
+                  <Award className="h-3 w-3" />
+                  <span className="hidden xs:inline text-xs">Certs</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -411,86 +408,69 @@ export const Dashboard = () => {
                               </p>
                             </CardContent>
                           </Card>
-                        ) : (
-                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                             {allCourses.map((course) => (
-                               <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                                 {course.imagem_capa && (
-                                   <div className="relative aspect-video overflow-hidden">
-                                     <img 
-                                       src={course.imagem_capa} 
-                                       alt={course.titulo}
-                                       className="w-full h-full object-cover"
-                                     />
-                                     <div className="absolute top-2 right-2">
-                                       <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
-                                         {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
-                                       </Badge>
-                                     </div>
-                                   </div>
-                                 )}
-                                 <CardHeader>
-                                   <div className="flex items-start justify-between">
-                                     <div className="space-y-1">
-                                       <CardTitle className="text-lg line-clamp-2">{course.titulo}</CardTitle>
-                                       {!course.imagem_capa && (
-                                         <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'}>
-                                           {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
-                                         </Badge>
-                                       )}
-                                     </div>
-                                   </div>
-                                    {course.data_inicio && (
-                                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                        <Calendar className="h-3 w-3" />
-                                        {formatDateWithoutTimezone(course.data_inicio)}
+                         ) : (
+                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                              {allCourses.map((course) => (
+                                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                  {course.imagem_capa && (
+                                    <div className="relative aspect-video overflow-hidden">
+                                      <img 
+                                        src={course.imagem_capa} 
+                                        alt={course.titulo}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <div className="absolute top-2 right-2">
+                                        <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'} className="text-xs">
+                                          {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
+                                        </Badge>
                                       </div>
-                                    )}
-                                 </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                                    </div>
+                                  )}
+                                  <CardHeader className="p-3 sm:p-4">
+                                    <CardTitle className="text-sm sm:text-base line-clamp-2">{course.titulo}</CardTitle>
+                                    <CardDescription className="text-xs sm:text-sm line-clamp-3">{course.descricao}</CardDescription>
+                                  </CardHeader>
+                                  <CardContent className="p-3 sm:p-4 pt-0">
+                                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
                                       <div className="flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        {course.duracao}
+                                        <span>{course.duracao}</span>
                                       </div>
                                       <div className="flex items-center gap-1">
                                         <GraduationCap className="h-3 w-3" />
-                                        {course.nivel}
+                                        <span>{course.nivel}</span>
                                       </div>
                                     </div>
                                     
-                                    {course.preco && (
-                                      <div className="text-sm">
-                                        <span className="text-muted-foreground">Preço: </span>
-                                        <span className="font-semibold">R$ {Number(course.preco).toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    
-                                      <div className="flex flex-col gap-2 mt-4">
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                          <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
-                                          <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
-                                        </div>
-                                         <div className="flex flex-col sm:flex-row gap-2">
-                                           <CreateModuleDialog 
-                                             courseId={course.id} 
-                                             courseTitle={course.titulo}
-                                             onModuleCreated={fetchUserData} 
-                                           />
-                                           <ViewModulesDialog
-                                             courseId={course.id}
-                                             courseTitle={course.titulo}
-                                             onModuleUpdated={fetchUserData}
-                                           />
-                                         </div>
-                                      </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        )
+                                    <div className="space-y-2">
+                                       <div className="flex flex-col sm:flex-row gap-2">
+                                         <EditCourseDialog 
+                                           course={course} 
+                                           onCourseUpdated={fetchUserData}
+                                         />
+                                         <CreateModuleDialog 
+                                           courseId={course.id} 
+                                           courseTitle={course.titulo}
+                                           onModuleCreated={fetchUserData}
+                                         />
+                                       </div>
+                                       <div className="flex flex-col sm:flex-row gap-2">
+                                         <ViewModulesDialog 
+                                           courseId={course.id}
+                                           courseTitle={course.titulo}
+                                           onModuleUpdated={fetchUserData}
+                                         />
+                                         <CourseStudentsDialog 
+                                           courseId={course.id} 
+                                           courseTitle={course.titulo}
+                                         />
+                                       </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                           </div>
+                         )
                       ) : (
                        // Visualização original para alunos
                        courseEnrollments.length === 0 ? (
