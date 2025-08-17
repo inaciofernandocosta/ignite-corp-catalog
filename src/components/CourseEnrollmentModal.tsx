@@ -22,9 +22,13 @@ interface CourseEnrollmentModalProps {
     email: string;
     name: string;
   };
+  existingEnrollment?: {
+    status: string;
+    data_inscricao: string;
+  } | null;
 }
 
-export function CourseEnrollmentModal({ isOpen, onClose, course, user }: CourseEnrollmentModalProps) {
+export function CourseEnrollmentModal({ isOpen, onClose, course, user, existingEnrollment }: CourseEnrollmentModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
@@ -33,31 +37,13 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user }: CourseE
     setIsLoading(true);
     
     try {
-      // Verificar se já existe inscrição
-      const { data: existingEnrollment } = await supabase
-        .from('inscricoes_cursos')
-        .select('id')
-        .eq('curso_id', course.id)
-        .eq('aluno_id', user.id)
-        .single();
-
-      if (existingEnrollment) {
-        toast({
-          title: "Já inscrito",
-          description: "Você já está inscrito neste curso.",
-          variant: "destructive"
-        });
-        onClose();
-        return;
-      }
-
-      // Criar nova inscrição
+      // Criar nova inscrição com status pendente
       const { error } = await supabase
         .from('inscricoes_cursos')
         .insert({
           curso_id: course.id,
           aluno_id: user.id,
-          status: 'ativo'
+          status: 'pendente'
         });
 
       if (error) throw error;
@@ -66,7 +52,7 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user }: CourseE
       
       toast({
         title: "Inscrição realizada!",
-        description: "Você receberá um e-mail de confirmação em breve.",
+        description: "Sua inscrição está aguardando aprovação. Você receberá um e-mail de confirmação em breve.",
       });
 
     } catch (error) {
@@ -91,11 +77,46 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user }: CourseE
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {isSuccess ? "Inscrição Confirmada!" : "Confirmar Inscrição"}
+            {existingEnrollment ? 
+              (existingEnrollment.status === 'pendente' ? "Aguardando Aprovação" : 
+               existingEnrollment.status === 'aprovado' ? "Inscrito no Curso" : 
+               existingEnrollment.status === 'reprovado' ? "Inscrição Negada" : "Confirmar Inscrição") :
+              (isSuccess ? "Inscrição Confirmada!" : "Confirmar Inscrição")
+            }
           </DialogTitle>
         </DialogHeader>
 
-        {isSuccess ? (
+        {existingEnrollment ? (
+          <div className="text-center space-y-4">
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
+              existingEnrollment.status === 'pendente' ? 'bg-warning/10' :
+              existingEnrollment.status === 'aprovado' ? 'bg-success/10' :
+              existingEnrollment.status === 'reprovado' ? 'bg-destructive/10' : 'bg-muted/10'
+            }`}>
+              <CheckCircle className={`w-8 h-8 ${
+                existingEnrollment.status === 'pendente' ? 'text-warning' :
+                existingEnrollment.status === 'aprovado' ? 'text-success' :
+                existingEnrollment.status === 'reprovado' ? 'text-destructive' : 'text-muted-foreground'
+              }`} />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg">{course.title}</h3>
+              <p className="text-muted-foreground">
+                {existingEnrollment.status === 'pendente' && 'Sua inscrição está sendo analisada pela equipe.'}
+                {existingEnrollment.status === 'aprovado' && 'Sua inscrição foi aprovada! Você receberá mais informações em breve.'}
+                {existingEnrollment.status === 'reprovado' && 'Infelizmente sua inscrição não foi aprovada desta vez.'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Inscrito em: {new Date(existingEnrollment.data_inscricao).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+
+            <Button onClick={handleClose} className="w-full">
+              Fechar
+            </Button>
+          </div>
+        ) : isSuccess ? (
           <div className="text-center space-y-4">
             <div className="mx-auto w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-success" />

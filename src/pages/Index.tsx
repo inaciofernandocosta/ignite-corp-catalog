@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { InstitutionalHero } from "@/components/InstitutionalHero";
 import { FilterSection } from "@/components/FilterSection";
@@ -14,6 +14,7 @@ import { useCourses } from "@/hooks/useCourses";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Filter {
   id: string;
@@ -26,6 +27,7 @@ const Index = React.memo(() => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [existingEnrollment, setExistingEnrollment] = useState<{status: string; data_inscricao: string} | null>(null);
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
   const { user, profile } = useAuth();
@@ -108,7 +110,32 @@ const Index = React.memo(() => {
   const handleEnrollmentModalClose = useCallback(() => {
     setShowEnrollmentModal(false);
     setSelectedCourse(null);
+    setExistingEnrollment(null);
   }, []);
+
+  // Verificar se usuário já está inscrito no curso selecionado
+  const checkExistingEnrollment = useCallback(async (courseId: string) => {
+    if (!user?.id || !courseId) return;
+    
+    try {
+      const { data } = await supabase
+        .from('inscricoes_cursos')
+        .select('status, data_inscricao')
+        .eq('curso_id', courseId)
+        .eq('aluno_id', user.id)
+        .single();
+        
+      setExistingEnrollment(data);
+    } catch (error) {
+      setExistingEnrollment(null);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (selectedCourse?.id) {
+      checkExistingEnrollment(selectedCourse.id);
+    }
+  }, [selectedCourse?.id, checkExistingEnrollment]);
 
   // Get access state for each course (memoized)
   const getAccessState = useCallback((course: any): AccessState => {
@@ -213,6 +240,7 @@ const Index = React.memo(() => {
             email: profile.email,
             name: profile.nome
           }}
+          existingEnrollment={existingEnrollment}
         />
       )}
     </div>

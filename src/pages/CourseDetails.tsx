@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCourseDetails } from '@/hooks/useCourseDetails';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +25,7 @@ import {
   Globe
 } from 'lucide-react';
 import { formatDateWithoutTimezone } from '@/lib/dateUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const CourseDetails = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -33,6 +34,7 @@ export const CourseDetails = () => {
   const { user, profile } = useAuth();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [existingEnrollment, setExistingEnrollment] = useState<{status: string; data_inscricao: string} | null>(null);
 
   // Determine user state based on authentication (memoized)
   const userState = useMemo(() => {
@@ -83,7 +85,33 @@ export const CourseDetails = () => {
 
   const handleEnrollmentModalClose = useCallback(() => {
     setShowEnrollmentModal(false);
-  }, []);
+    // Verificar novamente após fechar o modal
+    if (user?.id && course?.id) {
+      checkExistingEnrollment();
+    }
+  }, [user?.id, course?.id]);
+
+  // Verificar se usuário já está inscrito
+  const checkExistingEnrollment = useCallback(async () => {
+    if (!user?.id || !course?.id) return;
+    
+    try {
+      const { data } = await supabase
+        .from('inscricoes_cursos')
+        .select('status, data_inscricao')
+        .eq('curso_id', course.id)
+        .eq('aluno_id', user.id)
+        .single();
+        
+      setExistingEnrollment(data);
+    } catch (error) {
+      setExistingEnrollment(null);
+    }
+  }, [user?.id, course?.id]);
+
+  useEffect(() => {
+    checkExistingEnrollment();
+  }, [checkExistingEnrollment]);
 
   if (loading) {
     return (
@@ -253,10 +281,20 @@ export const CourseDetails = () => {
                   
                   <Button 
                     size="lg" 
-                    className="w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base"
+                    className={`w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base ${
+                      existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
+                      existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
+                      existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' : ''
+                    }`}
                     onClick={handleCTAClick}
+                    disabled={!!existingEnrollment}
                   >
-                    {user && profile ? 'Inscrever-se' : 'Quero me aplicar'}
+                    {existingEnrollment ? 
+                      (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
+                       existingEnrollment.status === 'aprovado' ? 'Inscrito' :
+                       existingEnrollment.status === 'reprovado' ? 'Inscrição negada' : 'Inscrever-se') :
+                      (user && profile ? 'Inscrever-se' : 'Quero me aplicar')
+                    }
                   </Button>
                   
                   <div className="text-xs text-center text-muted-foreground">
@@ -434,10 +472,20 @@ export const CourseDetails = () => {
           </p>
           <Button 
             size="lg" 
-            className="font-semibold px-6 sm:px-8 w-full sm:w-auto"
+            className={`font-semibold px-6 sm:px-8 w-full sm:w-auto ${
+              existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
+              existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
+              existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' : ''
+            }`}
             onClick={handleCTAClick}
+            disabled={!!existingEnrollment}
           >
-            {user && profile ? 'Inscrever-se agora' : 'Inscreva-se agora'}
+            {existingEnrollment ? 
+              (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
+               existingEnrollment.status === 'aprovado' ? 'Inscrito' :
+               existingEnrollment.status === 'reprovado' ? 'Inscrição negada' : 'Inscreva-se agora') :
+              (user && profile ? 'Inscrever-se agora' : 'Quero me aplicar')
+            }
           </Button>
         </div>
       </section>
@@ -466,6 +514,7 @@ export const CourseDetails = () => {
             email: profile.email,
             name: profile.nome
           }}
+          existingEnrollment={existingEnrollment}
         />
       )}
     </div>
