@@ -28,6 +28,7 @@ const Index = React.memo(() => {
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [existingEnrollment, setExistingEnrollment] = useState<{status: string; data_inscricao: string} | null>(null);
+  const [userEnrollments, setUserEnrollments] = useState<Record<string, {status: string; data_inscricao: string}>>({});
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
   const { user, profile } = useAuth();
@@ -86,8 +87,15 @@ const Index = React.memo(() => {
       slug: course?.slug,
       id: course?.id,
       user: !!user,
-      profile: !!profile
+      profile: !!profile,
+      enrollmentStatus: userEnrollments[course?.id]
     });
+
+    // Se o usuário já está inscrito, não fazer nada
+    if (userEnrollments[course?.id]) {
+      console.log('User already enrolled, not opening modal');
+      return;
+    }
 
     if (!user || !profile) {
       console.log('User not logged in, showing form');
@@ -100,18 +108,57 @@ const Index = React.memo(() => {
     console.log('User logged in, showing enrollment modal');
     setSelectedCourse(course);
     setShowEnrollmentModal(true);
-  }, [user, profile]);
+  }, [user, profile, userEnrollments]);
 
   const handleApplicationFormClose = useCallback(() => {
     setShowApplicationForm(false);
     setSelectedCourse(null);
   }, []);
 
+  // Verificar todas as inscrições do usuário
+  const loadUserEnrollments = useCallback(async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const { data } = await supabase
+        .from('inscricoes_cursos')
+        .select('curso_id, status, data_inscricao')
+        .eq('aluno_id', profile.id);
+        
+      if (data) {
+        const enrollmentsMap = data.reduce((acc, enrollment) => {
+          acc[enrollment.curso_id] = {
+            status: enrollment.status,
+            data_inscricao: enrollment.data_inscricao
+          };
+          return acc;
+        }, {} as Record<string, {status: string; data_inscricao: string}>);
+        
+        setUserEnrollments(enrollmentsMap);
+      }
+    } catch (error) {
+      console.error('Error loading user enrollments:', error);
+    }
+  }, [profile?.id]);
+
   const handleEnrollmentModalClose = useCallback(() => {
     setShowEnrollmentModal(false);
     setSelectedCourse(null);
     setExistingEnrollment(null);
-  }, []);
+    // Recarregar inscrições do usuário após fechar modal
+    if (profile?.id) {
+      loadUserEnrollments();
+    }
+  }, [profile?.id, loadUserEnrollments]);
+
+  // Carregar inscrições do usuário quando ele estiver logado
+  useEffect(() => {
+    if (profile?.id) {
+      loadUserEnrollments();
+    } else {
+      setUserEnrollments({});
+    }
+  }, [profile?.id, loadUserEnrollments]);
 
   // Verificar se usuário já está inscrito no curso selecionado
   const checkExistingEnrollment = useCallback(async (courseId: string) => {
@@ -210,6 +257,7 @@ const Index = React.memo(() => {
                   immersion={immersion}
                   userState={userState}
                   accessState={getAccessState(immersion)}
+                  enrollmentStatus={userEnrollments[immersion.id]}
                   onCTAClick={handleCTAClick}
                 />
               ))}

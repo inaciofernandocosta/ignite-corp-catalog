@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, Lock, CheckCircle, HelpCircle } from 'lucide-react';
+import { Clock, Calendar, Lock, CheckCircle, HelpCircle, XCircle } from 'lucide-react';
 import { formatDateWithoutTimezone } from "@/lib/dateUtils";
 import { useNavigate } from "react-router-dom";
 import { generateSlug } from "@/hooks/useCourseDetails";
@@ -25,6 +25,7 @@ interface ImmersionCardProps {
   immersion: Immersion;
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
   accessState?: 'available' | 'not-in-plan' | 'locked';
+  enrollmentStatus?: {status: string; data_inscricao: string};
   onCTAClick: (immersion: Immersion) => void; // Corrigir para passar o objeto completo
 }
 
@@ -40,7 +41,7 @@ const levelColors = {
   advanced: 'destructive'
 } as const;
 
-export function ImmersionCard({ immersion, userState, accessState, onCTAClick }: ImmersionCardProps) {
+export function ImmersionCard({ immersion, userState, accessState, enrollmentStatus, onCTAClick }: ImmersionCardProps) {
   const navigate = useNavigate();
   
   const handleCardClick = () => {
@@ -48,7 +49,46 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
     const slug = immersion.slug || generateSlug(immersion.title);
     navigate(`/curso/${slug}`);
   };
+  
   const getAccessInfo = () => {
+    // Se o usuário tem uma inscrição existente, mostrar o status
+    if (enrollmentStatus) {
+      const buttonStyles = {
+        pendente: {
+          icon: <Clock className="w-4 h-4" />,
+          label: "Programa Presencial",
+          badgeVariant: "outline" as const,
+          ctaText: "Aguardando aprovação",
+          ctaVariant: "secondary" as const,
+          showTeaser: false,
+          isLocked: true,
+          showButton: true
+        },
+        aprovado: {
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Programa Presencial",
+          badgeVariant: "outline" as const,
+          ctaText: "Inscrito",
+          ctaVariant: "secondary" as const,
+          showTeaser: false,
+          isLocked: true,
+          showButton: true
+        },
+        reprovado: {
+          icon: <XCircle className="w-4 h-4" />,
+          label: "Programa Presencial",
+          badgeVariant: "outline" as const,
+          ctaText: "Inscrição negada",
+          ctaVariant: "secondary" as const,
+          showTeaser: false,
+          isLocked: true,
+          showButton: true
+        }
+      };
+      
+      return buttonStyles[enrollmentStatus.status as keyof typeof buttonStyles] || buttonStyles['pendente'];
+    }
+    
     if (userState === 'visitor' || userState === 'logged-personal' || userState === 'logged-no-company') {
       return {
         icon: <Lock className="w-4 h-4" />,
