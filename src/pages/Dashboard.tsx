@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,19 +114,7 @@ export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState(profile?.role === 'admin' ? 'gerenciar' : 'cursos');
   const [dataLoading, setDataLoading] = useState(true);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (profile?.id) {
-      fetchUserData();
-    }
-  }, [profile]);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!profile?.id) return;
 
     try {
@@ -171,50 +159,27 @@ export const Dashboard = () => {
       
       setCertificates(certificatesWithNames);
 
-      // Buscar cursos com módulos e materiais organizados
+      // Buscar cursos com módulos apenas se necessário
       if (enrollments && enrollments.length > 0) {
         const courseIds = enrollments.map(e => e.curso_id);
         
-        // Buscar cursos
-        const { data: courses, error: coursesError } = await supabase
-          .from('cursos')
-          .select('*')
-          .in('id', courseIds);
+        const [coursesData, modulesData, materialsData] = await Promise.all([
+          supabase.from('cursos').select('*').in('id', courseIds),
+          supabase.from('curso_modulos').select('*').in('curso_id', courseIds).order('ordem'),
+          supabase.from('modulo_materiais').select('*').eq('ativo', true).order('ordem')
+        ]);
 
-        if (coursesError) throw coursesError;
-
-        // Buscar módulos dos cursos
-        const { data: modules, error: modulesError } = await supabase
-          .from('curso_modulos')
-          .select('*')
-          .in('curso_id', courseIds)
-          .order('ordem');
-
-        if (modulesError) throw modulesError;
-
-        // Buscar materiais dos módulos
-        let materials: CourseMaterial[] = [];
-        if (modules && modules.length > 0) {
-          const moduleIds = modules.map(m => m.id);
-          
-          const { data: materialsData, error: materialsError } = await supabase
-            .from('modulo_materiais')
-            .select('*')
-            .in('modulo_id', moduleIds)
-            .eq('ativo', true)
-            .order('ordem');
-
-          if (materialsError) throw materialsError;
-          materials = materialsData || [];
-        }
+        if (coursesData.error) throw coursesData.error;
+        if (modulesData.error) throw modulesData.error;
+        if (materialsData.error) throw materialsData.error;
 
         // Organizar dados hierarquicamente
-        const coursesWithModules: CourseWithModules[] = (courses || []).map(course => {
-          const courseModules = (modules || [])
+        const coursesWithModules: CourseWithModules[] = (coursesData.data || []).map(course => {
+          const courseModules = (modulesData.data || [])
             .filter(module => module.curso_id === course.id)
             .map(module => ({
               ...module,
-              materiais: materials.filter(material => material.modulo_id === module.id)
+              materiais: (materialsData.data || []).filter(material => material.modulo_id === module.id)
             }));
 
           return {
@@ -230,7 +195,19 @@ export const Dashboard = () => {
     } finally {
       setDataLoading(false);
     }
-  };
+  }, [profile?.id, profile?.role, profile?.nome]);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchUserData();
+    }
+  }, [profile?.id, fetchUserData]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -382,7 +359,7 @@ export const Dashboard = () => {
                   {/* Admin Tab - Gerenciar Alunos */}
                   {profile?.role === 'admin' && (
                     <TabsContent value="gerenciar" className="space-y-6">
-                      <StudentManagement />
+                      {activeTab === 'gerenciar' && <StudentManagement />}
                     </TabsContent>
                   )}
 

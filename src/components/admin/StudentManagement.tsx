@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,9 +31,8 @@ interface AdminStatsData {
   totalCertificates: number;
 }
 
-export const StudentManagement = () => {
+export const StudentManagement = React.memo(() => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStatsData>({
     totalStudents: 0,
     activeCourses: 0,
@@ -45,62 +44,8 @@ export const StudentManagement = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchStudentsAndStats();
-  }, []);
-
-  useEffect(() => {
-    filterStudents();
-  }, [students, searchTerm, statusFilter]);
-
-  const fetchStudentsAndStats = async () => {
-    try {
-      setLoading(true);
-
-      // Buscar alunos
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('inscricoes_mentoria')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (studentsError) throw studentsError;
-
-      setStudents(studentsData || []);
-
-      // Buscar estatísticas
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('cursos')
-        .select('id')
-        .eq('status', 'active');
-
-      const { data: certificatesData, error: certificatesError } = await supabase
-        .from('certificados_conclusao')
-        .select('id');
-
-      if (coursesError) console.error('Erro ao buscar cursos:', coursesError);
-      if (certificatesError) console.error('Erro ao buscar certificados:', certificatesError);
-
-      const activeStudents = studentsData?.filter(s => s.ativo && s.status === 'aprovado') || [];
-
-      setAdminStats({
-        totalStudents: activeStudents.length,
-        activeCourses: coursesData?.length || 0,
-        totalCertificates: certificatesData?.length || 0
-      });
-
-    } catch (error) {
-      console.error('Erro ao buscar dados:', error);
-      toast({
-        title: 'Erro ao carregar dados',
-        description: 'Não foi possível carregar as informações dos alunos.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterStudents = () => {
+  // Memorizar students filtrados para evitar re-cálculos desnecessários
+  const filteredStudents = useMemo(() => {
     let filtered = students;
 
     // Filtrar por termo de busca
@@ -120,14 +65,58 @@ export const StudentManagement = () => {
       filtered = filtered.filter(student => student.status === statusFilter);
     }
 
-    setFilteredStudents(filtered);
-  };
+    return filtered;
+  }, [students, searchTerm, statusFilter]);
 
-  const handleStudentUpdate = () => {
+  const fetchStudentsAndStats = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Buscar alunos
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (studentsError) throw studentsError;
+
+      setStudents(studentsData || []);
+
+      // Buscar estatísticas apenas se necessário - usando Promise.all para melhor performance
+      const [coursesResponse, certificatesResponse] = await Promise.all([
+        supabase.from('cursos').select('id').eq('status', 'active'),
+        supabase.from('certificados_conclusao').select('id')
+      ]);
+
+      const activeStudents = studentsData?.filter(s => s.ativo && s.status === 'aprovado') || [];
+
+      setAdminStats({
+        totalStudents: activeStudents.length,
+        activeCourses: coursesResponse.data?.length || 0,
+        totalCertificates: certificatesResponse.data?.length || 0
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+      toast({
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar as informações dos alunos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
     fetchStudentsAndStats();
-  };
+  }, [fetchStudentsAndStats]);
 
-  const exportStudents = () => {
+  const handleStudentUpdate = useCallback(() => {
+    fetchStudentsAndStats();
+  }, [fetchStudentsAndStats]);
+
+  const exportStudents = useCallback(() => {
     if (filteredStudents.length === 0) {
       toast({
         title: 'Nenhum dado para exportar',
@@ -242,7 +231,7 @@ export const StudentManagement = () => {
       title: 'Exportação concluída',
       description: `${filteredStudents.length} alunos exportados em Excel com sucesso.`,
     });
-  };
+  }, [filteredStudents, searchTerm, statusFilter, toast]);
 
   if (loading) {
     return (
@@ -351,4 +340,4 @@ export const StudentManagement = () => {
       />
     </div>
   );
-};
+});
