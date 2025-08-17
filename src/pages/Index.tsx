@@ -83,7 +83,9 @@ const Index = React.memo(() => {
       return;
     }
     
-    navigate(`/curso/${course.slug || course.id}`);
+    // Use slug if available, fallback to id
+    const courseSlug = course.slug || course.id;
+    navigate(`/curso/${courseSlug}`);
   }, [user, profile, navigate]);
 
   const handleApplicationFormClose = useCallback(() => {

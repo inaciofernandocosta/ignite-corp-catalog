@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Immersion } from '@/data/mockData';
+import { generateSlug } from '@/hooks/useCourseDetails';
 
 export const useCourses = () => {
   const [courses, setCourses] = useState<Immersion[]>([]);
@@ -35,7 +36,8 @@ export const useCourses = () => {
           description: course.descricao || 'Domine estratégias práticas e aplicáveis com metodologia exclusiva dos especialistas da indústria.',
           image: course.imagem_capa,
           duration: course.duracao,
-          startDate: course.data_inicio
+          startDate: course.data_inicio,
+          slug: course.slug || generateSlug(course.titulo) // Use existing slug or generate from title
         }));
 
         setCourses(mappedCourses);

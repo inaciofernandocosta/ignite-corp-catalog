@@ -10,6 +10,7 @@ export interface Immersion {
   image?: string;
   duration: string;
   startDate?: string;
+  slug?: string; // Adicionar campo slug
 }
 
 export const mockImmersions: Immersion[] = [
