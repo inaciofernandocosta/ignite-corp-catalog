@@ -27,6 +27,7 @@ const Index = React.memo(() => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedCourseForApplication, setSelectedCourseForApplication] = useState<any>(null);
   const [existingEnrollment, setExistingEnrollment] = useState<{status: string; data_inscricao: string} | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<Record<string, {status: string; data_inscricao: string}>>({});
   const { toast } = useToast();
@@ -99,7 +100,7 @@ const Index = React.memo(() => {
 
     if (!user || !profile) {
       console.log('User not logged in, showing form');
-      setSelectedCourse(course);
+      setSelectedCourseForApplication(course);
       setShowApplicationForm(true);
       return;
     }
@@ -112,7 +113,7 @@ const Index = React.memo(() => {
 
   const handleApplicationFormClose = useCallback(() => {
     setShowApplicationForm(false);
-    setSelectedCourse(null);
+    setSelectedCourseForApplication(null);
   }, []);
 
   // Verificar todas as inscrições do usuário
@@ -275,6 +276,7 @@ const Index = React.memo(() => {
       {showApplicationForm && (
         <ApplicationForm 
           onClose={handleApplicationFormClose}
+          course={selectedCourseForApplication}
         />
       )}
       

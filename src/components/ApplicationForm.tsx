@@ -13,44 +13,59 @@ import { useCompanyData } from '@/hooks/useCompanyData';
 import { applyPhoneMask, removePhoneMask, validateEmailFormat, filterEmailInput } from '@/lib/inputMasks';
 import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const formSchema = z.object({
-  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  telefone: z.string()
-    .min(1, 'Telefone é obrigatório')
-    .refine((value) => {
-      const numbers = removePhoneMask(value);
-      return numbers.length >= 10 && numbers.length <= 11;
-    }, 'Telefone deve ter 10 ou 11 dígitos'),
-  empresa_id: z.string().min(1, 'Selecione uma empresa'),
-  departamento_id: z.string().min(1, 'Selecione um departamento'),
-  cargo: z.string().min(2, 'Cargo deve ter pelo menos 2 caracteres'),
-  local_id: z.string().min(1, 'Selecione um local'),
-  senha: z.string()
-    .min(6, 'Senha deve ter pelo menos 6 caracteres')
-    .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
-    .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
-    .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
-    .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial'),
-  confirmarSenha: z.string().min(1, 'Confirme sua senha'),
-}).refine((data) => data.senha === data.confirmarSenha, {
-  message: "As senhas não coincidem",
-  path: ["confirmarSenha"],
-});
+const createFormSchema = (isCourseEnrollment: boolean) => {
+  const baseSchema = z.object({
+    nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    email: z.string().email('Email inválido'),
+    telefone: z.string()
+      .min(1, 'Telefone é obrigatório')
+      .refine((value) => {
+        const numbers = removePhoneMask(value);
+        return numbers.length >= 10 && numbers.length <= 11;
+      }, 'Telefone deve ter 10 ou 11 dígitos'),
+    empresa_id: z.string().min(1, 'Selecione uma empresa'),
+    departamento_id: z.string().min(1, 'Selecione um departamento'),
+    cargo: z.string().min(2, 'Cargo deve ter pelo menos 2 caracteres'),
+    local_id: z.string().min(1, 'Selecione um local'),
+  });
 
-type FormData = z.infer<typeof formSchema>;
+  if (isCourseEnrollment) {
+    return baseSchema;
+  }
+
+  return baseSchema.extend({
+    senha: z.string()
+      .min(6, 'Senha deve ter pelo menos 6 caracteres')
+      .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
+      .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
+      .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
+      .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial'),
+    confirmarSenha: z.string().min(1, 'Confirme sua senha'),
+  }).refine((data) => data.senha === data.confirmarSenha, {
+    message: "As senhas não coincidem",
+    path: ["confirmarSenha"],
+  });
+};
 
 interface ApplicationFormProps {
   onClose: () => void;
+  course?: {
+    id: string;
+    titulo: string;
+  };
 }
 
-export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
+export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
+  const isCourseEnrollment = !!course;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailError, setEmailError] = useState<string>('');
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
+
+  const formSchema = createFormSchema(isCourseEnrollment);
+  type FormData = z.infer<typeof formSchema>;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -62,8 +77,10 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
       departamento_id: '',
       cargo: '',
       local_id: '',
-      senha: '',
-      confirmarSenha: '',
+      ...(isCourseEnrollment ? {} : {
+        senha: '',
+        confirmarSenha: '',
+      }),
     },
   });
 
@@ -88,30 +105,65 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
       const selectedDepartment = availableDepartments.find(d => d.id === data.departamento_id);
       const selectedLocation = availableLocations.find(l => l.id === data.local_id);
 
-          // Clean phone number for storage
-          const cleanPhone = removePhoneMask(data.telefone);
+      // Clean phone number for storage
+      const cleanPhone = removePhoneMask(data.telefone);
 
-          // Inserir na tabela inscricoes_mentoria
-          const { error } = await supabase
-            .from('inscricoes_mentoria')
-            .insert({
-              nome: data.nome,
-              email: data.email,
-              telefone: cleanPhone,
-          empresa: selectedCompany?.nome || '',
-          departamento: selectedDepartment?.nome || '',
-          cargo: data.cargo,
-          unidade: selectedLocation?.nome || '',
-          status: 'aprovado',
-          ativo: true,
-          curso_nome: 'IA na Prática',
-        });
+      if (isCourseEnrollment && course) {
+        // Course enrollment flow - create pending entries in both tables
+        const { data: mentoriaData, error: mentoriaError } = await supabase
+          .from('inscricoes_mentoria')
+          .insert({
+            nome: data.nome,
+            email: data.email,
+            telefone: cleanPhone,
+            empresa: selectedCompany?.nome || '',
+            departamento: selectedDepartment?.nome || '',
+            cargo: data.cargo,
+            unidade: selectedLocation?.nome || '',
+            status: 'pendente',
+            ativo: false,
+            curso_nome: course.titulo,
+          })
+          .select('id')
+          .single();
 
-      if (error) throw error;
+        if (mentoriaError) throw mentoriaError;
+
+        // Create course enrollment
+        const { error: cursoError } = await supabase
+          .from('inscricoes_cursos')
+          .insert({
+            aluno_id: mentoriaData.id,
+            curso_id: course.id,
+            status: 'pendente',
+          });
+
+        if (cursoError) throw cursoError;
+      } else {
+        // Regular user registration flow
+        const { error } = await supabase
+          .from('inscricoes_mentoria')
+          .insert({
+            nome: data.nome,
+            email: data.email,
+            telefone: cleanPhone,
+            empresa: selectedCompany?.nome || '',
+            departamento: selectedDepartment?.nome || '',
+            cargo: data.cargo,
+            unidade: selectedLocation?.nome || '',
+            status: 'aprovado',
+            ativo: true,
+            curso_nome: 'IA na Prática',
+          });
+
+        if (error) throw error;
+      }
 
       toast({
-        title: 'Inscrição realizada com sucesso!',
-        description: 'Você receberá um email de confirmação em breve.',
+        title: isCourseEnrollment ? 'Inscrição no curso realizada!' : 'Cadastro realizado com sucesso!',
+        description: isCourseEnrollment 
+          ? 'Sua inscrição foi enviada para análise. Você receberá um email quando for aprovada.'
+          : 'Você receberá um email de confirmação em breve.',
       });
 
       onClose();
@@ -151,9 +203,14 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
           >
             <X className="h-4 w-4" />
           </Button>
-          <CardTitle className="text-2xl">Cadastrar Novo Usuário</CardTitle>
+          <CardTitle className="text-2xl">
+            {isCourseEnrollment ? `Inscrição no Curso: ${course?.titulo}` : 'Cadastrar Novo Usuário'}
+          </CardTitle>
           <CardDescription>
-            Preencha os dados para cadastrar um novo usuário no sistema.
+            {isCourseEnrollment 
+              ? 'Preencha seus dados para se inscrever no curso. Após a aprovação, você receberá as instruções de acesso.'
+              : 'Preencha os dados para cadastrar um novo usuário no sistema.'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -378,8 +435,9 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
+              {!isCourseEnrollment && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
                   control={form.control}
                   name="senha"
                   render={({ field }) => (
@@ -451,14 +509,18 @@ export const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                     </FormItem>
                   )}
                 />
-              </div>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button type="button" variant="outline" onClick={onClose}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="bg-primary">
-                  {isSubmitting ? 'Cadastrando...' : 'Cadastrar Usuário'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting 
+                    ? (isCourseEnrollment ? 'Inscrevendo...' : 'Cadastrando...') 
+                    : (isCourseEnrollment ? 'Inscrever-se no Curso' : 'Cadastrar Usuário')
+                  }
                 </Button>
               </div>
             </form>
