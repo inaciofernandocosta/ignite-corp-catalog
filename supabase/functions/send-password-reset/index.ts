@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -11,6 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface PasswordResetRequest {
@@ -18,19 +19,43 @@ interface PasswordResetRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('Password reset function called');
+  console.log('Password reset function called - Method:', req.method);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     console.log('Handling CORS preflight');
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 
   try {
-    const { email }: PasswordResetRequest = await req.json();
+    const body = await req.text();
+    console.log('Request body:', body);
+    
+    const { email }: PasswordResetRequest = JSON.parse(body);
     console.log('Password reset request for:', email);
 
+    if (!email) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Email é obrigatório" 
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // Verificar se o usuário existe na tabela inscricoes_mentoria
+    console.log('Verificando se usuário existe...');
     const { data: userExists, error: userError } = await supabase
       .from('inscricoes_mentoria')
       .select('nome, email, ativo')
@@ -53,7 +78,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Usuário encontrado:', userExists.nome);
 
     // Gerar link de redefinição usando Supabase Auth
-    const redirectUrl = `https://preview--ignite-corp-catalog.lovable.app/auth?type=recovery`;
+    const redirectUrl = `${req.headers.get('origin') || 'https://mentoriafutura.com'}/auth?type=recovery`;
+    console.log('Redirect URL:', redirectUrl);
+    
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
@@ -64,12 +91,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (resetError) {
       console.error('Erro ao gerar link de reset:', resetError);
-      throw resetError;
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Erro ao gerar link de recuperação" 
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     console.log('Link de reset gerado com sucesso');
 
-    // Criar HTML simples para o email (sem React Email por enquanto)
+    // Criar HTML simples para o email
     const html = `
       <!DOCTYPE html>
       <html>
@@ -118,9 +151,20 @@ const handler = async (req: Request): Promise<Response> => {
       html: html,
     });
 
-    console.log('Email enviado com sucesso. Resposta completa:', JSON.stringify(emailResponse, null, 2));
+    console.log('Resposta do Resend:', JSON.stringify(emailResponse, null, 2));
 
-    console.log("Email enviado com sucesso:", emailResponse);
+    if (emailResponse.error) {
+      console.error('Erro ao enviar email:', emailResponse.error);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Erro ao enviar email" 
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    console.log("Email enviado com sucesso!");
 
     return new Response(JSON.stringify({ 
       success: true,

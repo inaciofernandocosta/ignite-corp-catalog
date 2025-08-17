@@ -166,88 +166,52 @@ export const useAuth = () => {
     try {
       console.log('useAuth - Iniciando resetPassword para:', email);
       
-      // Chamar nossa edge function personalizada para envio de email
-      const { data, error } = await supabase.functions.invoke('send-password-reset', {
-        body: { email }
+      // Primeiro verificar se usuário existe no sistema
+      const { data: userExists, error: userCheckError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('email, nome')
+        .eq('email', email)
+        .eq('ativo', true)
+        .single();
+
+      if (userCheckError || !userExists) {
+        console.log('useAuth - Usuário não encontrado:', email);
+        toast({
+          title: 'Email não encontrado',
+          description: 'Este email não está cadastrado no sistema.',
+          variant: 'destructive',
+        });
+        return { error: { message: 'Email não encontrado' } };
+      }
+
+      console.log('useAuth - Usuário encontrado:', userExists.nome);
+      
+      // Usar método nativo do Supabase
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
-      console.log('useAuth - Resposta da edge function:', { data, error });
-
-      if (error) {
-        console.error('useAuth - Erro na edge function:', error);
+      if (resetError) {
+        console.error('useAuth - Erro no reset de senha:', resetError);
         
-        // Se for erro de rate limit ou conexão, usar método nativo como fallback
-        if (error.message?.includes('Failed to fetch') || error.message?.includes('rate limit')) {
-          console.log('useAuth - Tentando fallback com método nativo');
-          
-          // Verificar se usuário existe primeiro
-          const { data: userExists } = await supabase
-            .from('inscricoes_mentoria')
-            .select('email')
-            .eq('email', email)
-            .eq('ativo', true)
-            .single();
-
-          if (!userExists) {
-            toast({
-              title: 'Email não encontrado',
-              description: 'Este email não está cadastrado no sistema.',
-              variant: 'destructive',
-            });
-            return { error: { message: 'Email não encontrado' } };
-          }
-
-          // Usar método nativo do Supabase como fallback
-          const { error: nativeError } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth?reset=true`,
-          });
-
-          if (nativeError) {
-            console.error('useAuth - Erro no método nativo:', nativeError);
-            
-            if (nativeError.message?.includes('rate limit')) {
-              toast({
-                title: 'Muitas tentativas',
-                description: 'Aguarde alguns minutos antes de tentar novamente.',
-                variant: 'destructive',
-              });
-              return { error: { message: 'Rate limit excedido' } };
-            }
-            
-            toast({
-              title: 'Erro ao enviar email',
-              description: nativeError.message,
-              variant: 'destructive',
-            });
-            return { error: nativeError };
-          }
-
+        if (resetError.message?.includes('rate limit')) {
           toast({
-            title: 'Email enviado!',
-            description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+            title: 'Muitas tentativas',
+            description: 'Aguarde alguns minutos antes de tentar novamente.',
+            variant: 'destructive',
           });
-          return { error: null };
+          return { error: { message: 'Rate limit excedido' } };
         }
         
         toast({
           title: 'Erro ao enviar email',
-          description: 'Erro interno. Tente novamente mais tarde.',
+          description: resetError.message || 'Erro interno do servidor',
           variant: 'destructive',
         });
-        return { error: { message: 'Erro interno do servidor' } };
+        return { error: resetError };
       }
 
-      if (!data?.success) {
-        console.error('useAuth - Falha na edge function:', data?.error);
-        toast({
-          title: 'Erro ao enviar email',
-          description: data?.error || 'Erro desconhecido.',
-          variant: 'destructive',
-        });
-        return { error: { message: data?.error || 'Erro desconhecido' } };
-      }
-
-      console.log('useAuth - Email enviado com sucesso via edge function');
+      console.log('useAuth - Email de reset enviado com sucesso');
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
@@ -257,7 +221,6 @@ export const useAuth = () => {
     } catch (error: any) {
       console.error('useAuth - Erro geral em resetPassword:', error);
       
-      // Se for erro de rate limit, informar ao usuário
       if (error.message?.includes('rate limit')) {
         toast({
           title: 'Muitas tentativas',
