@@ -57,31 +57,21 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         ctaText: "Quero me aplicar",
         ctaVariant: "default" as const,
         showTeaser: true,
-        isLocked: true
+        isLocked: true,
+        showButton: true
       };
     }
 
     if (userState === 'logged-corporate') {
-      if (accessState === 'not-in-plan') {
-        return {
-          icon: <HelpCircle className="w-4 h-4" />,
-          label: "Não incluído no plano",
-          badgeVariant: "outline" as const,
-          ctaText: "Solicitar liberação",
-          ctaVariant: "outline" as const,
-          showTeaser: false,
-          isLocked: false
-        };
-      }
-
       return {
         icon: <CheckCircle className="w-4 h-4" />,
         label: "Programa Presencial",
         badgeVariant: "outline" as const,
-        ctaText: "Quero me aplicar",
+        ctaText: "",
         ctaVariant: "default" as const,
         showTeaser: false,
-        isLocked: false
+        isLocked: false,
+        showButton: false
       };
     }
 
@@ -92,7 +82,8 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
       ctaText: "Ver detalhes",
       ctaVariant: "outline" as const,
       showTeaser: true,
-      isLocked: true
+      isLocked: true,
+      showButton: true
     };
   };
 
@@ -178,17 +169,19 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
       </CardHeader>
 
       <CardFooter className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6 flex-shrink-0">
-        <Button
-          variant={accessInfo.ctaVariant}
-          size="sm"
-          className="w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm"
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent card click when button is clicked
-            onCTAClick(immersion);
-          }}
-        >
-          {accessInfo.ctaText}
-        </Button>
+        {accessInfo.showButton && (
+          <Button
+            variant={accessInfo.ctaVariant}
+            size="sm"
+            className="w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click when button is clicked
+              onCTAClick(immersion);
+            }}
+          >
+            {accessInfo.ctaText}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
