@@ -264,44 +264,46 @@ export const StudentManagement = () => {
 
       {/* Gerenciar Inscrições */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div>
-              <CardTitle className="text-xl">
+              <CardTitle className="text-lg sm:text-xl">
                 Gerenciar Inscrições ({filteredStudents.length})
               </CardTitle>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={exportStudents}
                 disabled={filteredStudents.length === 0}
+                className="text-xs sm:text-sm"
+                size="sm"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
                 Exportar ({filteredStudents.length})
               </Button>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <UserPlus className="h-4 w-4 mr-2" />
+              <Button onClick={() => setShowCreateDialog(true)} className="text-xs sm:text-sm" size="sm">
+                <UserPlus className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
                 Cadastrar Usuário
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {/* Filtros */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nome, email, empresa..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-8 sm:pl-10 text-sm"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter className="h-3 sm:h-4 w-3 sm:w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
