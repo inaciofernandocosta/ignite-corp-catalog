@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCourseDetails } from '@/hooks/useCourseDetails';
+import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ApplicationForm } from '@/components/ApplicationForm';
+import { CourseEnrollmentModal } from '@/components/CourseEnrollmentModal';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { 
@@ -28,16 +30,65 @@ export const CourseDetails = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { course, loading } = useCourseDetails(slug || '');
+  const { user, profile } = useAuth();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
 
-  const handleLogin = () => {
-    navigate('/auth');
-  };
+  // Determine user state based on authentication (memoized)
+  const userState = useMemo(() => {
+    if (!user || !profile) return 'visitor';
+    
+    // Check if user has corporate email
+    const email = profile.email.toLowerCase();
+    const corporateDomains = ['mentoriafutura.com.br', 'empresa.com', 'corp.com'];
+    const hasCorporateEmail = corporateDomains.some(domain => email.includes(domain));
+    
+    if (hasCorporateEmail) return 'logged-corporate';
+    
+    // Check if user's company is in our database
+    if (profile.empresa && profile.empresa !== '') {
+      return 'logged-corporate';
+    }
+    
+    return 'logged-personal';
+  }, [user, profile]);
+
+  const handleLogin = useCallback(() => {
+    if (user && profile) {
+      // Se já está logado, redirecionar para dashboard
+      navigate('/dashboard');
+    } else {
+      // Se não está logado, ir para tela de auth
+      navigate('/auth');
+    }
+  }, [user, profile, navigate]);
+
+  const handleSignOut = useCallback(() => {
+    // This will be handled by the Header component
+  }, []);
+
+  const handleCTAClick = useCallback(() => {
+    if (!user || !profile) {
+      setShowApplicationForm(true);
+      return;
+    }
+    
+    // Para usuários logados, mostrar modal de confirmação de inscrição
+    setShowEnrollmentModal(true);
+  }, [user, profile]);
+
+  const handleApplicationFormClose = useCallback(() => {
+    setShowApplicationForm(false);
+  }, []);
+
+  const handleEnrollmentModalClose = useCallback(() => {
+    setShowEnrollmentModal(false);
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header userState="visitor" onLogin={handleLogin} />
+        <Header userState={userState} onLogin={handleLogin} onSignOut={handleSignOut} />
         <div className="container mx-auto px-4 py-16">
           <div className="flex items-center justify-center">
             <div className="text-center">
@@ -54,7 +105,7 @@ export const CourseDetails = () => {
   if (!course) {
     return (
       <div className="min-h-screen">
-        <Header userState="visitor" onLogin={handleLogin} />
+        <Header userState={userState} onLogin={handleLogin} onSignOut={handleSignOut} />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Curso não encontrado</h1>
@@ -84,7 +135,7 @@ export const CourseDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
-        <Header userState="visitor" onLogin={handleLogin} />
+        <Header userState={userState} onLogin={handleLogin} onSignOut={handleSignOut} />
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-20 sm:pt-24 pb-12 sm:pb-16">
@@ -203,9 +254,9 @@ export const CourseDetails = () => {
                   <Button 
                     size="lg" 
                     className="w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base"
-                    onClick={() => setShowApplicationForm(true)}
+                    onClick={handleCTAClick}
                   >
-                    Quero me aplicar
+                    {user && profile ? 'Inscrever-se' : 'Quero me aplicar'}
                   </Button>
                   
                   <div className="text-xs text-center text-muted-foreground">
@@ -384,9 +435,9 @@ export const CourseDetails = () => {
           <Button 
             size="lg" 
             className="font-semibold px-6 sm:px-8 w-full sm:w-auto"
-            onClick={() => setShowApplicationForm(true)}
+            onClick={handleCTAClick}
           >
-            Inscreva-se agora
+            {user && profile ? 'Inscrever-se agora' : 'Inscreva-se agora'}
           </Button>
         </div>
       </section>
@@ -395,7 +446,27 @@ export const CourseDetails = () => {
 
       {/* Application Form Modal */}
       {showApplicationForm && (
-        <ApplicationForm onClose={() => setShowApplicationForm(false)} />
+        <ApplicationForm onClose={handleApplicationFormClose} />
+      )}
+
+      {/* Course Enrollment Modal */}
+      {showEnrollmentModal && course && user && profile && (
+        <CourseEnrollmentModal
+          isOpen={showEnrollmentModal}
+          onClose={handleEnrollmentModalClose}
+          course={{
+            id: course.id,
+            title: course.titulo,
+            duration: course.duracao,
+            startDate: course.data_inicio,
+            slug: course.slug
+          }}
+          user={{
+            id: profile.id,
+            email: profile.email,
+            name: profile.nome
+          }}
+        />
       )}
     </div>
   );
