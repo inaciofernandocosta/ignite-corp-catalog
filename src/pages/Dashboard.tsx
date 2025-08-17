@@ -41,6 +41,7 @@ import { EditModuleDialog } from '@/components/admin/EditModuleDialog';
 import { ManageModuleMaterialsDialog } from '@/components/admin/ManageModuleMaterialsDialog';
 import { ViewModulesDialog } from '@/components/admin/ViewModulesDialog';
 import { UserProfile } from '@/components/UserProfile';
+import { CourseModulesViewer } from '@/components/student/CourseModulesViewer';
 
 interface CourseEnrollment {
   id: string;
@@ -562,23 +563,27 @@ export const Dashboard = () => {
                                      )}
                                    </div>
                                    
-                                    <div className="space-y-2 mt-4">
-                                      <Button className="w-full" size="sm">
-                                        <PlayCircle className="h-4 w-4 mr-2" />
-                                        Continuar Curso
-                                      </Button>
-                                      {Number(enrollment.progresso) >= 100 && (() => {
-                                        const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                        return certificate ? (
-                                          <StorageCertificateViewer certificate={certificate} />
-                                        ) : (
-                                          <Button variant="outline" className="w-full" size="sm" disabled>
-                                            <Award className="h-4 w-4 mr-2" />
-                                            Certificado não encontrado
-                                          </Button>
-                                        );
-                                      })()}
-                                    </div>
+                                     <div className="space-y-2 mt-4">
+                                       <Button className="w-full" size="sm">
+                                         <PlayCircle className="h-4 w-4 mr-2" />
+                                         Continuar Curso
+                                       </Button>
+                                       <CourseModulesViewer
+                                         courseId={enrollment.curso_id}
+                                         courseTitle={enrollment.curso.titulo}
+                                       />
+                                       {Number(enrollment.progresso) >= 100 && (() => {
+                                         const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                         return certificate ? (
+                                           <StorageCertificateViewer certificate={certificate} />
+                                         ) : (
+                                           <Button variant="outline" className="w-full" size="sm" disabled>
+                                             <Award className="h-4 w-4 mr-2" />
+                                             Certificado não encontrado
+                                           </Button>
+                                         );
+                                       })()}
+                                     </div>
                                  </div>
                                </div>
                              </Card>

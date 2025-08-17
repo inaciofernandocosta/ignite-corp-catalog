@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Edit, FileText, Trash2, Clock, Hash } from "lucide-react";
 import { EditModuleDialog } from "./EditModuleDialog";
 import { ManageModuleMaterialsDialog } from "./ManageModuleMaterialsDialog";
+import { MaterialViewer } from "../MaterialViewer";
 
 interface Module {
   id: string;
@@ -160,6 +161,11 @@ export const ViewModulesDialog: React.FC<ViewModulesDialogProps> = ({
                       moduleId={module.id}
                       moduleTitle={module.titulo}
                       onMaterialsUpdated={handleModuleUpdated}
+                    />
+                    <MaterialViewer
+                      moduleId={module.id}
+                      moduleTitle={module.titulo}
+                      isAdmin={true}
                     />
                     <Button
                       variant="outline"

@@ -410,16 +410,25 @@ export const ManageModuleMaterialsDialog: React.FC<ManageModuleMaterialsDialogPr
                           </div>
                         </div>
                         
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => startEdit(material)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          
-                          <AlertDialog>
+                         <div className="flex gap-2">
+                           {material.url && (
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => window.open(material.url, '_blank')}
+                             >
+                               <Upload className="h-4 w-4" />
+                             </Button>
+                           )}
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => startEdit(material)}
+                           >
+                             <Edit2 className="h-4 w-4" />
+                           </Button>
+                           
+                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="outline" size="sm">
                                 <Trash2 className="h-4 w-4" />
