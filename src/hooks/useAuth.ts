@@ -252,19 +252,53 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      // Ignorar erros de sessão não encontrada - é um comportamento esperado
+      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
+        console.error('Erro real no logout:', error);
+        toast({
+          title: 'Erro ao sair',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Logout bem sucedido (ou sessão já não existia)
+      console.log('Logout realizado com sucesso');
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
       });
+      
+      // Limpar estado local
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+    } catch (error: any) {
+      console.error('Erro inesperado no logout:', error);
+      
+      // Mesmo com erro, limpar estado local para garantir logout
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Só mostrar toast de erro se não for relacionado a sessão
+      if (!error.message?.includes('session') && !error.message?.includes('Session')) {
+        toast({
+          title: 'Erro ao sair',
+          description: 'Tente novamente.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Logout realizado',
+          description: 'Até logo!',
+        });
+      }
     }
   };
 
