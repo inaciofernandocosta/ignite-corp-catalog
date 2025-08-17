@@ -102,41 +102,215 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Link de reset gerado com sucesso');
 
-    // Criar HTML simples para o email
+    // Template de email profissional e responsivo
     const html = `
       <!DOCTYPE html>
-      <html>
+      <html lang="pt-BR">
         <head>
           <meta charset="utf-8">
-          <title>Redefinição de Senha</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Redefinição de Senha - IA na Prática</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background-color: #f8fafc;
+              line-height: 1.6;
+            }
+            
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              padding: 48px 40px;
+              text-align: center;
+              color: white;
+            }
+            
+            .header h1 {
+              margin: 0;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.025em;
+            }
+            
+            .header p {
+              margin: 8px 0 0 0;
+              font-size: 16px;
+              opacity: 0.9;
+              font-weight: 400;
+            }
+            
+            .content {
+              padding: 48px 40px;
+            }
+            
+            .greeting {
+              font-size: 18px;
+              font-weight: 600;
+              color: #1f2937;
+              margin: 0 0 24px 0;
+            }
+            
+            .message {
+              font-size: 16px;
+              color: #4b5563;
+              margin: 0 0 32px 0;
+              line-height: 1.7;
+            }
+            
+            .cta-container {
+              text-align: center;
+              margin: 40px 0;
+            }
+            
+            .cta-button {
+              display: inline-block;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              text-decoration: none;
+              padding: 16px 32px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 16px;
+              letter-spacing: 0.025em;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
+            }
+            
+            .cta-button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px 0 rgba(102, 126, 234, 0.5);
+            }
+            
+            .security-notice {
+              background-color: #fef3c7;
+              border: 1px solid #f59e0b;
+              border-radius: 8px;
+              padding: 16px;
+              margin: 32px 0;
+            }
+            
+            .security-notice p {
+              margin: 0;
+              font-size: 14px;
+              color: #92400e;
+              font-weight: 500;
+            }
+            
+            .footer {
+              background-color: #f9fafb;
+              padding: 32px 40px;
+              text-align: center;
+              border-top: 1px solid #e5e7eb;
+            }
+            
+            .footer p {
+              margin: 8px 0;
+              font-size: 14px;
+              color: #6b7280;
+            }
+            
+            .footer .brand {
+              font-weight: 600;
+              color: #374151;
+              font-size: 16px;
+            }
+            
+            .social-links {
+              margin: 24px 0 16px 0;
+            }
+            
+            .social-links a {
+              display: inline-block;
+              margin: 0 8px;
+              color: #6b7280;
+              text-decoration: none;
+              font-size: 14px;
+            }
+            
+            @media only screen and (max-width: 600px) {
+              .container {
+                margin: 0;
+                border-radius: 0;
+              }
+              
+              .header, .content, .footer {
+                padding: 32px 24px;
+              }
+              
+              .header h1 {
+                font-size: 24px;
+              }
+              
+              .cta-button {
+                padding: 14px 28px;
+                font-size: 15px;
+              }
+            }
+          </style>
         </head>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #f6f9fc; padding: 32px; border-radius: 8px;">
-            <h1 style="color: #7c3aed; text-align: center; margin-bottom: 24px;">Redefinição de Senha</h1>
-            
-            <p style="font-size: 16px; color: #333; margin-bottom: 16px;">Olá ${userExists.nome},</p>
-            
-            <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
-              Você solicitou a redefinição de sua senha. Clique no botão abaixo para criar uma nova senha:
-            </p>
-            
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${resetData.properties?.action_link || '#'}" 
-                 style="background-color: #7c3aed; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                Redefinir Senha
-              </a>
+        <body>
+          <div style="padding: 40px 20px;">
+            <div class="container">
+              <div class="header">
+                <h1>🔐 Redefinição de Senha</h1>
+                <p>Solicitação de alteração de credenciais</p>
+              </div>
+              
+              <div class="content">
+                <p class="greeting">Olá, ${userExists.nome}! 👋</p>
+                
+                <p class="message">
+                  Recebemos uma solicitação para redefinir a senha da sua conta na plataforma <strong>IA na Prática</strong>. 
+                  Para continuar com o processo, clique no botão abaixo para criar sua nova senha de forma segura.
+                </p>
+                
+                <div class="cta-container">
+                  <a href="${resetData.properties?.action_link || '#'}" class="cta-button">
+                    🔄 Redefinir Minha Senha
+                  </a>
+                </div>
+                
+                <div class="security-notice">
+                  <p>
+                    ⚠️ <strong>Importante:</strong> Este link é válido por apenas 24 horas por motivos de segurança. 
+                    Após esse período, será necessário solicitar um novo link de recuperação.
+                  </p>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">
+                  Se você não solicitou esta redefinição, pode ignorar este email com segurança. 
+                  Sua conta permanecerá protegida e nenhuma alteração será feita.
+                </p>
+              </div>
+              
+              <div class="footer">
+                <p class="brand">IA na Prática</p>
+                <p>Transformando o futuro através da Inteligência Artificial</p>
+                
+                <div class="social-links">
+                  <a href="#" style="margin-right: 16px;">📧 Suporte</a>
+                  <a href="#" style="margin-right: 16px;">🌐 Site</a>
+                  <a href="#">📱 Contato</a>
+                </div>
+                
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 24px;">
+                  Este é um email automático, não responda diretamente.<br>
+                  © ${new Date().getFullYear()} IA na Prática. Todos os direitos reservados.
+                </p>
+              </div>
             </div>
-            
-            <p style="font-size: 14px; color: #666; text-align: center; margin-top: 24px;">
-              Este link é válido por 24 horas. Se você não solicitou esta redefinição, ignore este email.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 32px 0;">
-            
-            <p style="font-size: 14px; color: #666; text-align: center; margin: 0;">
-              Atenciosamente,<br>
-              Equipe IA na Prática
-            </p>
           </div>
         </body>
       </html>
