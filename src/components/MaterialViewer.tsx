@@ -170,15 +170,17 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {materials.map((material) => (
             <Card key={material.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       {getFileIcon(material.tipo, material.formato)}
-                      <h4 className="font-medium">{material.titulo}</h4>
+                      <h4 className="font-medium text-sm sm:text-base leading-tight break-words">{material.titulo}</h4>                      
+                    </div>
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
                       <Badge variant="outline" className="text-xs">
                         {material.tipo}
                       </Badge>
@@ -190,42 +192,44 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
                     </div>
                     
                     {material.descricao && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 break-words">
                         {material.descricao}
                       </p>
                     )}
                     
-                    <div className="flex gap-4 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground">
                       {material.arquivo_tamanho && (
                         <span>Tamanho: {formatFileSize(material.arquivo_tamanho)}</span>
                       )}
                       {material.arquivo_nome && (
-                        <span>Arquivo: {material.arquivo_nome}</span>
+                        <span className="truncate">Arquivo: {material.arquivo_nome}</span>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
                     {material.tipo === 'link' ? (
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto text-xs"
                         onClick={() => material.url && window.open(material.url, '_blank')}
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
+                        <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Abrir Link
                       </Button>
                     ) : (
                       <Button
                         variant="outline" 
                         size="sm"
+                        className="w-full sm:w-auto text-xs"
                         onClick={() => handleDownload(material)}
                         disabled={downloadingIds.has(material.id) || !material.url}
                       >
                         {downloadingIds.has(material.id) ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                         ) : (
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         )}
                         {downloadingIds.has(material.id) ? 'Baixando...' : 'Download'}
                       </Button>
@@ -252,11 +256,11 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
           Ver Materiais ({materials.length})
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Materiais: {moduleTitle}
+      <DialogContent className="w-[95vw] max-w-[700px] max-h-[85vh] overflow-y-auto p-3 sm:p-6">
+        <DialogHeader className="pb-3">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Materiais: {moduleTitle}</span>
           </DialogTitle>
         </DialogHeader>
         {content}

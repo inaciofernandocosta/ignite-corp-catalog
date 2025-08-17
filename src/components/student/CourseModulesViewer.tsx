@@ -88,11 +88,11 @@ export const CourseModulesViewer: React.FC<CourseModulesViewerProps> = ({
           Ver Conteúdo do Curso
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            {courseTitle} - Módulos e Materiais
+      <DialogContent className="w-[95vw] max-w-[800px] max-h-[85vh] overflow-y-auto p-3 sm:p-6">
+        <DialogHeader className="pb-3">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">{courseTitle} - Módulos e Materiais</span>
           </DialogTitle>
         </DialogHeader>
         
@@ -117,52 +117,52 @@ export const CourseModulesViewer: React.FC<CourseModulesViewerProps> = ({
                   open={expandedModules.has(module.id)}
                   onOpenChange={() => toggleModule(module.id)}
                 >
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1 flex-1 text-left">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="w-fit">
-                              <Hash className="h-3 w-3 mr-1" />
-                              {module.ordem}
-                            </Badge>
-                            <CardTitle className="text-lg">{module.titulo}</CardTitle>
-                          </div>
-                          {module.descricao && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {module.descricao}
-                            </p>
-                          )}
-                          {module.duracao_estimada && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {module.duracao_estimada}
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          {expandedModules.has(module.id) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
+                   <CollapsibleTrigger asChild>
+                     <CardHeader className="pb-2 sm:pb-3 cursor-pointer hover:bg-muted/50 transition-colors p-3 sm:p-6">
+                       <div className="flex items-start justify-between gap-2">
+                         <div className="space-y-1 flex-1 text-left min-w-0">
+                           <div className="flex items-center gap-2 flex-wrap">
+                             <Badge variant="outline" className="w-fit text-xs flex-shrink-0">
+                               <Hash className="h-3 w-3 mr-1" />
+                               {module.ordem}
+                             </Badge>
+                             <CardTitle className="text-sm sm:text-lg leading-tight">{module.titulo}</CardTitle>
+                           </div>
+                           {module.descricao && (
+                             <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                               {module.descricao}
+                             </p>
+                           )}
+                           {module.duracao_estimada && (
+                             <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                               <Clock className="h-3 w-3" />
+                               {module.duracao_estimada}
+                             </div>
+                           )}
+                         </div>
+                         <div className="ml-2 flex-shrink-0">
+                           {expandedModules.has(module.id) ? (
+                             <ChevronUp className="h-4 w-4" />
+                           ) : (
+                             <ChevronDown className="h-4 w-4" />
+                           )}
+                         </div>
+                       </div>
+                     </CardHeader>
+                   </CollapsibleTrigger>
                   
-                  <CollapsibleContent>
-                    <CardContent className="pt-0 border-t">
-                      <div className="mt-4">
-                        <MaterialViewer
-                          moduleId={module.id}
-                          moduleTitle={module.titulo}
-                          isAdmin={false}
-                          showTrigger={false}
-                        />
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
+                   <CollapsibleContent>
+                     <CardContent className="pt-0 border-t p-3 sm:p-6">
+                       <div className="mt-2 sm:mt-4">
+                         <MaterialViewer
+                           moduleId={module.id}
+                           moduleTitle={module.titulo}
+                           isAdmin={false}
+                           showTrigger={false}
+                         />
+                       </div>
+                     </CardContent>
+                   </CollapsibleContent>
                 </Collapsible>
               </Card>
             ))}
