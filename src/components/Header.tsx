@@ -2,15 +2,18 @@ import { User, Building2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
   onLogin: () => void;
+  onSignOut?: () => void;
 }
 
-export function Header({ userState, onLogin }: HeaderProps) {
+export function Header({ userState, onLogin, onSignOut }: HeaderProps) {
   const { profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -19,9 +22,7 @@ export function Header({ userState, onLogin }: HeaderProps) {
           {/* Logo */}
           <button 
             className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity min-w-0"
-            onClick={() => {
-              window.location.href = '/';
-            }}
+            onClick={() => navigate('/')}
           >
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-primary rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
               <Building2 className="w-4 sm:w-6 h-4 sm:h-6 text-primary-foreground" />
@@ -64,7 +65,7 @@ export function Header({ userState, onLogin }: HeaderProps) {
                   variant="outline" 
                   size="sm" 
                   className="border-border whitespace-nowrap"
-                  onClick={() => window.location.href = '/dashboard'}
+                  onClick={() => navigate('/dashboard')}
                 >
                   <User className="w-4 h-4 lg:mr-2" />
                   <span className="hidden lg:inline">Dashboard</span>
@@ -74,8 +75,8 @@ export function Header({ userState, onLogin }: HeaderProps) {
                   size="sm"
                   className="whitespace-nowrap"
                   onClick={() => {
-                    signOut();
-                    window.location.href = '/';
+                    onSignOut ? onSignOut() : signOut();
+                    navigate('/');
                   }}
                 >
                   Sair
@@ -125,7 +126,7 @@ export function Header({ userState, onLogin }: HeaderProps) {
                       variant="outline" 
                       size="sm" 
                       className="border-border w-full"
-                      onClick={() => window.location.href = '/dashboard'}
+                      onClick={() => navigate('/dashboard')}
                     >
                       <User className="w-4 h-4 mr-2" />
                       Dashboard
@@ -135,8 +136,8 @@ export function Header({ userState, onLogin }: HeaderProps) {
                       size="sm"
                       className="w-full"
                       onClick={() => {
-                        signOut();
-                        window.location.href = '/';
+                        onSignOut ? onSignOut() : signOut();
+                        navigate('/');
                       }}
                     >
                       Sair
