@@ -23,6 +23,12 @@ export const useAuth = () => {
 
   // Remove dependência do toast para evitar loop infinito
   const fetchUserProfile = useCallback(async (email: string) => {
+    // Evitar re-chamadas desnecessárias se o perfil já foi carregado para este email
+    if (profile?.email === email) {
+      console.log('Perfil já carregado para este email, pulando...');
+      return;
+    }
+
     try {
       // Buscar dados da inscrição
       const { data: inscricao, error: inscricaoError } = await supabase
@@ -67,7 +73,7 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }
-  }, []);
+  }, [profile?.email]); // Adicionar profile.email como dependência para detectar mudanças
 
   useEffect(() => {
     let isInitialized = false;
@@ -328,6 +334,9 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
+      
+      // Limpar dados de inicialização das tabs
+      localStorage.removeItem('dashboard-tab-initialized');
       
     } catch (error: any) {
       console.error('Erro inesperado no logout:', error);

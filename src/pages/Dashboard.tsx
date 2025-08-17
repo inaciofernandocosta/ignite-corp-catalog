@@ -203,12 +203,13 @@ export const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  // Gerenciar inicialização da tab baseado no role
+  // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
-    if (profile?.role === 'admin' && activeTab === 'cursos') {
+    if (profile?.role === 'admin' && activeTab === 'cursos' && !localStorage.getItem('dashboard-tab-initialized')) {
       setActiveTab('gerenciar');
+      localStorage.setItem('dashboard-tab-initialized', 'true');
     }
-  }, [profile?.role, activeTab]);
+  }, [profile?.role]);
 
   useEffect(() => {
     if (profile?.id) {
