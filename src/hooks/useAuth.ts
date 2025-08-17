@@ -21,6 +21,7 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Remove dependência do toast para evitar loop infinito
   const fetchUserProfile = useCallback(async (email: string) => {
     try {
       // Buscar dados da inscrição
@@ -70,10 +71,13 @@ export const useAuth = () => {
 
   useEffect(() => {
     let isInitialized = false;
+    let isMounted = true;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
         console.log('Auth state change:', event, !!session?.user);
         
         setSession(session);
@@ -93,23 +97,40 @@ export const useAuth = () => {
     );
 
     // THEN check for existing session - but only once
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isInitialized) {
-        console.log('Initial session check:', !!session?.user);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user && session.user.email) {
-          await fetchUserProfile(session.user.email);
+    const initializeAuth = async () => {
+      if (!isInitialized && isMounted) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!isMounted) return;
+          
+          console.log('Initial session check:', !!session?.user);
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user && session.user.email) {
+            await fetchUserProfile(session.user.email);
+          }
+          
+          setLoading(false);
+          isInitialized = true;
+        } catch (error) {
+          console.error('Error initializing auth:', error);
+          if (isMounted) {
+            setLoading(false);
+            isInitialized = true;
+          }
         }
-        
-        setLoading(false);
-        isInitialized = true;
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [fetchUserProfile]);
 
   const signIn = async (email: string, password: string) => {

@@ -111,7 +111,7 @@ export const Dashboard = () => {
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [coursesWithModules, setCoursesWithModules] = useState<CourseWithModules[]>([]);
-  const [activeTab, setActiveTab] = useState(profile?.role === 'admin' ? 'gerenciar' : 'cursos');
+  const [activeTab, setActiveTab] = useState('cursos');
   const [dataLoading, setDataLoading] = useState(true);
 
   const fetchUserData = useCallback(async () => {
@@ -202,6 +202,13 @@ export const Dashboard = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Gerenciar inicialização da tab baseado no role
+  useEffect(() => {
+    if (profile?.role === 'admin' && activeTab === 'cursos') {
+      setActiveTab('gerenciar');
+    }
+  }, [profile?.role, activeTab]);
 
   useEffect(() => {
     if (profile?.id) {

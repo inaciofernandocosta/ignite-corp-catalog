@@ -109,7 +109,19 @@ export const StudentManagement = React.memo(() => {
   }, [toast]);
 
   useEffect(() => {
-    fetchStudentsAndStats();
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchStudentsAndStats();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [fetchStudentsAndStats]);
 
   const handleStudentUpdate = useCallback(() => {
