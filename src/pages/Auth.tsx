@@ -187,39 +187,39 @@ export const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-sm sm:max-w-md">
+        <div className="mb-6 sm:mb-8 text-center">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="mb-4 text-muted-foreground hover:text-foreground"
+            className="mb-4 text-muted-foreground hover:text-foreground text-sm"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar ao início
           </Button>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Mentoria Futura
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Acesse sua área do aluno
           </p>
         </div>
 
         <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl">
+          <CardHeader className="text-center pb-4 px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl">
               {showResetPassword ? 'Redefinir Senha' :
                showForgotPassword ? 'Recuperar Senha' : 
                'Área do Aluno'}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               {showResetPassword ? 'Digite sua nova senha' :
                showForgotPassword ? 'Digite seu email para recuperar sua senha' :
                'Entre com sua conta'}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             {showResetPassword ? (
               <ResetPasswordForm onSuccess={handleResetSuccess} onBack={handleBackToLogin} />
             ) : showForgotPassword ? (

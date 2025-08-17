@@ -258,73 +258,73 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
            <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
                  Mentoria Futura
                </h1>
-               <Badge variant="secondary" className="hidden sm:inline-flex">
+               <Badge variant="secondary" className="hidden sm:inline-flex text-xs whitespace-nowrap">
                  {profile.role === 'aluno' ? 'Área do Aluno' : profile.role}
                </Badge>
              </div>
 
-             <div className="flex items-center gap-4">
+             <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
                <Button 
                  variant="ghost" 
                  size="sm" 
                  onClick={() => navigate('/')}
-                 className="text-muted-foreground hover:text-foreground"
+                 className="text-muted-foreground hover:text-foreground px-2 sm:px-3"
                >
-                 <Home className="h-4 w-4 mr-2" />
-                 Catálogo
+                 <Home className="h-4 w-4 sm:mr-2" />
+                 <span className="hidden sm:inline">Catálogo</span>
                </Button>
                
-               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+               <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
                  <User className="h-4 w-4" />
-                 <span>{profile.nome}</span>
+                 <span className="truncate max-w-32">{profile.nome}</span>
                </div>
                <UserProfile />
-               <Button variant="outline" size="sm" onClick={signOut}>
-                 <LogOut className="h-4 w-4 mr-2" />
-                 Sair
+               <Button variant="outline" size="sm" onClick={signOut} className="px-2 sm:px-3">
+                 <LogOut className="h-4 w-4 sm:mr-2" />
+                 <span className="hidden sm:inline">Sair</span>
                </Button>
              </div>
            </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Sidebar - Profile */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardHeader className="text-center">
-                <Avatar className="h-20 w-20 mx-auto mb-4">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-xl">
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <Card className="lg:sticky lg:top-24">
+              <CardHeader className="text-center pb-4 sm:pb-6">
+                <Avatar className="h-16 sm:h-20 w-16 sm:w-20 mx-auto mb-3 sm:mb-4">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-lg sm:text-xl">
                     {getInitials(profile.nome)}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-xl">{profile.nome}</CardTitle>
-                <CardDescription>{profile.email}</CardDescription>
+                <CardTitle className="text-lg sm:text-xl truncate px-2">{profile.nome}</CardTitle>
+                <CardDescription className="text-sm truncate px-2">{profile.email}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 px-4 sm:px-6">
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.empresa}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{profile.empresa}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.departamento}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{profile.departamento}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.cargo}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{profile.cargo}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.unidade}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{profile.unidade}</span>
                   </div>
                 </div>
                 
@@ -345,26 +345,30 @@ export const Dashboard = () => {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <div className="lg:col-span-3 order-1 lg:order-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} h-auto p-1`}>
                 {profile?.role === 'admin' && (
-                  <TabsTrigger value="gerenciar" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Gerenciar Alunos
+                  <TabsTrigger value="gerenciar" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
+                    <Users className="h-3 sm:h-4 w-3 sm:w-4" />
+                    <span className="hidden sm:inline">Gerenciar Alunos</span>
+                    <span className="sm:hidden">Alunos</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="cursos" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  {profile?.role === 'admin' ? 'Cursos' : 'Meus Cursos'}
+                <TabsTrigger value="cursos" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
+                  <BookOpen className="h-3 sm:h-4 w-3 sm:w-4" />
+                  <span className="hidden sm:inline">{profile?.role === 'admin' ? 'Cursos' : 'Meus Cursos'}</span>
+                  <span className="sm:hidden">Cursos</span>
                 </TabsTrigger>
-                <TabsTrigger value="certificados" className="flex items-center gap-2">
-                  <Award className="h-4 w-4" />
-                  Certificados
+                <TabsTrigger value="certificados" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
+                  <Award className="h-3 sm:h-4 w-3 sm:w-4" />
+                  <span className="hidden sm:inline">Certificados</span>
+                  <span className="sm:hidden">Certs</span>
                 </TabsTrigger>
-                <TabsTrigger value="materiais" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Materiais
+                <TabsTrigger value="materiais" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
+                  <FileText className="h-3 sm:h-4 w-3 sm:w-4" />
+                  <span className="hidden sm:inline">Materiais</span>
+                  <span className="sm:hidden">Docs</span>
                 </TabsTrigger>
               </TabsList>
 

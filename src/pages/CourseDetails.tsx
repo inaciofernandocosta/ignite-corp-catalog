@@ -87,52 +87,52 @@ export const CourseDetails = () => {
         <Header userState="visitor" onLogin={handleLogin} />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-24 pb-16">
-        <div className="container mx-auto px-4">
+      <section className="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 pt-20 sm:pt-24 pb-12 sm:pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb e Botão Voltar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
               <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">
                 Início
               </button>
               <span>/</span>
               <span>Cursos</span>
               <span>/</span>
-              <span className="text-foreground">{course.titulo}</span>
+              <span className="text-foreground truncate max-w-32 sm:max-w-none">{course.titulo}</span>
             </div>
             
             <Button 
               variant="outline" 
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 w-full sm:w-auto"
+              className="flex items-center gap-2 w-full sm:w-auto text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar ao Catálogo
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12">
             {/* Course Info */}
-            <div className="lg:col-span-2">
-              <div className="flex gap-3 mb-6">
-                <Badge variant="outline" className="text-sm font-medium">
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <Badge variant="outline" className="text-xs sm:text-sm font-medium">
                   Programa Presencial
                 </Badge>
-                <Badge variant="new" className="text-sm">
+                <Badge variant="new" className="text-xs sm:text-sm">
                   Novo
                 </Badge>
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-heading font-bold text-foreground mb-4 sm:mb-6 leading-tight">
                 {course.titulo}
               </h1>
 
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
                 {course.descricao}
               </p>
 
               {/* Quick Info */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary" />
                   <div>
@@ -174,10 +174,10 @@ export const CourseDetails = () => {
             </div>
 
             {/* Course Image & CTA */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-8">
+            <div className="lg:col-span-1 order-1 lg:order-2">
+              <Card className="lg:sticky lg:top-8">
                 {course.imagem_capa && (
-                  <div className="relative h-48 overflow-hidden rounded-t-lg">
+                  <div className="relative h-40 sm:h-48 overflow-hidden rounded-t-lg">
                     <img 
                       src={course.imagem_capa} 
                       alt={course.titulo}
@@ -186,23 +186,23 @@ export const CourseDetails = () => {
                   </div>
                 )}
                 
-                <CardContent className="p-6">
-                  <div className="text-center mb-6">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="text-center mb-4 sm:mb-6">
                     {course.preco && course.preco > 0 ? (
-                      <div className="text-3xl font-bold text-primary mb-2">
+                      <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
                         R$ {course.preco.toFixed(2)}
                       </div>
                     ) : (
-                      <div className="text-2xl font-bold text-success mb-2">
+                      <div className="text-xl sm:text-2xl font-bold text-success mb-2">
                         Gratuito
                       </div>
                     )}
-                    <p className="text-sm text-muted-foreground">Investimento total</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Investimento total</p>
                   </div>
                   
                   <Button 
                     size="lg" 
-                    className="w-full mb-4 font-semibold"
+                    className="w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base"
                     onClick={() => setShowApplicationForm(true)}
                   >
                     Quero me aplicar
@@ -220,10 +220,10 @@ export const CourseDetails = () => {
       </section>
 
       {/* Course Details */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-12">
+      <section className="py-12 sm:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12">
+            <div className="lg:col-span-2 space-y-8 sm:space-y-12">
               {/* Objetivos */}
               {course.objetivos && course.objetivos.length > 0 && (
                 <Card>
@@ -373,17 +373,17 @@ export const CourseDetails = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-heading font-bold mb-4">
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold mb-4">
             Pronto para transformar sua carreira?
           </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
             Junte-se aos profissionais que estão se preparando para o futuro do trabalho com IA.
           </p>
           <Button 
             size="lg" 
-            className="font-semibold px-8"
+            className="font-semibold px-6 sm:px-8 w-full sm:w-auto"
             onClick={() => setShowApplicationForm(true)}
           >
             Inscreva-se agora

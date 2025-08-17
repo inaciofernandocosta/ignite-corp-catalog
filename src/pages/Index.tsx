@@ -114,33 +114,34 @@ const Index = () => {
         resultCount={filteredImmersions.length}
       />
       
-      <main className="py-12 sm:py-16">
-        <div className="container mx-auto px-4 sm:px-6">
+      <main className="py-8 sm:py-12 lg:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
-            <div className="text-center py-20">
-              <h3 className="text-xl sm:text-2xl font-heading font-semibold text-foreground mb-4">
+            <div className="text-center py-12 sm:py-16 lg:py-20">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-heading font-semibold text-foreground mb-4">
                 Carregando cursos...
               </h3>
             </div>
           ) : error ? (
-            <div className="text-center py-20">
-              <h3 className="text-xl sm:text-2xl font-heading font-semibold text-foreground mb-4">
+            <div className="text-center py-12 sm:py-16 lg:py-20">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-heading font-semibold text-foreground mb-4">
                 Erro ao carregar cursos
               </h3>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-md mx-auto">
                 {error}
               </p>
             </div>
           ) : filteredImmersions.length === 0 ? (
-            <div className="text-center py-20">
-              <h3 className="text-xl sm:text-2xl font-heading font-semibold text-foreground mb-4">
+            <div className="text-center py-12 sm:py-16 lg:py-20">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-heading font-semibold text-foreground mb-4">
                 Nenhuma imersão encontrada
               </h3>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-md mx-auto">
                 Tente ajustar os filtros ou entre em contato com nosso suporte.
               </p>
               <Button 
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setActiveFilters([]);
                 }}
@@ -149,7 +150,7 @@ const Index = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {filteredImmersions.map((immersion) => (
                 <ImmersionCard
                   key={immersion.id}

@@ -99,12 +99,12 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
 
   return (
     <Card 
-      className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden cursor-pointer"
+      className="group hover:shadow-card-hover transition-all duration-300 bg-gradient-card border-border overflow-hidden cursor-pointer h-full flex flex-col"
       onClick={handleCardClick}
     >
       {/* Course Image */}
       {immersion.image ? (
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-40 sm:h-48 overflow-hidden flex-shrink-0">
           <img 
             src={immersion.image} 
             alt={immersion.title}
@@ -113,7 +113,7 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           
           {/* Badges overlay on image */}
-          <div className="absolute top-3 left-3 flex gap-2">
+          <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex gap-1 sm:gap-2 flex-wrap">
             <Badge variant="outline" className="text-xs font-medium bg-black/50 border-white/20 text-white">
               {accessInfo.label}
             </Badge>
@@ -126,8 +126,8 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         </div>
       ) : (
         /* Badges without image */
-        <div className="p-4 pb-0">
-          <div className="flex gap-2 mb-3">
+        <div className="p-3 sm:p-4 pb-0">
+          <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
             <Badge variant="outline" className="text-xs font-medium border-border">
               {accessInfo.label}
             </Badge>
@@ -140,31 +140,31 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         </div>
       )}
       
-      <CardHeader className={`pb-4 ${!immersion.image ? 'pt-0' : ''}`}>
+      <CardHeader className={`pb-3 sm:pb-4 px-3 sm:px-6 flex-grow ${!immersion.image ? 'pt-0' : 'pt-3 sm:pt-6'}`}>
         {/* Title */}
-        <h3 className="font-heading font-bold text-lg sm:text-xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-3">
+        <h3 className="font-heading font-bold text-base sm:text-lg lg:text-xl leading-tight text-card-foreground group-hover:text-primary transition-colors mb-2 sm:mb-3 line-clamp-2">
           {immersion.title}
         </h3>
         
         {/* Course Info */}
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
           {immersion.duration && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              <span>{immersion.duration}</span>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <Clock className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+              <span className="truncate">{immersion.duration}</span>
             </div>
           )}
           
           {immersion.startDate && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              <span>Início: {formatDateWithoutTimezone(immersion.startDate)}</span>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <Calendar className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+              <span className="truncate">Início: {formatDateWithoutTimezone(immersion.startDate)}</span>
             </div>
           )}
         </div>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           {immersion.tags.slice(0, 2).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
@@ -176,11 +176,11 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         </div>
       </CardHeader>
 
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6 flex-shrink-0">
         <Button
           variant={accessInfo.ctaVariant}
-          size="lg"
-          className="w-full font-semibold py-3"
+          size="sm"
+          className="w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm"
           onClick={(e) => {
             e.stopPropagation(); // Prevent card click when button is clicked
             onCTAClick(immersion.id, accessInfo.ctaText);
