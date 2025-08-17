@@ -8,9 +8,14 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  password: z.string()
+    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
+    .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
+    .regex(/\d/, 'Senha deve conter pelo menos um número'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Senhas não conferem",
@@ -33,7 +38,7 @@ export const ResetPasswordForm = ({ onSuccess, onBack }: ResetPasswordFormProps)
 
   const form = useForm<ResetPasswordData>({
     resolver: zodResolver(resetPasswordSchema),
-    mode: 'onSubmit',
+    mode: 'onChange', // Mudou para validação em tempo real
     defaultValues: {
       password: '',
       confirmPassword: '',
@@ -146,6 +151,9 @@ export const ResetPasswordForm = ({ onSuccess, onBack }: ResetPasswordFormProps)
             </FormItem>
           )}
         />
+
+        {/* Indicador de força da senha */}
+        <PasswordStrengthIndicator password={form.watch("password") || ""} />
 
         <FormField
           control={form.control}
