@@ -22,7 +22,8 @@ import {
   CheckCircle,
   Play,
   FileText,
-  Globe
+  Globe,
+  XCircle
 } from 'lucide-react';
 import { formatDateWithoutTimezone } from '@/lib/dateUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -298,8 +299,33 @@ export const CourseDetails = () => {
                   </Button>
                   
                   <div className="text-xs text-center text-muted-foreground">
-                    <CheckCircle className="w-4 h-4 inline mr-1" />
-                    Vagas limitadas - Inscreva-se já!
+                    {existingEnrollment ? (
+                      <>
+                        {existingEnrollment.status === 'pendente' && (
+                          <>
+                            <Clock className="w-4 h-4 inline mr-1 text-warning" />
+                            <span className="text-warning">Aguardando aprovação da inscrição</span>
+                          </>
+                        )}
+                        {existingEnrollment.status === 'aprovado' && (
+                          <>
+                            <CheckCircle className="w-4 h-4 inline mr-1 text-success" />
+                            <span className="text-success">Você está inscrito no curso</span>
+                          </>
+                        )}
+                        {existingEnrollment.status === 'reprovado' && (
+                          <>
+                            <XCircle className="w-4 h-4 inline mr-1 text-destructive" />
+                            <span className="text-destructive">Inscrição não aprovada</span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 inline mr-1" />
+                        Vagas limitadas - Inscreva-se já!
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
