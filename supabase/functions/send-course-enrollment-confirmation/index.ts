@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 import { Resend } from "npm:resend@2.0.0";
@@ -28,6 +29,8 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { enrollmentData }: EnrollmentConfirmationRequest = await req.json();
 
+    console.log('Processando confirmação de inscrição:', enrollmentData);
+
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -42,6 +45,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (studentError || !student) {
+      console.error('Erro ao buscar dados do estudante:', studentError);
       throw new Error("Estudante não encontrado");
     }
 
@@ -53,6 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (courseError || !course) {
+      console.error('Erro ao buscar dados do curso:', courseError);
       throw new Error("Curso não encontrado");
     }
 
@@ -61,19 +66,24 @@ const handler = async (req: Request): Promise<Response> => {
       ? new Date(course.data_inicio).toLocaleDateString('pt-BR')
       : 'A definir';
 
-    // Send confirmation email to student
+    console.log('Enviando e-mail para:', student.email);
+
+    // Send enrollment confirmation email to student
     const emailResponse = await resend.emails.send({
       from: "Mentoria Futura <contato@mentoriafutura.com.br>",
       to: [student.email],
-      subject: `Inscrição confirmada: ${course.titulo}`,
+      subject: `Inscrição recebida: ${course.titulo}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #2563eb; text-align: center;">Inscrição Confirmada!</h1>
+          <h1 style="color: #2563eb; text-align: center;">Inscrição Recebida!</h1>
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h2 style="color: #1e293b; margin-top: 0;">Olá, ${student.nome}!</h2>
             <p style="color: #475569; line-height: 1.6;">
-              Sua inscrição no curso <strong>${course.titulo}</strong> foi confirmada com sucesso!
+              Recebemos sua inscrição para o curso <strong>${course.titulo}</strong> e ela está sendo analisada pela nossa equipe.
+            </p>
+            <p style="color: #475569; line-height: 1.6;">
+              Em breve você receberá um retorno sobre a aprovação da sua inscrição.
             </p>
           </div>
 
@@ -89,7 +99,16 @@ const handler = async (req: Request): Promise<Response> => {
 
           <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
             <p style="color: #1e40af; margin: 0; font-weight: 500;">
-              📧 Em breve você receberá mais informações sobre o cronograma detalhado e materiais do curso.
+              📧 Aguarde o e-mail de confirmação da aprovação. Nossa equipe analisará sua inscrição e retornará em breve.
+            </p>
+          </div>
+
+          <div style="background-color: #fff7ed; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+            <p style="color: #92400e; margin: 0; font-weight: 500;">
+              ⏰ <strong>Próximos passos:</strong><br>
+              1. Nossa equipe analisará sua inscrição<br>
+              2. Você receberá um e-mail com o resultado<br>
+              3. Se aprovado, receberá detalhes sobre cronograma e materiais
             </p>
           </div>
 
@@ -112,11 +131,11 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("E-mail de confirmação enviado:", emailResponse);
+    console.log("E-mail de confirmação de inscrição enviado:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: "E-mail de confirmação enviado com sucesso",
+      message: "E-mail de confirmação de inscrição enviado com sucesso",
       emailResponse 
     }), {
       status: 200,
@@ -127,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("Erro ao enviar e-mail de confirmação:", error);
+    console.error("Erro ao enviar e-mail de confirmação de inscrição:", error);
     return new Response(
       JSON.stringify({ 
         error: error.message,

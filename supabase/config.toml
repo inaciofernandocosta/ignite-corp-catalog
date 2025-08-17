@@ -1,4 +1,8 @@
+
 project_id = "fauoxtziffljgictcvhi"
 
 [functions.send-password-reset]
+verify_jwt = false
+
+[functions.send-course-enrollment-confirmation]
 verify_jwt = false
