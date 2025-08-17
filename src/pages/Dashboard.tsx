@@ -562,59 +562,25 @@ export const Dashboard = () => {
                                     </div>
                                   </div>
                                   
-                                  <div className="flex flex-col justify-between space-y-3 sm:space-y-4">
-                                    <div className="space-y-2">
-                                      {Number(enrollment.progresso) >= 100 ? (
-                                        <div className="flex flex-col gap-2">
-                                          <Badge variant="default" className="w-fit text-xs bg-green-100 text-green-800 border-green-200">
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            Curso Concluído
-                                          </Badge>
-                                          {(() => {
-                                            const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                            return certificate && certificate.status === 'aprovado' ? (
-                                              <Badge variant="default" className="w-fit text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-                                                <Award className="h-3 w-3 mr-1" />
-                                                Certificado Disponível
-                                              </Badge>
-                                            ) : null;
-                                          })()}
-                                        </div>
-                                      ) : (
-                                        <Badge variant="secondary" className="w-fit text-xs">
-                                          <PlayCircle className="h-3 w-3 mr-1" />
-                                          Em Progresso
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="space-y-2">
-                                        <Button 
-                                          variant="default" 
-                                          className="w-full text-xs sm:text-sm" 
-                                          size="sm"
-                                          onClick={() => navigate(`/course/${enrollment.curso_id}`)}
-                                        >
-                                          <PlayCircle className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                          Continuar Curso
-                                        </Button>
-                                        <CourseModulesViewer
-                                          courseId={enrollment.curso_id}
-                                          courseTitle={enrollment.curso.titulo}
-                                        />
-                                        {Number(enrollment.progresso) >= 100 && (() => {
-                                          const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                          return certificate ? (
-                                            <StorageCertificateViewer certificate={certificate} />
-                                          ) : (
-                                            <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
-                                              <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                              Certificado não encontrado
-                                            </Button>
-                                          );
-                                        })()}
-                                      </div>
-                                  </div>
+                                   <div className="flex flex-col justify-end space-y-3 sm:space-y-4">
+                                     <div className="space-y-2">
+                                         <CourseModulesViewer
+                                           courseId={enrollment.curso_id}
+                                           courseTitle={enrollment.curso.titulo}
+                                         />
+                                         {Number(enrollment.progresso) >= 100 && (() => {
+                                           const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                           return certificate ? (
+                                             <StorageCertificateViewer certificate={certificate} />
+                                           ) : (
+                                             <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
+                                               <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+                                               Certificado não encontrado
+                                             </Button>
+                                           );
+                                         })()}
+                                       </div>
+                                   </div>
                                 </div>
                               </Card>
                             ))}
@@ -707,54 +673,25 @@ export const Dashboard = () => {
                                     </div>
                                   </div>
                                   
-                                  <div className="flex flex-col justify-between space-y-3 sm:space-y-4">
-                                    <div className="space-y-2">
-                                      {Number(enrollment.progresso) >= 100 ? (
-                                        <div className="flex flex-col gap-2">
-                                          <Badge variant="default" className="w-fit text-xs bg-green-100 text-green-800 border-green-200">
-                                            <CheckCircle className="h-3 w-3 mr-1" />
-                                            Curso Concluído
-                                          </Badge>
-                                          {(() => {
-                                            const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                            return certificate && certificate.status === 'aprovado' ? (
-                                              <Badge variant="default" className="w-fit text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-                                                <Award className="h-3 w-3 mr-1" />
-                                                Certificado Disponível
-                                              </Badge>
-                                            ) : null;
-                                          })()}
-                                        </div>
-                                      ) : (
-                                        <Badge variant="secondary" className="w-fit text-xs">
-                                          <PlayCircle className="h-3 w-3 mr-1" />
-                                          Em andamento
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    
-                                      <div className="space-y-2">
-                                        <Button className="w-full text-xs sm:text-sm" size="sm">
-                                          <PlayCircle className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                          Continuar Curso
-                                        </Button>
-                                        <CourseModulesViewer
-                                          courseId={enrollment.curso_id}
-                                          courseTitle={enrollment.curso.titulo}
-                                        />
-                                        {Number(enrollment.progresso) >= 100 && (() => {
-                                          const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                          return certificate ? (
-                                            <StorageCertificateViewer certificate={certificate} />
-                                          ) : (
-                                            <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
-                                              <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                              Certificado não encontrado
-                                            </Button>
-                                          );
-                                        })()}
-                                      </div>
-                                  </div>
+                                   <div className="flex flex-col justify-end space-y-3 sm:space-y-4">
+                                     <div className="space-y-2">
+                                         <CourseModulesViewer
+                                           courseId={enrollment.curso_id}
+                                           courseTitle={enrollment.curso.titulo}
+                                         />
+                                         {Number(enrollment.progresso) >= 100 && (() => {
+                                           const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                           return certificate ? (
+                                             <StorageCertificateViewer certificate={certificate} />
+                                           ) : (
+                                             <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
+                                               <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+                                               Certificado não encontrado
+                                             </Button>
+                                           );
+                                         })()}
+                                       </div>
+                                   </div>
                                </div>
                              </Card>
                            ))}
