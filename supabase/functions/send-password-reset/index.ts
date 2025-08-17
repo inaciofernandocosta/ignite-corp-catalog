@@ -110,12 +110,15 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Enviar email
+    console.log('Tentando enviar email para:', email);
     const emailResponse = await resend.emails.send({
-      from: "IA na Prática <noreply@mentoriafutura.com.br>",
+      from: "IA na Prática <onboarding@resend.dev>",
       to: [email],
       subject: "Redefinição de Senha - IA na Prática",
       html: html,
     });
+
+    console.log('Email enviado com sucesso. Resposta completa:', JSON.stringify(emailResponse, null, 2));
 
     console.log("Email enviado com sucesso:", emailResponse);
 
