@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Buscar dados do estudante na tabela inscricoes_mentoria
     const { data: studentData, error: studentError } = await supabaseClient
       .from("inscricoes_mentoria")
-      .select("id, nome, email, telefone, empresa, departamento, cargo, unidade, token_validacao")
+      .select("id, nome, email, telefone, empresa, departamento, cargo, unidade, token_validacao, ativo")
       .eq("id", enrollmentData.student_id)
       .single();
 
@@ -62,34 +62,42 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Curso não encontrado");
     }
 
-    // Se não tiver token, gerar um novo
-    let tokenValidacao = studentData.token_validacao;
-    if (!tokenValidacao) {
-      // Gerar token único
-      tokenValidacao = crypto.randomUUID().replace(/-/g, '') + Date.now().toString();
-      
-      // Atualizar usuário com o token
-      const { error: updateError } = await supabaseClient
-        .from('inscricoes_mentoria')
-        .update({ token_validacao: tokenValidacao })
-        .eq('id', enrollmentData.student_id);
+    // Verificar se o usuário já existe no Supabase Auth
+    const { data: authUser, error: authError } = await supabaseClient.auth.admin.listUsers();
+    const existingUser = authUser?.users?.find(user => user.email === studentData.email);
+    
+    console.log('Usuário existe no Auth:', !!existingUser);
+    console.log('Status ativo na inscricao:', studentData.ativo);
 
-      if (updateError) {
-        console.error('Erro ao atualizar token:', updateError);
+    // Determinar o tipo de email baseado na existência do usuário no Auth
+    const isNewUser = !existingUser;
+    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://fauoxtziffljgictcvhi.supabase.co";
+
+    let emailHtml: string;
+    let emailSubject: string;
+
+    if (isNewUser) {
+      // Usuário novo - precisa ativar conta
+      let tokenValidacao = studentData.token_validacao;
+      if (!tokenValidacao) {
+        // Gerar token único apenas para usuários novos
+        tokenValidacao = crypto.randomUUID().replace(/-/g, '') + Date.now().toString();
+        
+        // Atualizar usuário com o token
+        const { error: updateError } = await supabaseClient
+          .from('inscricoes_mentoria')
+          .update({ token_validacao: tokenValidacao })
+          .eq('id', enrollmentData.student_id);
+
+        if (updateError) {
+          console.error('Erro ao atualizar token:', updateError);
+        }
       }
-    }
 
-    // URL de ativação
-    const activationUrl = `${Deno.env.get("SUPABASE_URL")}/auth/activate?token=${tokenValidacao}`;
-
-    console.log('Enviando e-mail de aprovação para:', studentData.email);
-
-    // Send approval email
-    const emailResponse = await resend.emails.send({
-      from: "Mentoria Futura <contato@mentoriafutura.com.br>",
-      to: [studentData.email],
-      subject: `🎉 Sua inscrição no curso "${courseData.titulo}" foi aprovada!`,
-      html: `
+      const activationUrl = `${APP_BASE_URL}/auth?token=${tokenValidacao}&type=activation`;
+      emailSubject = `🎉 Sua inscrição no curso "${courseData.titulo}" foi aprovada!`;
+      
+      emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #16a34a; margin: 0;">🎉 Parabéns!</h1>
@@ -100,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h3 style="color: #15803d; margin-top: 0;">Olá, ${studentData.nome}!</h3>
             <p style="color: #166534; line-height: 1.6; margin: 15px 0;">
               Temos o prazer de informar que sua inscrição no curso <strong>"${courseData.titulo}"</strong> foi aprovada! 
-              Agora você pode acessar nossa plataforma e começar sua jornada de aprendizado.
+              Agora você precisa ativar sua conta para acessar nossa plataforma.
             </p>
           </div>
 
@@ -118,9 +126,9 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
 
           <div style="background-color: #1e40af; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
-            <h3 style="margin-top: 0; color: white;">🚀 Próximo passo: Ative sua conta</h3>
+            <h3 style="margin-top: 0; color: white;">🚀 Primeiro acesso: Ative sua conta</h3>
             <p style="margin: 15px 0; opacity: 0.9;">
-              Para acessar a plataforma, você precisa ativar sua conta clicando no botão abaixo:
+              Como este é seu primeiro acesso, você precisa ativar sua conta e definir sua senha:
             </p>
             <a href="${activationUrl}" 
                style="display: inline-block; background-color: #16a34a; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; margin: 10px 0;">
@@ -139,11 +147,11 @@ const handler = async (req: Request): Promise<Response> => {
 
           <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
             <p style="color: #1e40af; margin: 0; font-weight: 500;">
-              📚 <strong>O que vem agora:</strong><br>
-              1. Ative sua conta usando o link acima<br>
+              📚 <strong>Passos para começar:</strong><br>
+              1. Clique no botão "Ativar Minha Conta" acima<br>
               2. Defina sua senha de acesso<br>
-              3. Explore os cursos disponíveis<br>
-              4. Comece seu aprendizado!
+              3. Faça login na plataforma<br>
+              4. Explore os cursos disponíveis e comece!
             </p>
           </div>
 
@@ -167,7 +175,97 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
           </div>
         </div>
-      `,
+      `;
+    } else {
+      // Usuário existente - pode fazer login diretamente
+      const loginUrl = `${APP_BASE_URL}/auth`;
+      emailSubject = `✅ Nova inscrição aprovada no curso "${courseData.titulo}"!`;
+      
+      emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #16a34a; margin: 0;">✅ Inscrição Aprovada!</h1>
+            <h2 style="color: #1e293b; margin: 10px 0;">Novo curso disponível!</h2>
+          </div>
+          
+          <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #16a34a;">
+            <h3 style="color: #15803d; margin-top: 0;">Olá, ${studentData.nome}!</h3>
+            <p style="color: #166534; line-height: 1.6; margin: 15px 0;">
+              Sua nova inscrição no curso <strong>"${courseData.titulo}"</strong> foi aprovada! 
+              Como você já possui uma conta ativa, pode acessar a plataforma imediatamente.
+            </p>
+          </div>
+
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1e293b; margin-top: 0;">📚 Curso aprovado:</h3>
+            <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+              <h4 style="color: #1e40af; margin: 0 0 8px 0;">${courseData.titulo}</h4>
+              <p style="color: #475569; margin: 0; line-height: 1.5;">${courseData.descricao || 'Descrição do curso em breve...'}</p>
+            </div>
+          </div>
+
+          <div style="background-color: #16a34a; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
+            <h3 style="margin-top: 0; color: white;">🎯 Acesse agora sua plataforma</h3>
+            <p style="margin: 15px 0; opacity: 0.9;">
+              Sua conta já está ativa! Faça login com suas credenciais habituais:
+            </p>
+            <a href="${loginUrl}" 
+               style="display: inline-block; background-color: #1e40af; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; margin: 10px 0;">
+              🚀 Fazer Login na Plataforma
+            </a>
+          </div>
+
+          <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
+            <p style="color: #1e40af; margin: 0; font-weight: 500;">
+              💡 <strong>Lembrete:</strong><br>
+              • Use seu e-mail: <strong>${studentData.email}</strong><br>
+              • Use a mesma senha da sua conta existente<br>
+              • O novo curso já estará disponível no seu painel<br>
+              • Você pode começar imediatamente!
+            </p>
+          </div>
+
+          <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin: 20px 0;">
+            <p style="color: #166534; margin: 0; font-weight: 500;">
+              🎉 <strong>Vantagens de ter uma conta ativa:</strong><br>
+              • Acesso imediato a novos cursos<br>
+              • Histórico de progresso preservado<br>
+              • Certificados em um só lugar<br>
+              • Experiência personalizada continuada
+            </p>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 10px;">
+              Precisa de ajuda? Entre em contato conosco:
+            </p>
+            <p style="margin: 5px 0;">
+              <a href="mailto:contato@mentoriafutura.com.br" style="color: #2563eb; text-decoration: none;">
+                📧 contato@mentoriafutura.com.br
+              </a>
+            </p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <div style="text-align: center;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+              Mentoria Futura - Transformando carreiras através da educação<br>
+              Este é um e-mail automático, por favor não responda diretamente.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    console.log(`Enviando e-mail de aprovação (${isNewUser ? 'novo usuário' : 'usuário existente'}) para:`, studentData.email);
+
+    // Send approval email
+    const emailResponse = await resend.emails.send({
+      from: "Mentoria Futura <contato@mentoriafutura.com.br>",
+      to: [studentData.email],
+      subject: emailSubject,
+      html: emailHtml,
     });
 
     console.log("E-mail de aprovação enviado:", emailResponse);
