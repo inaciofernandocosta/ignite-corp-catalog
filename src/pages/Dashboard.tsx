@@ -300,48 +300,48 @@ export const Dashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Sidebar - Profile */}
           <div className="lg:col-span-1 order-2 lg:order-1">
             <Card className="lg:sticky lg:top-24">
-              <CardHeader className="text-center pb-4 sm:pb-6">
-                <Avatar className="h-16 sm:h-20 w-16 sm:w-20 mx-auto mb-3 sm:mb-4">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-lg sm:text-xl">
+              <CardHeader className="text-center pb-4 sm:pb-6 px-3 sm:px-6">
+                <Avatar className="h-12 sm:h-16 lg:h-20 w-12 sm:w-16 lg:w-20 mx-auto mb-2 sm:mb-3 lg:mb-4">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-sm sm:text-lg lg:text-xl">
                     {getInitials(profile.nome)}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-lg sm:text-xl truncate px-2">{profile.nome}</CardTitle>
-                <CardDescription className="text-sm truncate px-2">{profile.email}</CardDescription>
+                <CardTitle className="text-base sm:text-lg lg:text-xl truncate px-1 sm:px-2">{profile.nome}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm truncate px-1 sm:px-2">{profile.email}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 px-4 sm:px-6">
-                <div className="space-y-3 text-sm">
+              <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 lg:px-6">
+                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Building className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{profile.empresa}</span>
+                    <Building className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">{profile.empresa}</span>
                   </div>
                   <div className="flex items-center gap-2 min-w-0">
-                    <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{profile.departamento}</span>
+                    <Briefcase className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">{profile.departamento}</span>
                   </div>
                   <div className="flex items-center gap-2 min-w-0">
-                    <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{profile.cargo}</span>
+                    <User className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">{profile.cargo}</span>
                   </div>
                   <div className="flex items-center gap-2 min-w-0">
-                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{profile.unidade}</span>
+                    <MapPin className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">{profile.unidade}</span>
                   </div>
                 </div>
                 
                 <Separator />
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Cursos Ativos</span>
                     <span className="font-medium">{courseEnrollments.filter(c => c.status === 'ativo').length}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Certificados</span>
                     <span className="font-medium">{certificates.length}</span>
                   </div>
@@ -503,83 +503,83 @@ export const Dashboard = () => {
                              </p>
                            </CardContent>
                          </Card>
-                       ) : (
-                         <div className="grid gap-6">
-                           {courseEnrollments.map((enrollment) => (
-                             <Card key={enrollment.id} className="overflow-hidden">
-                               <div className="grid md:grid-cols-3 gap-6 p-6">
-                                 <div className="md:col-span-2 space-y-4">
-                                   <div>
-                                     <div className="flex items-center gap-2 mb-2">
-                                       <h3 className="text-xl font-semibold">{enrollment.curso.titulo}</h3>
-                                       <Badge variant={enrollment.status === 'ativo' ? 'default' : 'secondary'}>
-                                         {enrollment.status}
-                                       </Badge>
-                                     </div>
-                                     <p className="text-muted-foreground">{enrollment.curso.descricao}</p>
-                                   </div>
+                        ) : (
+                          <div className="grid gap-4 sm:gap-6">
+                            {courseEnrollments.map((enrollment) => (
+                              <Card key={enrollment.id} className="overflow-hidden">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
+                                  <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+                                    <div>
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                                        <h3 className="text-lg sm:text-xl font-semibold">{enrollment.curso.titulo}</h3>
+                                        <Badge variant={enrollment.status === 'ativo' ? 'default' : 'secondary'} className="w-fit">
+                                          {enrollment.status}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-sm sm:text-base text-muted-foreground">{enrollment.curso.descricao}</p>
+                                    </div>
                                    
-                                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                     <div className="flex items-center gap-1">
-                                       <Clock className="h-4 w-4" />
-                                       {enrollment.curso.duracao}
-                                     </div>
-                                     <div className="flex items-center gap-1">
-                                       <GraduationCap className="h-4 w-4" />
-                                       {enrollment.curso.nivel}
-                                     </div>
-                                     <div className="flex items-center gap-1">
-                                       <Calendar className="h-4 w-4" />
-                                       Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}
-                                     </div>
-                                   </div>
+                                    <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-3 sm:h-4 w-3 sm:w-4" />
+                                        <span className="text-xs sm:text-sm">{enrollment.curso.duracao}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <GraduationCap className="h-3 sm:h-4 w-3 sm:w-4" />
+                                        <span className="text-xs sm:text-sm">{enrollment.curso.nivel}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
+                                        <span className="text-xs sm:text-sm">Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}</span>
+                                      </div>
+                                    </div>
                                    
-                                   <div className="space-y-2">
-                                     <div className="flex justify-between text-sm">
-                                       <span>Progresso do curso</span>
-                                       <span className="font-medium">{enrollment.progresso}%</span>
-                                     </div>
-                                     <Progress value={enrollment.progresso} className="h-2" />
-                                   </div>
-                                 </div>
-                                 
-                                 <div className="flex flex-col justify-between">
-                                   <div className="space-y-2">
-                                     {Number(enrollment.progresso) >= 100 ? (
-                                       <Badge variant="default" className="w-fit">
-                                         <CheckCircle className="h-3 w-3 mr-1" />
-                                         Concluído
-                                       </Badge>
-                                     ) : (
-                                       <Badge variant="secondary" className="w-fit">
-                                         <PlayCircle className="h-3 w-3 mr-1" />
-                                         Em andamento
-                                       </Badge>
-                                     )}
-                                   </div>
-                                   
-                                     <div className="space-y-2 mt-4">
-                                       <Button className="w-full" size="sm">
-                                         <PlayCircle className="h-4 w-4 mr-2" />
-                                         Continuar Curso
-                                       </Button>
-                                       <CourseModulesViewer
-                                         courseId={enrollment.curso_id}
-                                         courseTitle={enrollment.curso.titulo}
-                                       />
-                                       {Number(enrollment.progresso) >= 100 && (() => {
-                                         const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                         return certificate ? (
-                                           <StorageCertificateViewer certificate={certificate} />
-                                         ) : (
-                                           <Button variant="outline" className="w-full" size="sm" disabled>
-                                             <Award className="h-4 w-4 mr-2" />
-                                             Certificado não encontrado
-                                           </Button>
-                                         );
-                                       })()}
-                                     </div>
-                                 </div>
+                                    <div className="space-y-2">
+                                      <div className="flex justify-between text-xs sm:text-sm">
+                                        <span>Progresso do curso</span>
+                                        <span className="font-medium">{enrollment.progresso}%</span>
+                                      </div>
+                                      <Progress value={enrollment.progresso} className="h-1 sm:h-2" />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col justify-between space-y-3 sm:space-y-4">
+                                    <div className="space-y-2">
+                                      {Number(enrollment.progresso) >= 100 ? (
+                                        <Badge variant="default" className="w-fit text-xs">
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Concluído
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="secondary" className="w-fit text-xs">
+                                          <PlayCircle className="h-3 w-3 mr-1" />
+                                          Em andamento
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    
+                                      <div className="space-y-2">
+                                        <Button className="w-full text-xs sm:text-sm" size="sm">
+                                          <PlayCircle className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+                                          Continuar Curso
+                                        </Button>
+                                        <CourseModulesViewer
+                                          courseId={enrollment.curso_id}
+                                          courseTitle={enrollment.curso.titulo}
+                                        />
+                                        {Number(enrollment.progresso) >= 100 && (() => {
+                                          const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                          return certificate ? (
+                                            <StorageCertificateViewer certificate={certificate} />
+                                          ) : (
+                                            <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
+                                              <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+                                              Certificado não encontrado
+                                            </Button>
+                                          );
+                                        })()}
+                                      </div>
+                                  </div>
                                </div>
                              </Card>
                            ))}
@@ -600,38 +600,40 @@ export const Dashboard = () => {
                           </p>
                         </CardContent>
                       </Card>
-                    ) : (
-                      <div className="grid gap-4">
-                        {certificates.map((certificate) => (
-                          <Card key={certificate.id}>
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <Award className="h-5 w-5 text-yellow-500" />
-                                    <h3 className="font-semibold">Certificado de Conclusão</h3>
-                                    <Badge variant={certificate.status === 'emitido' ? 'default' : 'secondary'}>
-                                      {certificate.status}
-                                    </Badge>
-                                  </div>
-                                  <div className="text-sm text-muted-foreground space-y-1">
-                                    <p>Número: {certificate.numero_certificado}</p>
-                                     <p>Data de conclusão: {formatDateWithoutTimezone(certificate.data_conclusao)}</p>
-                                     <p>Data de emissão: {formatDateWithoutTimezone(certificate.data_emissao)}</p>
-                                  </div>
-                                </div>
-                                
-                                {certificate.certificado_pdf && (
-                                  <Button size="sm">
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Baixar PDF
-                                  </Button>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
+                     ) : (
+                       <div className="grid gap-4">
+                         {certificates.map((certificate) => (
+                           <Card key={certificate.id}>
+                             <CardContent className="p-4 sm:p-6">
+                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                                 <div className="space-y-2 flex-1">
+                                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                     <div className="flex items-center gap-2">
+                                       <Award className="h-4 sm:h-5 w-4 sm:w-5 text-yellow-500" />
+                                       <h3 className="text-sm sm:text-base font-semibold">Certificado de Conclusão</h3>
+                                     </div>
+                                     <Badge variant={certificate.status === 'emitido' ? 'default' : 'secondary'} className="w-fit text-xs">
+                                       {certificate.status}
+                                     </Badge>
+                                   </div>
+                                   <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
+                                     <p>Número: {certificate.numero_certificado}</p>
+                                      <p>Data de conclusão: {formatDateWithoutTimezone(certificate.data_conclusao)}</p>
+                                      <p>Data de emissão: {formatDateWithoutTimezone(certificate.data_emissao)}</p>
+                                   </div>
+                                 </div>
+                                 
+                                 {certificate.certificado_pdf && (
+                                   <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                                     <Download className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+                                     Baixar PDF
+                                   </Button>
+                                 )}
+                               </div>
+                             </CardContent>
+                           </Card>
+                         ))}
+                       </div>
                     )}
                   </TabsContent>
 
