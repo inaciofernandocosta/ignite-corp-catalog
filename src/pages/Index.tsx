@@ -67,9 +67,6 @@ const Index = React.memo(() => {
     }
   }, [user, profile, navigate]);
 
-  const handleSignOut = useCallback(() => {
-    // This will be handled by the Header component
-  }, []);
 
   const handleCorporateLogin = useCallback(() => {
     navigate('/auth');
@@ -203,7 +200,6 @@ const Index = React.memo(() => {
       <Header 
         userState={userState} 
         onLogin={handleLogin}
-        onSignOut={handleSignOut}
       />
       
       <InstitutionalHero 
