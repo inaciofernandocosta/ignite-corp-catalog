@@ -387,90 +387,92 @@ export const Dashboard = () => {
                   )}
 
                    {/* Cursos Tab */}
-                   <TabsContent value="cursos" className="space-y-6">
-                     <div className="flex justify-between items-center">
-                       <div>
-                         <h2 className="text-2xl font-bold">Gerenciar Cursos</h2>
-                         <p className="text-muted-foreground">Crie e gerencie os cursos da plataforma</p>
+                   {profile?.role === 'admin' && (
+                     <TabsContent value="cursos" className="space-y-6">
+                       <div className="flex justify-between items-center">
+                         <div>
+                           <h2 className="text-2xl font-bold">Gerenciar Cursos</h2>
+                           <p className="text-muted-foreground">Crie e gerencie os cursos da plataforma</p>
+                         </div>
+                         <CreateCourseDialog onCourseCreated={fetchUserData} />
                        </div>
-                       <CreateCourseDialog onCourseCreated={fetchUserData} />
-                     </div>
-                     
-                     {/* Visualização administrativa de cursos */}
-                     {allCourses.length === 0 ? (
-                       <Card>
-                         <CardContent className="text-center py-12">
-                           <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                           <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
-                           <p className="text-muted-foreground">
-                             Crie seu primeiro curso usando o botão "Novo Curso" acima.
-                           </p>
-                         </CardContent>
-                       </Card>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                           {allCourses.map((course) => (
-                             <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                               {course.imagem_capa && (
-                                 <div className="relative aspect-video overflow-hidden">
-                                   <img 
-                                     src={course.imagem_capa} 
-                                     alt={course.titulo}
-                                     className="w-full h-full object-cover"
-                                   />
-                                   <div className="absolute top-2 right-2">
-                                     <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'} className="text-xs">
-                                       {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
-                                     </Badge>
+                       
+                       {/* Visualização administrativa de cursos */}
+                       {allCourses.length === 0 ? (
+                         <Card>
+                           <CardContent className="text-center py-12">
+                             <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                             <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
+                             <p className="text-muted-foreground">
+                               Crie seu primeiro curso usando o botão "Novo Curso" acima.
+                             </p>
+                           </CardContent>
+                         </Card>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                             {allCourses.map((course) => (
+                               <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                                 {course.imagem_capa && (
+                                   <div className="relative aspect-video overflow-hidden">
+                                     <img 
+                                       src={course.imagem_capa} 
+                                       alt={course.titulo}
+                                       className="w-full h-full object-cover"
+                                     />
+                                     <div className="absolute top-2 right-2">
+                                       <Badge variant={course.status === 'active' ? 'default' : course.status === 'draft' ? 'secondary' : 'outline'} className="text-xs">
+                                         {course.status === 'active' ? 'Ativo' : course.status === 'draft' ? 'Rascunho' : course.status}
+                                       </Badge>
+                                     </div>
                                    </div>
-                                 </div>
-                               )}
-                               <CardHeader className="p-3 sm:p-4">
-                                 <CardTitle className="text-sm sm:text-base line-clamp-2">{course.titulo}</CardTitle>
-                                 <CardDescription className="text-xs sm:text-sm line-clamp-3">{course.descricao}</CardDescription>
-                               </CardHeader>
-                               <CardContent className="p-3 sm:p-4 pt-0">
-                                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
-                                   <div className="flex items-center gap-1">
-                                     <Clock className="h-3 w-3" />
-                                     <span>{course.duracao}</span>
+                                 )}
+                                 <CardHeader className="p-3 sm:p-4">
+                                   <CardTitle className="text-sm sm:text-base line-clamp-2">{course.titulo}</CardTitle>
+                                   <CardDescription className="text-xs sm:text-sm line-clamp-3">{course.descricao}</CardDescription>
+                                 </CardHeader>
+                                 <CardContent className="p-3 sm:p-4 pt-0">
+                                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
+                                     <div className="flex items-center gap-1">
+                                       <Clock className="h-3 w-3" />
+                                       <span>{course.duracao}</span>
+                                     </div>
+                                     <div className="flex items-center gap-1">
+                                       <GraduationCap className="h-3 w-3" />
+                                       <span>{course.nivel}</span>
+                                     </div>
                                    </div>
-                                   <div className="flex items-center gap-1">
-                                     <GraduationCap className="h-3 w-3" />
-                                     <span>{course.nivel}</span>
+                                   
+                                   <div className="space-y-2">
+                                      <div className="flex flex-col sm:flex-row gap-2">
+                                        <EditCourseDialog 
+                                          course={course} 
+                                          onCourseUpdated={fetchUserData}
+                                        />
+                                        <CreateModuleDialog 
+                                          courseId={course.id} 
+                                          courseTitle={course.titulo}
+                                          onModuleCreated={fetchUserData}
+                                        />
+                                      </div>
+                                      <div className="flex flex-col sm:flex-row gap-2">
+                                        <ViewModulesDialog 
+                                          courseId={course.id}
+                                          courseTitle={course.titulo}
+                                          onModuleUpdated={fetchUserData}
+                                        />
+                                        <CourseStudentsDialog 
+                                          courseId={course.id} 
+                                          courseTitle={course.titulo}
+                                        />
+                                      </div>
                                    </div>
-                                 </div>
-                                 
-                                 <div className="space-y-2">
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                      <EditCourseDialog 
-                                        course={course} 
-                                        onCourseUpdated={fetchUserData}
-                                      />
-                                      <CreateModuleDialog 
-                                        courseId={course.id} 
-                                        courseTitle={course.titulo}
-                                        onModuleCreated={fetchUserData}
-                                      />
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                      <ViewModulesDialog 
-                                        courseId={course.id}
-                                        courseTitle={course.titulo}
-                                        onModuleUpdated={fetchUserData}
-                                      />
-                                      <CourseStudentsDialog 
-                                        courseId={course.id} 
-                                        courseTitle={course.titulo}
-                                      />
-                                    </div>
-                                 </div>
-                               </CardContent>
-                             </Card>
-                           ))}
-                        </div>
-                      )}
-                   </TabsContent>
+                                 </CardContent>
+                               </Card>
+                             ))}
+                          </div>
+                        )}
+                     </TabsContent>
+                   )}
 
                    {/* Nova aba: Meus Cursos - Para admins verem seus próprios cursos */}
                    {profile?.role === 'admin' && (
@@ -493,27 +495,27 @@ export const Dashboard = () => {
                            </CardContent>
                          </Card>
                         ) : (
-                          <div className="grid gap-4 sm:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {courseEnrollments.map((enrollment) => (
-                              <Card key={enrollment.id} className="overflow-hidden relative">
+                              <Card key={enrollment.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
                                 {/* Badges/Selos no topo do card */}
-                                 <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-                                   {Number(enrollment.progresso) >= 100 && (
-                                     <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
-                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                       Concluído
-                                     </Badge>
-                                   )}
-                                   {(() => {
-                                     const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                     return certificate && certificate.status === 'aprovado' ? (
-                                       <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
-                                         <Award className="h-3 w-3 mr-1" />
-                                         Certificado
-                                       </Badge>
-                                     ) : null;
-                                   })()}
-                                 </div>
+                                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                                  {Number(enrollment.progresso) >= 100 && (
+                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg text-xs">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Concluído
+                                    </Badge>
+                                  )}
+                                  {(() => {
+                                    const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                    return certificate && certificate.status === 'aprovado' ? (
+                                      <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg text-xs">
+                                        <Award className="h-3 w-3 mr-1" />
+                                        Certificado
+                                      </Badge>
+                                    ) : null;
+                                  })()}
+                                </div>
 
                                 {/* Imagem de capa do curso se disponível */}
                                 {enrollment.curso.imagem_capa && (
@@ -523,61 +525,56 @@ export const Dashboard = () => {
                                       alt={enrollment.curso.titulo}
                                       className="w-full h-full object-cover"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
-                                  <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-                                    <div>
-                                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">{enrollment.curso.titulo}</h3>
-                                      <p className="text-sm sm:text-base text-muted-foreground">{enrollment.curso.descricao}</p>
+                                <CardHeader className="p-3 sm:p-4">
+                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso.titulo}</CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso.descricao}</CardDescription>
+                                </CardHeader>
+
+                                <CardContent className="p-3 sm:p-4 pt-0">
+                                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span>{enrollment.curso.duracao}</span>
                                     </div>
-                                    
-                                    <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                                      <div className="flex items-center gap-1">
-                                        <Clock className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span>{enrollment.curso.duracao}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <GraduationCap className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span>{enrollment.curso.nivel}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span>Inscrito em {formatDateWithoutTimezone(enrollment.data_inscricao)}</span>
-                                      </div>
+                                    <div className="flex items-center gap-1">
+                                      <GraduationCap className="h-3 w-3" />
+                                      <span>{enrollment.curso.nivel}</span>
                                     </div>
-                                    
-                                    <div className="space-y-2">
-                                      <div className="flex items-center justify-between text-xs sm:text-sm">
-                                        <span className="text-muted-foreground">Progresso</span>
-                                        <span className="font-semibold">{Number(enrollment.progresso)}%</span>
-                                      </div>
-                                      <Progress value={Number(enrollment.progresso)} className="h-2" />
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}</span>
                                     </div>
                                   </div>
                                   
-                                   <div className="flex flex-col justify-end space-y-3 sm:space-y-4">
-                                     <div className="space-y-2">
-                                         <CourseModulesViewer
-                                           courseId={enrollment.curso_id}
-                                           courseTitle={enrollment.curso.titulo}
-                                         />
-                                         {Number(enrollment.progresso) >= 100 && (() => {
-                                           const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                           return certificate ? (
-                                             <StorageCertificateViewer certificate={certificate} />
-                                           ) : (
-                                             <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
-                                               <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                               Certificado não encontrado
-                                             </Button>
-                                           );
-                                         })()}
-                                       </div>
-                                   </div>
-                                </div>
+                                  <div className="space-y-2 mb-4">
+                                    <div className="flex justify-between text-xs">
+                                      <span>Progresso</span>
+                                      <span className="font-medium">{enrollment.progresso}%</span>
+                                    </div>
+                                    <Progress value={enrollment.progresso} className="h-1" />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <CourseModulesViewer
+                                      courseId={enrollment.curso_id}
+                                      courseTitle={enrollment.curso.titulo}
+                                    />
+                                    {Number(enrollment.progresso) >= 100 && (() => {
+                                      const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                      return certificate ? (
+                                        <StorageCertificateViewer certificate={certificate} />
+                                      ) : (
+                                        <Button variant="outline" className="w-full text-xs" size="sm" disabled>
+                                          <Award className="h-3 w-3 mr-1" />
+                                          Certificado não encontrado
+                                        </Button>
+                                      );
+                                    })()}
+                                  </div>
+                                </CardContent>
                               </Card>
                             ))}
                           </div>
@@ -599,27 +596,27 @@ export const Dashboard = () => {
                            </CardContent>
                          </Card>
                         ) : (
-                          <div className="grid gap-4 sm:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {courseEnrollments.map((enrollment) => (
-                              <Card key={enrollment.id} className="overflow-hidden relative">
+                              <Card key={enrollment.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
                                 {/* Badges/Selos no topo do card */}
-                                 <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-                                   {Number(enrollment.progresso) >= 100 && (
-                                     <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
-                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                       Concluído
-                                     </Badge>
-                                   )}
-                                   {(() => {
-                                     const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                     return certificate && certificate.status === 'aprovado' ? (
-                                       <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
-                                         <Award className="h-3 w-3 mr-1" />
-                                         Certificado
-                                       </Badge>
-                                     ) : null;
-                                   })()}
-                                 </div>
+                                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                                  {Number(enrollment.progresso) >= 100 && (
+                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg text-xs">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Concluído
+                                    </Badge>
+                                  )}
+                                  {(() => {
+                                    const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                    return certificate && certificate.status === 'aprovado' ? (
+                                      <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg text-xs">
+                                        <Award className="h-3 w-3 mr-1" />
+                                        Certificado
+                                      </Badge>
+                                    ) : null;
+                                  })()}
+                                </div>
 
                                 {/* Imagem de capa do curso se disponível */}
                                 {enrollment.curso.imagem_capa && (
@@ -629,70 +626,60 @@ export const Dashboard = () => {
                                       alt={enrollment.curso.titulo}
                                       className="w-full h-full object-cover"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
-                                  <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-                                    <div>
-                                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                                        <h3 className="text-lg sm:text-xl font-semibold">{enrollment.curso.titulo}</h3>
-                                        <Badge variant={enrollment.status === 'ativo' ? 'default' : 'secondary'} className="w-fit">
-                                          {enrollment.status}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-sm sm:text-base text-muted-foreground">{enrollment.curso.descricao}</p>
+                                <CardHeader className="p-3 sm:p-4">
+                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso.titulo}</CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso.descricao}</CardDescription>
+                                </CardHeader>
+
+                                <CardContent className="p-3 sm:p-4 pt-0">
+                                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span>{enrollment.curso.duracao}</span>
                                     </div>
-                                   
-                                    <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                                      <div className="flex items-center gap-1">
-                                        <Clock className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span className="text-xs sm:text-sm">{enrollment.curso.duracao}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <GraduationCap className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span className="text-xs sm:text-sm">{enrollment.curso.nivel}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
-                                        <span className="text-xs sm:text-sm">Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}</span>
-                                      </div>
+                                    <div className="flex items-center gap-1">
+                                      <GraduationCap className="h-3 w-3" />
+                                      <span>{enrollment.curso.nivel}</span>
                                     </div>
-                                   
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between text-xs sm:text-sm">
-                                        <span>Progresso do curso</span>
-                                        <span className="font-medium">{enrollment.progresso}%</span>
-                                      </div>
-                                      <Progress value={enrollment.progresso} className="h-1 sm:h-2" />
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>Iniciado em {formatDateWithoutTimezone(enrollment.data_inscricao)}</span>
                                     </div>
                                   </div>
                                   
-                                   <div className="flex flex-col justify-end space-y-3 sm:space-y-4">
-                                     <div className="space-y-2">
-                                         <CourseModulesViewer
-                                           courseId={enrollment.curso_id}
-                                           courseTitle={enrollment.curso.titulo}
-                                         />
-                                         {Number(enrollment.progresso) >= 100 && (() => {
-                                           const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                           return certificate ? (
-                                             <StorageCertificateViewer certificate={certificate} />
-                                           ) : (
-                                             <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm" disabled>
-                                               <Award className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                               Certificado não encontrado
-                                             </Button>
-                                           );
-                                         })()}
-                                       </div>
-                                   </div>
-                               </div>
-                             </Card>
-                           ))}
-                         </div>
-                       )}
+                                  <div className="space-y-2 mb-4">
+                                    <div className="flex justify-between text-xs">
+                                      <span>Progresso</span>
+                                      <span className="font-medium">{enrollment.progresso}%</span>
+                                    </div>
+                                    <Progress value={enrollment.progresso} className="h-1" />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <CourseModulesViewer
+                                      courseId={enrollment.curso_id}
+                                      courseTitle={enrollment.curso.titulo}
+                                    />
+                                    {Number(enrollment.progresso) >= 100 && (() => {
+                                      const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                      return certificate ? (
+                                        <StorageCertificateViewer certificate={certificate} />
+                                      ) : (
+                                        <Button variant="outline" className="w-full text-xs" size="sm" disabled>
+                                          <Award className="h-3 w-3 mr-1" />
+                                          Certificado não encontrado
+                                        </Button>
+                                      );
+                                    })()}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
                      </TabsContent>
                    )}
 
