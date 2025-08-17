@@ -353,7 +353,7 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} h-auto p-1`}>
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'} h-auto p-1`}>
                 {profile?.role === 'admin' && (
                   <TabsTrigger value="gerenciar" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
                     <Users className="h-3 sm:h-4 w-3 sm:w-4" />
@@ -370,11 +370,6 @@ export const Dashboard = () => {
                   <Award className="h-3 sm:h-4 w-3 sm:w-4" />
                   <span className="hidden sm:inline">Certificados</span>
                   <span className="sm:hidden">Certs</span>
-                </TabsTrigger>
-                <TabsTrigger value="materiais" className="flex items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3 text-xs sm:text-sm">
-                  <FileText className="h-3 sm:h-4 w-3 sm:w-4" />
-                  <span className="hidden sm:inline">Materiais</span>
-                  <span className="sm:hidden">Docs</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -640,132 +635,6 @@ export const Dashboard = () => {
                     )}
                   </TabsContent>
 
-                  {/* Materiais Tab */}
-                  <TabsContent value="materiais" className="space-y-6">
-                    {coursesWithModules.length === 0 ? (
-                      <Card>
-                        <CardContent className="text-center py-12">
-                          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">Nenhum material encontrado</h3>
-                          <p className="text-muted-foreground">
-                            Os materiais do curso aparecerão aqui quando disponíveis.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="space-y-8">
-                        {coursesWithModules.map((course) => (
-                          <Card key={course.id}>
-                            <CardHeader>
-                              <div className="flex items-center gap-3">
-                                <GraduationCap className="h-6 w-6 text-primary" />
-                                <div>
-                                  <CardTitle className="text-xl">{course.titulo}</CardTitle>
-                                  <CardDescription>{course.descricao}</CardDescription>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              {course.modulos.length === 0 ? (
-                                <div className="text-center py-8">
-                                  <BookOpen className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                                  <p className="text-muted-foreground">
-                                    Nenhum módulo encontrado para este curso.
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="space-y-6">
-                                  {course.modulos.map((module) => (
-                                    <div key={module.id} className="border-l-4 border-primary/20 pl-4">
-                                       <div className="mb-4">
-                                         <div className="flex items-center justify-between">
-                                           <div>
-                                             <h4 className="font-semibold text-lg flex items-center gap-2">
-                                               <BookOpen className="h-5 w-5 text-secondary" />
-                                               {module.titulo}
-                                             </h4>
-                                             {module.descricao && (
-                                               <p className="text-sm text-muted-foreground mt-1">
-                                                 {module.descricao}
-                                               </p>
-                                             )}
-                                           </div>
-                                           {profile?.role === 'admin' && (
-                                             <div className="flex gap-2">
-                                               <EditModuleDialog 
-                                                 module={module} 
-                                                 onModuleUpdated={fetchUserData} 
-                                               />
-                                               <ManageModuleMaterialsDialog 
-                                                 moduleId={module.id}
-                                                 moduleTitle={module.titulo}
-                                                 onMaterialsUpdated={fetchUserData}
-                                               />
-                                             </div>
-                                           )}
-                                         </div>
-                                       </div>
-
-                                      {module.materiais.length === 0 ? (
-                                        <div className="ml-6 py-4 text-center border border-dashed border-muted-foreground/30 rounded-lg">
-                                          <FileText className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                                          <p className="text-sm text-muted-foreground">
-                                            Nenhum material disponível neste módulo.
-                                          </p>
-                                        </div>
-                                      ) : (
-                                        <div className="ml-6 grid gap-3">
-                                          {module.materiais.map((material) => (
-                                            <Card key={material.id} className="border-l-4 border-l-secondary/50">
-                                              <CardContent className="p-4">
-                                                <div className="flex items-center justify-between">
-                                                  <div className="space-y-2 flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                      <FileText className="h-4 w-4 text-blue-500" />
-                                                      <h5 className="font-medium">{material.titulo}</h5>
-                                                      <Badge variant="outline" className="text-xs">
-                                                        {material.tipo}
-                                                      </Badge>
-                                                    </div>
-                                                    {material.descricao && (
-                                                      <p className="text-sm text-muted-foreground">
-                                                        {material.descricao}
-                                                      </p>
-                                                    )}
-                                                    <div className="flex gap-4 text-xs text-muted-foreground">
-                                                      {material.formato && (
-                                                        <span>Formato: {material.formato.toUpperCase()}</span>
-                                                      )}
-                                                      {material.arquivo_tamanho && (
-                                                        <span>Tamanho: {formatFileSize(material.arquivo_tamanho)}</span>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  {material.url && (
-                                                    <Button size="sm" asChild>
-                                                      <a href={material.url} target="_blank" rel="noopener noreferrer">
-                                                        <Download className="h-4 w-4 mr-2" />
-                                                        Baixar
-                                                      </a>
-                                                    </Button>
-                                                  )}
-                                                </div>
-                                              </CardContent>
-                                            </Card>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
                 </>
               )}
             </Tabs>
