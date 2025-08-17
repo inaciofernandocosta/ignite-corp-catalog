@@ -18,13 +18,14 @@ interface Immersion {
   image?: string;
   duration: string;
   startDate?: string;
+  slug?: string; // Adicionar campo slug
 }
 
 interface ImmersionCardProps {
   immersion: Immersion;
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
   accessState?: 'available' | 'not-in-plan' | 'locked';
-  onCTAClick: (immersionId: string, action: string) => void;
+  onCTAClick: (immersion: Immersion) => void; // Corrigir para passar o objeto completo
 }
 
 const levelLabels = {
@@ -43,8 +44,8 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
   const navigate = useNavigate();
   
   const handleCardClick = () => {
-    // Generate slug from title
-    const slug = generateSlug(immersion.title);
+    // Use existing slug or generate from title
+    const slug = immersion.slug || generateSlug(immersion.title);
     navigate(`/curso/${slug}`);
   };
   const getAccessInfo = () => {
@@ -183,7 +184,7 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
           className="w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm"
           onClick={(e) => {
             e.stopPropagation(); // Prevent card click when button is clicked
-            onCTAClick(immersion.id, accessInfo.ctaText);
+            onCTAClick(immersion);
           }}
         >
           {accessInfo.ctaText}

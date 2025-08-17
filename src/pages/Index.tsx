@@ -77,7 +77,16 @@ const Index = React.memo(() => {
   }, [toast]);
 
   const handleCTAClick = useCallback((course: any) => {
+    console.log('handleCTAClick called with:', {
+      course: course,
+      slug: course?.slug,
+      id: course?.id,
+      user: !!user,
+      profile: !!profile
+    });
+
     if (!user || !profile) {
+      console.log('User not logged in, showing form');
       setSelectedCourse(course);
       setShowApplicationForm(true);
       return;
@@ -85,6 +94,7 @@ const Index = React.memo(() => {
     
     // Use slug if available, fallback to id
     const courseSlug = course.slug || course.id;
+    console.log('Navigating to:', `/curso/${courseSlug}`);
     navigate(`/curso/${courseSlug}`);
   }, [user, profile, navigate]);
 
