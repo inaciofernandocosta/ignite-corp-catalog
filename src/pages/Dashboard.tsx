@@ -156,12 +156,18 @@ export const Dashboard = () => {
       }
 
       // Buscar certificados
+      console.log('🔍 Buscando certificados para inscrições:', (enrollments || []).map(e => e.id));
       const { data: certs, error: certsError } = await supabase
         .from('certificados_conclusao')
         .select('*')
         .in('inscricao_curso_id', (enrollments || []).map(e => e.id));
 
-      if (certsError) throw certsError;
+      if (certsError) {
+        console.error('❌ Erro ao buscar certificados:', certsError);
+        throw certsError;
+      }
+      
+      console.log('📜 Certificados encontrados:', certs);
       
       // Adicionar o nome do aluno aos certificados
       const certificatesWithNames = (certs || []).map(cert => ({
@@ -169,6 +175,7 @@ export const Dashboard = () => {
         aluno_nome: profile.nome
       }));
       
+      console.log('📜 Certificados com nomes:', certificatesWithNames);
       setCertificates(certificatesWithNames);
 
       // Buscar cursos com módulos e materiais organizados
@@ -489,20 +496,32 @@ export const Dashboard = () => {
                               <Card key={enrollment.id} className="overflow-hidden relative">
                                 {/* Badges/Selos no topo do card */}
                                 <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-                                  {Number(enrollment.progresso) >= 100 && (
-                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
-                                      <CheckCircle className="h-3 w-3 mr-1" />
-                                      Concluído
-                                    </Badge>
-                                  )}
                                   {(() => {
+                                    console.log('🎯 DEBUG Badge - Enrollment:', {
+                                      id: enrollment.id,
+                                      progresso: enrollment.progresso,
+                                      curso: enrollment.curso.titulo
+                                    });
+                                    console.log('📋 DEBUG Badge - Certificados disponíveis:', certificates);
                                     const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                    return certificate && certificate.status === 'aprovado' ? (
-                                      <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
-                                        <Award className="h-3 w-3 mr-1" />
-                                        Certificado
-                                      </Badge>
-                                    ) : null;
+                                    console.log('🎖️ DEBUG Badge - Certificado encontrado:', certificate);
+                                    
+                                    return (
+                                      <>
+                                        {Number(enrollment.progresso) >= 100 && (
+                                          <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
+                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                            Concluído
+                                          </Badge>
+                                        )}
+                                        {certificate && certificate.status === 'aprovado' ? (
+                                          <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
+                                            <Award className="h-3 w-3 mr-1" />
+                                            Certificado
+                                          </Badge>
+                                        ) : null}
+                                      </>
+                                    );
                                   })()}
                                 </div>
 
