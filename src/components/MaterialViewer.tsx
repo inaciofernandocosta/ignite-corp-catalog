@@ -50,6 +50,8 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
   const fetchMaterials = async () => {
     setLoading(true);
     try {
+      console.log('MaterialViewer: Buscando materiais para módulo:', moduleId);
+      
       const { data, error } = await supabase
         .from('modulo_materiais')
         .select('*')
@@ -58,6 +60,8 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
         .order('ordem');
 
       if (error) throw error;
+      
+      console.log('MaterialViewer: Materiais encontrados:', data?.length || 0, data);
       setMaterials(data || []);
     } catch (error: any) {
       console.error('Erro ao buscar materiais:', error);
@@ -76,6 +80,13 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
       fetchMaterials();
     }
   }, [open, moduleId]);
+
+  // Para componentes sem showTrigger, buscar materiais automaticamente
+  useEffect(() => {
+    if (!showTrigger) {
+      fetchMaterials();
+    }
+  }, [moduleId, showTrigger]);
 
   const handleDownload = async (material: Material) => {
     if (!material.url) return;
