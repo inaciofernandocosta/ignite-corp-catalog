@@ -19,6 +19,7 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const { toast } = useToast();
 
   // Remove dependência do toast para evitar loop infinito
@@ -309,56 +310,68 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    // Evitar múltiplos cliques
+    if (logoutLoading) return;
+    
     try {
-      const { error } = await supabase.auth.signOut();
+      setLogoutLoading(true);
+      console.log('Iniciando processo de logout...');
       
-      // Ignorar erros de sessão não encontrada - é um comportamento esperado
-      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
-        console.error('Erro real no logout:', error);
-        toast({
-          title: 'Erro ao sair',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
+      // PRIMEIRO: Limpar estado local imediatamente para garantir logout na UI
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      localStorage.removeItem('dashboard-tab-initialized');
+      
+      // SEGUNDO: Tentar fazer logout do Supabase apenas se existe uma sessão
+      const { data: currentSession } = await supabase.auth.getSession();
+      
+      if (currentSession?.session) {
+        console.log('Sessão encontrada, fazendo logout do Supabase...');
+        const { error } = await supabase.auth.signOut();
+        
+        // Ignorar erros conhecidos de sessão
+        if (error && !error.message?.includes('session') && !error.message?.includes('Session') && 
+            !error.message?.includes('Auth session missing')) {
+          console.error('Erro no logout do Supabase (mas continuando):', error);
+        }
+      } else {
+        console.log('Nenhuma sessão ativa encontrada, pulando logout do Supabase');
       }
       
-      // Logout bem sucedido (ou sessão já não existia)
-      console.log('Logout realizado com sucesso');
+      // TERCEIRO: Sempre mostrar sucesso e redirecionar
+      console.log('Logout concluído com sucesso');
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
       });
       
-      // Limpar estado local
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      
-      // Limpar dados de inicialização das tabs
-      localStorage.removeItem('dashboard-tab-initialized');
+      // Forçar redirecionamento para home
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
       
     } catch (error: any) {
-      console.error('Erro inesperado no logout:', error);
+      console.error('Erro durante logout:', error);
       
-      // Mesmo com erro, limpar estado local para garantir logout
+      // Mesmo com erro, garantir que o estado seja limpo
       setUser(null);
       setSession(null);
       setProfile(null);
+      localStorage.removeItem('dashboard-tab-initialized');
       
-      // Só mostrar toast de erro se não for relacionado a sessão
-      if (!error.message?.includes('session') && !error.message?.includes('Session')) {
-        toast({
-          title: 'Erro ao sair',
-          description: 'Tente novamente.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Logout realizado',
-          description: 'Até logo!',
-        });
-      }
+      // Sempre mostrar sucesso para o usuário (a limpeza local já foi feita)
+      toast({
+        title: 'Logout realizado',
+        description: 'Até logo!',
+      });
+      
+      // Forçar redirecionamento mesmo com erro
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
@@ -367,6 +380,7 @@ export const useAuth = () => {
     session,
     profile,
     loading,
+    logoutLoading,
     signIn,
     signUp,
     signOut,

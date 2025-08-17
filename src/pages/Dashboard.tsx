@@ -105,7 +105,7 @@ interface CourseWithModules {
 }
 
 export const Dashboard = () => {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, signOut, loading, logoutLoading } = useAuth();
   const navigate = useNavigate();
   const [courseEnrollments, setCourseEnrollments] = useState<CourseEnrollment[]>([]);
   const [allCourses, setAllCourses] = useState<any[]>([]);
@@ -276,10 +276,16 @@ export const Dashboard = () => {
                  <span className="truncate max-w-32">{profile.nome}</span>
                </div>
                <UserProfile />
-               <Button variant="outline" size="sm" onClick={signOut} className="px-2 sm:px-3">
-                 <LogOut className="h-4 w-4 sm:mr-2" />
-                 <span className="hidden sm:inline">Sair</span>
-               </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={signOut} 
+                  disabled={logoutLoading}
+                  className="px-2 sm:px-3"
+                >
+                  <LogOut className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{logoutLoading ? 'Saindo...' : 'Sair'}</span>
+                </Button>
              </div>
            </div>
         </div>

@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export const Header = memo(({ userState, onLogin, onSignOut }: HeaderProps) => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, logoutLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -24,9 +24,12 @@ export const Header = memo(({ userState, onLogin, onSignOut }: HeaderProps) => {
   }, [navigate]);
 
   const handleSignOut = useCallback(() => {
-    onSignOut ? onSignOut() : signOut();
-    navigate('/');
-  }, [onSignOut, signOut, navigate]);
+    if (onSignOut) {
+      onSignOut();
+    } else {
+      signOut(); // signOut já cuida do redirecionamento
+    }
+  }, [onSignOut, signOut]);
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -88,8 +91,9 @@ export const Header = memo(({ userState, onLogin, onSignOut }: HeaderProps) => {
                   size="sm"
                   className="whitespace-nowrap"
                   onClick={handleSignOut}
+                  disabled={logoutLoading}
                 >
-                  Sair
+                  {logoutLoading ? 'Saindo...' : 'Sair'}
                 </Button>
               </div>
             )}
@@ -146,8 +150,9 @@ export const Header = memo(({ userState, onLogin, onSignOut }: HeaderProps) => {
                       size="sm"
                       className="w-full"
                       onClick={handleSignOut}
+                      disabled={logoutLoading}
                     >
-                      Sair
+                      {logoutLoading ? 'Saindo...' : 'Sair'}
                     </Button>
                   </div>
                 )}
