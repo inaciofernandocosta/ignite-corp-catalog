@@ -353,7 +353,7 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-2'} h-auto p-1 gap-1`}>
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-3' : 'grid-cols-1'} h-auto p-1 gap-1`}>
                 {profile?.role === 'admin' && (
                   <TabsTrigger value="gerenciar" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Users className="h-3 w-3" />
@@ -370,10 +370,6 @@ export const Dashboard = () => {
                     <span className="hidden xs:inline text-xs">Meus Cursos</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="certificados" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
-                  <Award className="h-3 w-3" />
-                  <span className="hidden xs:inline text-xs">Certs</span>
-                </TabsTrigger>
               </TabsList>
 
               {dataLoading ? (
@@ -699,55 +695,6 @@ export const Dashboard = () => {
                        )}
                      </TabsContent>
                    )}
-
-                  {/* Certificados Tab */}
-                  <TabsContent value="certificados" className="space-y-6">
-                    {certificates.length === 0 ? (
-                      <Card>
-                        <CardContent className="text-center py-12">
-                          <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">Nenhum certificado encontrado</h3>
-                          <p className="text-muted-foreground">
-                            Complete um curso para receber seu certificado.
-                          </p>
-                        </CardContent>
-                      </Card>
-                     ) : (
-                       <div className="grid gap-4">
-                         {certificates.map((certificate) => (
-                           <Card key={certificate.id}>
-                             <CardContent className="p-4 sm:p-6">
-                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                                 <div className="space-y-2 flex-1">
-                                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                     <div className="flex items-center gap-2">
-                                       <Award className="h-4 sm:h-5 w-4 sm:w-5 text-yellow-500" />
-                                       <h3 className="text-sm sm:text-base font-semibold">Certificado de Conclusão</h3>
-                                     </div>
-                                      <Badge variant={certificate.status === 'aprovado' ? 'default' : 'secondary'} className="w-fit text-xs">
-                                        {certificate.status}
-                                      </Badge>
-                                   </div>
-                                   <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
-                                     <p>Número: {certificate.numero_certificado}</p>
-                                      <p>Data de conclusão: {formatDateWithoutTimezone(certificate.data_conclusao)}</p>
-                                      <p>Data de emissão: {formatDateWithoutTimezone(certificate.data_emissao)}</p>
-                                   </div>
-                                 </div>
-                                 
-                                 {certificate.certificado_pdf && (
-                                   <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
-                                     <Download className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
-                                     Baixar PDF
-                                   </Button>
-                                 )}
-                               </div>
-                             </CardContent>
-                           </Card>
-                         ))}
-                       </div>
-                    )}
-                  </TabsContent>
 
                 </>
               )}
