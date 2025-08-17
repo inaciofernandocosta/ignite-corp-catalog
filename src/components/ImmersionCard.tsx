@@ -83,6 +83,16 @@ export function ImmersionCard({ immersion, userState, accessState, enrollmentSta
           showTeaser: false,
           isLocked: true,
           showButton: true
+        },
+        concluido: {
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Programa Presencial",
+          badgeVariant: "outline" as const,
+          ctaText: "Concluído",
+          ctaVariant: "default" as const,
+          showTeaser: false,
+          isLocked: true,
+          showButton: true
         }
       };
       

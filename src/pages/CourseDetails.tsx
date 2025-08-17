@@ -282,18 +282,20 @@ export const CourseDetails = () => {
                   
                   <Button 
                     size="lg" 
-                    className={`w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base ${
-                      existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
-                      existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
-                      existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' : ''
-                    }`}
+                     className={`w-full mb-3 sm:mb-4 font-semibold text-sm sm:text-base ${
+                       existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
+                       existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
+                       existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' :
+                       existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' : ''
+                     }`}
                     onClick={handleCTAClick}
                     disabled={!!existingEnrollment}
                   >
                     {existingEnrollment ? 
                       (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
                        existingEnrollment.status === 'aprovado' ? 'Inscrito' :
-                       existingEnrollment.status === 'reprovado' ? 'Inscrição negada' : 'Inscrever-se') :
+                       existingEnrollment.status === 'reprovado' ? 'Inscrição negada' :
+                       existingEnrollment.status === 'concluido' ? 'Concluído' : 'Inscrever-se') :
                       (user && profile ? 'Inscrever-se' : 'Quero me aplicar')
                     }
                   </Button>
@@ -313,12 +315,19 @@ export const CourseDetails = () => {
                             <span className="text-success">Você está inscrito no curso</span>
                           </>
                         )}
-                        {existingEnrollment.status === 'reprovado' && (
-                          <>
-                            <XCircle className="w-4 h-4 inline mr-1 text-destructive" />
-                            <span className="text-destructive">Inscrição não aprovada</span>
-                          </>
-                        )}
+                         {existingEnrollment.status === 'reprovado' && (
+                           <>
+                             <XCircle className="w-4 h-4 inline mr-1 text-destructive" />
+                             <span className="text-destructive">Inscrição não aprovada</span>
+                           </>
+                         )}
+                         
+                         {existingEnrollment.status === 'concluido' && (
+                           <>
+                             <Award className="w-4 h-4 inline mr-1 text-primary" />
+                             <span className="text-primary">Curso concluído com sucesso</span>
+                           </>
+                         )}
                       </>
                     ) : (
                       <>
@@ -498,18 +507,20 @@ export const CourseDetails = () => {
           </p>
           <Button 
             size="lg" 
-            className={`font-semibold px-6 sm:px-8 w-full sm:w-auto ${
-              existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
-              existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
-              existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' : ''
-            }`}
+             className={`font-semibold px-6 sm:px-8 w-full sm:w-auto ${
+               existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
+               existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
+               existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' :
+               existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' : ''
+             }`}
             onClick={handleCTAClick}
             disabled={!!existingEnrollment}
           >
             {existingEnrollment ? 
               (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
                existingEnrollment.status === 'aprovado' ? 'Inscrito' :
-               existingEnrollment.status === 'reprovado' ? 'Inscrição negada' : 'Inscreva-se agora') :
+               existingEnrollment.status === 'reprovado' ? 'Inscrição negada' :
+               existingEnrollment.status === 'concluido' ? 'Concluído' : 'Inscreva-se agora') :
               (user && profile ? 'Inscrever-se agora' : 'Quero me aplicar')
             }
           </Button>

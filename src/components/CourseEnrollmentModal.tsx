@@ -80,7 +80,8 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user, existingE
             {existingEnrollment ? 
               (existingEnrollment.status === 'pendente' ? "Aguardando Aprovação" : 
                existingEnrollment.status === 'aprovado' ? "Inscrito no Curso" : 
-               existingEnrollment.status === 'reprovado' ? "Inscrição Negada" : "Confirmar Inscrição") :
+               existingEnrollment.status === 'reprovado' ? "Inscrição Negada" :
+               existingEnrollment.status === 'concluido' ? "Curso Concluído" : "Confirmar Inscrição") :
               (isSuccess ? "Inscrição Confirmada!" : "Confirmar Inscrição")
             }
           </DialogTitle>
@@ -91,12 +92,14 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user, existingE
             <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
               existingEnrollment.status === 'pendente' ? 'bg-warning/10' :
               existingEnrollment.status === 'aprovado' ? 'bg-success/10' :
-              existingEnrollment.status === 'reprovado' ? 'bg-destructive/10' : 'bg-muted/10'
+              existingEnrollment.status === 'reprovado' ? 'bg-destructive/10' :
+              existingEnrollment.status === 'concluido' ? 'bg-primary/10' : 'bg-muted/10'
             }`}>
               <CheckCircle className={`w-8 h-8 ${
                 existingEnrollment.status === 'pendente' ? 'text-warning' :
                 existingEnrollment.status === 'aprovado' ? 'text-success' :
-                existingEnrollment.status === 'reprovado' ? 'text-destructive' : 'text-muted-foreground'
+                existingEnrollment.status === 'reprovado' ? 'text-destructive' :
+                existingEnrollment.status === 'concluido' ? 'text-primary' : 'text-muted-foreground'
               }`} />
             </div>
             
@@ -106,6 +109,7 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user, existingE
                 {existingEnrollment.status === 'pendente' && 'Sua inscrição está sendo analisada pela equipe.'}
                 {existingEnrollment.status === 'aprovado' && 'Sua inscrição foi aprovada! Você receberá mais informações em breve.'}
                 {existingEnrollment.status === 'reprovado' && 'Infelizmente sua inscrição não foi aprovada desta vez.'}
+                {existingEnrollment.status === 'concluido' && 'Parabéns! Você concluiu este curso com sucesso e pode baixar seu certificado.'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Inscrito em: {new Date(existingEnrollment.data_inscricao).toLocaleDateString('pt-BR')}
