@@ -52,7 +52,7 @@ export function CourseEnrollmentModal({ isOpen, onClose, course, user, existingE
       
       toast({
         title: "Inscrição realizada!",
-        description: "Sua inscrição está aguardando aprovação. Você receberá um e-mail de confirmação em breve.",
+        description: "Sua inscrição está aguardando aprovação. Você receberá um e-mail de confirmação automaticamente.",
       });
 
     } catch (error) {
