@@ -40,6 +40,13 @@ export const useCourseDetails = (slug: string) => {
         setLoading(true);
         setError(null);
 
+        // Verificar se slug é válido
+        if (!slug || slug === 'undefined') {
+          setError('Curso não encontrado');
+          setLoading(false);
+          return;
+        }
+
         // First try to find by slug
         let { data, error } = await supabase
           .from('cursos')
@@ -81,8 +88,11 @@ export const useCourseDetails = (slug: string) => {
       }
     };
 
-    if (slug) {
+    if (slug && slug !== 'undefined') {
       fetchCourse();
+    } else {
+      setLoading(false);
+      setError('Curso não encontrado');
     }
   }, [slug]);
 

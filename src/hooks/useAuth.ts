@@ -26,7 +26,6 @@ export const useAuth = () => {
   const fetchUserProfile = useCallback(async (email: string) => {
     // Evitar re-chamadas desnecessárias se o perfil já foi carregado para este email
     if (profile?.email === email) {
-      console.log('Perfil já carregado para este email, pulando...');
       return;
     }
 
@@ -120,13 +119,14 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && session.user.email) {
+        // Only fetch user profile on SIGNED_IN events, not during initialization
+        if (session?.user && session.user.email && event === 'SIGNED_IN' && isInitialized) {
           setTimeout(() => {
             if (isMounted) {
               fetchUserProfile(session.user.email);
             }
           }, 0);
-        } else {
+        } else if (!session?.user) {
           setProfile(null);
         }
         
@@ -146,18 +146,6 @@ export const useAuth = () => {
       subscription.unsubscribe();
     };
   }, [fetchUserProfile]);
-
-  // Timeout de segurança para garantir que loading seja resolvido
-  useEffect(() => {
-    const safetyTimeout = setTimeout(() => {
-      if (loading) {
-        console.log('Auth - Timeout de segurança: forçando fim do loading');
-        setLoading(false);
-      }
-    }, 3000); // 3 segundos máximo de loading
-
-    return () => clearTimeout(safetyTimeout);
-  }, [loading]);
 
   const signIn = async (email: string, password: string) => {
     try {
