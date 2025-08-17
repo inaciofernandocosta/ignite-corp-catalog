@@ -39,6 +39,7 @@ import { CreateCourseDialog } from '@/components/admin/CreateCourseDialog';
 import { CreateModuleDialog } from '@/components/admin/CreateModuleDialog';
 import { EditModuleDialog } from '@/components/admin/EditModuleDialog';
 import { ManageModuleMaterialsDialog } from '@/components/admin/ManageModuleMaterialsDialog';
+import { ViewModulesDialog } from '@/components/admin/ViewModulesDialog';
 import { UserProfile } from '@/components/UserProfile';
 
 interface CourseEnrollment {
@@ -475,13 +476,18 @@ export const Dashboard = () => {
                                           <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
                                           <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
                                         </div>
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                          <CreateModuleDialog 
-                                            courseId={course.id} 
-                                            courseTitle={course.titulo}
-                                            onModuleCreated={fetchUserData} 
-                                          />
-                                        </div>
+                                         <div className="flex flex-col sm:flex-row gap-2">
+                                           <CreateModuleDialog 
+                                             courseId={course.id} 
+                                             courseTitle={course.titulo}
+                                             onModuleCreated={fetchUserData} 
+                                           />
+                                           <ViewModulesDialog
+                                             courseId={course.id}
+                                             courseTitle={course.titulo}
+                                             onModuleUpdated={fetchUserData}
+                                           />
+                                         </div>
                                       </div>
                                   </div>
                                 </CardContent>
