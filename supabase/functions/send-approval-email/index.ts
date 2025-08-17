@@ -11,18 +11,12 @@ const corsHeaders = {
 };
 
 interface ApprovalEmailRequest {
-  studentData: {
-    id: string;
-    nome: string;
-    email: string;
-    telefone?: string;
-    empresa?: string;
-    departamento?: string;
-    cargo?: string;
-    unidade?: string;
+  enrollmentData: {
+    enrollment_id: string;
+    course_id: string;
+    student_id: string;
     status: string;
   };
-  activationToken?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,9 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { studentData, activationToken }: ApprovalEmailRequest = await req.json();
+    const { enrollmentData }: ApprovalEmailRequest = await req.json();
 
-    console.log('Processando e-mail de aprovação para:', studentData.email);
+    console.log('Processando e-mail de aprovação para inscrição:', enrollmentData.enrollment_id);
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -42,8 +36,34 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    // Buscar dados do estudante na tabela inscricoes_mentoria
+    const { data: studentData, error: studentError } = await supabaseClient
+      .from("inscricoes_mentoria")
+      .select("id, nome, email, telefone, empresa, departamento, cargo, unidade, token_validacao")
+      .eq("id", enrollmentData.student_id)
+      .single();
+
+    if (studentError || !studentData) {
+      console.error('Erro ao buscar dados do estudante:', studentError);
+      throw new Error("Estudante não encontrado");
+    }
+
+    console.log('Dados do estudante encontrados:', studentData.email);
+
+    // Buscar dados do curso
+    const { data: courseData, error: courseError } = await supabaseClient
+      .from("cursos")
+      .select("titulo, descricao")
+      .eq("id", enrollmentData.course_id)
+      .single();
+
+    if (courseError || !courseData) {
+      console.error('Erro ao buscar dados do curso:', courseError);
+      throw new Error("Curso não encontrado");
+    }
+
     // Se não tiver token, gerar um novo
-    let tokenValidacao = activationToken;
+    let tokenValidacao = studentData.token_validacao;
     if (!tokenValidacao) {
       // Gerar token único
       tokenValidacao = crypto.randomUUID().replace(/-/g, '') + Date.now().toString();
@@ -52,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { error: updateError } = await supabaseClient
         .from('inscricoes_mentoria')
         .update({ token_validacao: tokenValidacao })
-        .eq('id', studentData.id);
+        .eq('id', enrollmentData.student_id);
 
       if (updateError) {
         console.error('Erro ao atualizar token:', updateError);
@@ -68,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Mentoria Futura <contato@mentoriafutura.com.br>",
       to: [studentData.email],
-      subject: `🎉 Sua inscrição foi aprovada! - Mentoria Futura`,
+      subject: `🎉 Sua inscrição no curso "${courseData.titulo}" foi aprovada!`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -79,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #16a34a;">
             <h3 style="color: #15803d; margin-top: 0;">Olá, ${studentData.nome}!</h3>
             <p style="color: #166534; line-height: 1.6; margin: 15px 0;">
-              Temos o prazer de informar que sua inscrição na <strong>Mentoria Futura</strong> foi aprovada! 
+              Temos o prazer de informar que sua inscrição no curso <strong>"${courseData.titulo}"</strong> foi aprovada! 
               Agora você pode acessar nossa plataforma e começar sua jornada de aprendizado.
             </p>
           </div>
