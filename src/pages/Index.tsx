@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { FAQ } from "@/components/FAQ";
 import { Footer } from "@/components/Footer";
 import { ApplicationForm } from "@/components/ApplicationForm";
+import { CourseEnrollmentModal } from "@/components/CourseEnrollmentModal";
 import { Button } from "@/components/ui/button";
 import { type UserState, type AccessState } from "@/data/mockData";
 import { useCourses } from "@/hooks/useCourses";
@@ -23,6 +24,7 @@ interface Filter {
 const Index = React.memo(() => {
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const { toast } = useToast();
   const { courses, loading, error } = useCourses();
@@ -92,14 +94,19 @@ const Index = React.memo(() => {
       return;
     }
     
-    // Use slug if available, fallback to id
-    const courseSlug = course.slug || course.id;
-    console.log('Navigating to:', `/curso/${courseSlug}`);
-    navigate(`/curso/${courseSlug}`);
-  }, [user, profile, navigate]);
+    // Para usuários logados, mostrar modal de confirmação de inscrição
+    console.log('User logged in, showing enrollment modal');
+    setSelectedCourse(course);
+    setShowEnrollmentModal(true);
+  }, [user, profile]);
 
   const handleApplicationFormClose = useCallback(() => {
     setShowApplicationForm(false);
+    setSelectedCourse(null);
+  }, []);
+
+  const handleEnrollmentModalClose = useCallback(() => {
+    setShowEnrollmentModal(false);
     setSelectedCourse(null);
   }, []);
 
@@ -193,6 +200,19 @@ const Index = React.memo(() => {
       {showApplicationForm && (
         <ApplicationForm 
           onClose={handleApplicationFormClose}
+        />
+      )}
+      
+      {showEnrollmentModal && selectedCourse && user && profile && (
+        <CourseEnrollmentModal
+          isOpen={showEnrollmentModal}
+          onClose={handleEnrollmentModalClose}
+          course={selectedCourse}
+          user={{
+            id: profile.id,
+            email: profile.email,
+            name: profile.nome
+          }}
         />
       )}
     </div>
