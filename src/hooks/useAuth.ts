@@ -172,9 +172,21 @@ export const useAuth = () => {
         .select('email, nome')
         .eq('email', email)
         .eq('ativo', true)
-        .single();
+        .maybeSingle();
 
-      if (userCheckError || !userExists) {
+      console.log('useAuth - Resultado da busca:', { userExists, userCheckError });
+
+      if (userCheckError) {
+        console.error('useAuth - Erro na consulta:', userCheckError);
+        toast({
+          title: 'Erro no sistema',
+          description: 'Tente novamente mais tarde.',
+          variant: 'destructive',
+        });
+        return { error: userCheckError };
+      }
+
+      if (!userExists) {
         console.log('useAuth - Usuário não encontrado:', email);
         toast({
           title: 'Email não encontrado',
