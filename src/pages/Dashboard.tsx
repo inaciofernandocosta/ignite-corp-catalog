@@ -497,7 +497,7 @@ export const Dashboard = () => {
                                   )}
                                   {(() => {
                                     const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                    return certificate && certificate.status === 'emitido' ? (
+                                    return certificate && certificate.status === 'aprovado' ? (
                                       <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
                                         <Award className="h-3 w-3 mr-1" />
                                         Certificado
@@ -564,7 +564,7 @@ export const Dashboard = () => {
                                           </Badge>
                                           {(() => {
                                             const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
-                                            return certificate && certificate.status === 'emitido' ? (
+                                            return certificate && certificate.status === 'aprovado' ? (
                                               <Badge variant="default" className="w-fit text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
                                                 <Award className="h-3 w-3 mr-1" />
                                                 Certificado Disponível
@@ -634,9 +634,9 @@ export const Dashboard = () => {
                                        <Award className="h-4 sm:h-5 w-4 sm:w-5 text-yellow-500" />
                                        <h3 className="text-sm sm:text-base font-semibold">Certificado de Conclusão</h3>
                                      </div>
-                                     <Badge variant={certificate.status === 'emitido' ? 'default' : 'secondary'} className="w-fit text-xs">
-                                       {certificate.status}
-                                     </Badge>
+                                      <Badge variant={certificate.status === 'aprovado' ? 'default' : 'secondary'} className="w-fit text-xs">
+                                        {certificate.status}
+                                      </Badge>
                                    </div>
                                    <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
                                      <p>Número: {certificate.numero_certificado}</p>
