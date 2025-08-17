@@ -36,6 +36,9 @@ import { StudentManagement } from '@/components/admin/StudentManagement';
 import { EditCourseDialog } from '@/components/admin/EditCourseDialog';
 import { CourseStudentsDialog } from '@/components/admin/CourseStudentsDialog';
 import { CreateCourseDialog } from '@/components/admin/CreateCourseDialog';
+import { CreateModuleDialog } from '@/components/admin/CreateModuleDialog';
+import { EditModuleDialog } from '@/components/admin/EditModuleDialog';
+import { ManageModuleMaterialsDialog } from '@/components/admin/ManageModuleMaterialsDialog';
 import { UserProfile } from '@/components/UserProfile';
 
 interface CourseEnrollment {
@@ -85,6 +88,7 @@ interface CourseModule {
   titulo: string;
   descricao: string;
   ordem: number;
+  curso_id: string;
   materiais: CourseMaterial[];
 }
 
@@ -466,10 +470,19 @@ export const Dashboard = () => {
                                       </div>
                                     )}
                                     
-                                     <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                                       <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
-                                       <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
-                                     </div>
+                                      <div className="flex flex-col gap-2 mt-4">
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                          <EditCourseDialog course={course} onCourseUpdated={fetchUserData} />
+                                          <CourseStudentsDialog courseId={course.id} courseTitle={course.titulo} />
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                          <CreateModuleDialog 
+                                            courseId={course.id} 
+                                            courseTitle={course.titulo}
+                                            onModuleCreated={fetchUserData} 
+                                          />
+                                        </div>
+                                      </div>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -653,17 +666,34 @@ export const Dashboard = () => {
                                 <div className="space-y-6">
                                   {course.modulos.map((module) => (
                                     <div key={module.id} className="border-l-4 border-primary/20 pl-4">
-                                      <div className="mb-4">
-                                        <h4 className="font-semibold text-lg flex items-center gap-2">
-                                          <BookOpen className="h-5 w-5 text-secondary" />
-                                          {module.titulo}
-                                        </h4>
-                                        {module.descricao && (
-                                          <p className="text-sm text-muted-foreground mt-1">
-                                            {module.descricao}
-                                          </p>
-                                        )}
-                                      </div>
+                                       <div className="mb-4">
+                                         <div className="flex items-center justify-between">
+                                           <div>
+                                             <h4 className="font-semibold text-lg flex items-center gap-2">
+                                               <BookOpen className="h-5 w-5 text-secondary" />
+                                               {module.titulo}
+                                             </h4>
+                                             {module.descricao && (
+                                               <p className="text-sm text-muted-foreground mt-1">
+                                                 {module.descricao}
+                                               </p>
+                                             )}
+                                           </div>
+                                           {profile?.role === 'admin' && (
+                                             <div className="flex gap-2">
+                                               <EditModuleDialog 
+                                                 module={module} 
+                                                 onModuleUpdated={fetchUserData} 
+                                               />
+                                               <ManageModuleMaterialsDialog 
+                                                 moduleId={module.id}
+                                                 moduleTitle={module.titulo}
+                                                 onMaterialsUpdated={fetchUserData}
+                                               />
+                                             </div>
+                                           )}
+                                         </div>
+                                       </div>
 
                                       {module.materiais.length === 0 ? (
                                         <div className="ml-6 py-4 text-center border border-dashed border-muted-foreground/30 rounded-lg">
