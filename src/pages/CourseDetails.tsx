@@ -83,31 +83,31 @@ export const CourseDetails = () => {
     setShowApplicationForm(false);
   }, []);
 
-  const handleEnrollmentModalClose = useCallback(() => {
-    setShowEnrollmentModal(false);
-    // Verificar novamente após fechar o modal
-    if (user?.id && course?.id) {
-      checkExistingEnrollment();
-    }
-  }, [user?.id, course?.id]);
-
   // Verificar se usuário já está inscrito
   const checkExistingEnrollment = useCallback(async () => {
-    if (!user?.id || !course?.id) return;
+    if (!profile?.id || !course?.id) return;
     
     try {
       const { data } = await supabase
         .from('inscricoes_cursos')
         .select('status, data_inscricao')
         .eq('curso_id', course.id)
-        .eq('aluno_id', user.id)
-        .single();
+        .eq('aluno_id', profile.id)
+        .maybeSingle();
         
       setExistingEnrollment(data);
     } catch (error) {
       setExistingEnrollment(null);
     }
-  }, [user?.id, course?.id]);
+  }, [profile?.id, course?.id]);
+
+  const handleEnrollmentModalClose = useCallback(() => {
+    setShowEnrollmentModal(false);
+    // Verificar novamente após fechar o modal
+    if (profile?.id && course?.id) {
+      checkExistingEnrollment();
+    }
+  }, [profile?.id, course?.id, checkExistingEnrollment]);
 
   useEffect(() => {
     checkExistingEnrollment();

@@ -115,21 +115,21 @@ const Index = React.memo(() => {
 
   // Verificar se usuário já está inscrito no curso selecionado
   const checkExistingEnrollment = useCallback(async (courseId: string) => {
-    if (!user?.id || !courseId) return;
+    if (!profile?.id || !courseId) return;
     
     try {
       const { data } = await supabase
         .from('inscricoes_cursos')
         .select('status, data_inscricao')
         .eq('curso_id', courseId)
-        .eq('aluno_id', user.id)
-        .single();
+        .eq('aluno_id', profile.id)
+        .maybeSingle();
         
       setExistingEnrollment(data);
     } catch (error) {
       setExistingEnrollment(null);
     }
-  }, [user?.id]);
+  }, [profile?.id]);
 
   useEffect(() => {
     if (selectedCourse?.id) {
