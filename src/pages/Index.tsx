@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { InstitutionalHero } from "@/components/InstitutionalHero";
 import { FilterSection } from "@/components/FilterSection";
@@ -20,7 +20,7 @@ interface Filter {
   category: string;
 }
 
-const Index = () => {
+const Index = React.memo(() => {
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -32,8 +32,8 @@ const Index = () => {
   // Filter courses based on filters (simplified since filters were removed)
   const filteredImmersions = courses;
 
-  // Determine user state based on authentication
-  const getUserState = (): UserState => {
+  // Determine user state based on authentication (memoized)
+  const userState = useMemo((): UserState => {
     if (!user || !profile) return 'visitor';
     
     // Check if user has corporate email
@@ -49,11 +49,9 @@ const Index = () => {
     }
     
     return 'logged-personal';
-  };
+  }, [user, profile]);
 
-  const userState = getUserState();
-
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     if (user && profile) {
       // Se já está logado, redirecionar para dashboard
       navigate('/dashboard');
@@ -61,46 +59,57 @@ const Index = () => {
       // Se não está logado, ir para tela de auth
       navigate('/auth');
     }
-  };
+  }, [user, profile, navigate]);
 
-  const handleCorporateLogin = () => {
+  const handleSignOut = useCallback(() => {
+    // This will be handled by the Header component
+  }, []);
+
+  const handleCorporateLogin = useCallback(() => {
     navigate('/auth');
-  };
+  }, [navigate]);
 
-  const handleContractForCompany = () => {
+  const handleContractForCompany = useCallback(() => {
     toast({
       title: "Interesse registrado", 
       description: "Nossa equipe entrará em contato em breve!",
     });
-  };
+  }, [toast]);
 
-  const handleCTAClick = (immersionId: string, action: string) => {
-    const course = courses.find(c => c.id === immersionId);
-    
-    if (action === "Quero me aplicar" && course) {
+  const handleCTAClick = useCallback((course: any) => {
+    if (!user || !profile) {
       setSelectedCourse(course);
       setShowApplicationForm(true);
-    } else {
-      toast({
-        title: "Ação registrada",
-        description: `${action} - ${immersionId}`,
-      });
+      return;
     }
-  };
-
-  const getAccessState = (immersionId: string): AccessState => {
-    if (userState !== 'logged-corporate') return 'locked';
     
-    // Simulate some immersions not being in the plan
-    const restrictedIds = ['deep-learning-avancado', 'mlops-production'];
-    return restrictedIds.includes(immersionId) ? 'not-in-plan' : 'available';
-  };
+    navigate(`/curso/${course.slug || course.id}`);
+  }, [user, profile, navigate]);
+
+  const handleApplicationFormClose = useCallback(() => {
+    setShowApplicationForm(false);
+    setSelectedCourse(null);
+  }, []);
+
+  // Get access state for each course (memoized)
+  const getAccessState = useCallback((course: any): AccessState => {
+    if (!user || !profile) return 'locked';
+    
+    // For now, return 'available' for all authenticated users
+    // This can be extended with more complex logic later
+    return 'available';
+  }, [user, profile]);
+
+  const handleClearFilters = useCallback(() => {
+    setActiveFilters([]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        userState={userState}
+        userState={userState} 
         onLogin={handleLogin}
+        onSignOut={handleSignOut}
       />
       
       <InstitutionalHero 
@@ -142,9 +151,7 @@ const Index = () => {
               <Button 
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => {
-                  setActiveFilters([]);
-                }}
+                onClick={handleClearFilters}
               >
                 Limpar filtros
               </Button>
@@ -156,7 +163,7 @@ const Index = () => {
                   key={immersion.id}
                   immersion={immersion}
                   userState={userState}
-                  accessState={getAccessState(immersion.id)}
+                  accessState={getAccessState(immersion)}
                   onCTAClick={handleCTAClick}
                 />
               ))}
@@ -172,10 +179,12 @@ const Index = () => {
       <Footer />
       
       {showApplicationForm && (
-        <ApplicationForm onClose={() => setShowApplicationForm(false)} />
+        <ApplicationForm 
+          onClose={handleApplicationFormClose}
+        />
       )}
     </div>
   );
-};
+});
 
 export default Index;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,41 +21,7 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer profile fetch with setTimeout
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.email!);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.email!);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (email: string) => {
+  const fetchUserProfile = useCallback(async (email: string) => {
     try {
       // Buscar dados da inscrição
       const { data: inscricao, error: inscricaoError } = await supabase
@@ -84,7 +50,7 @@ export const useAuth = () => {
       // Usar a primeira role ativa ou 'aluno' como padrão
       const userRole = userRoles && userRoles.length > 0 ? userRoles[0].role : 'aluno';
 
-      setProfile({
+      const newProfile = {
         id: inscricao.id,
         nome: inscricao.nome,
         email: inscricao.email,
@@ -93,13 +59,58 @@ export const useAuth = () => {
         cargo: inscricao.cargo,
         unidade: inscricao.unidade,
         role: userRole,
-      });
+      };
 
+      setProfile(newProfile);
       console.log('Perfil carregado:', { email, role: userRole });
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let isInitialized = false;
+    
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, !!session?.user);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user && session.user.email) {
+          await fetchUserProfile(session.user.email);
+        } else {
+          setProfile(null);
+        }
+        
+        if (!isInitialized) {
+          setLoading(false);
+          isInitialized = true;
+        }
+      }
+    );
+
+    // THEN check for existing session - but only once
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isInitialized) {
+        console.log('Initial session check:', !!session?.user);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user && session.user.email) {
+          await fetchUserProfile(session.user.email);
+        }
+        
+        setLoading(false);
+        isInitialized = true;
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchUserProfile]);
 
   const signIn = async (email: string, password: string) => {
     try {
