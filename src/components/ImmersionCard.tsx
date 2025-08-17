@@ -67,11 +67,11 @@ export function ImmersionCard({ immersion, userState, accessState, onCTAClick }:
         icon: <CheckCircle className="w-4 h-4" />,
         label: "Programa Presencial",
         badgeVariant: "outline" as const,
-        ctaText: "",
+        ctaText: "Inscrever-se",
         ctaVariant: "default" as const,
         showTeaser: false,
         isLocked: false,
-        showButton: false
+        showButton: true
       };
     }
 
