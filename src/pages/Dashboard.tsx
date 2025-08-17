@@ -486,7 +486,38 @@ export const Dashboard = () => {
                         ) : (
                           <div className="grid gap-4 sm:gap-6">
                             {courseEnrollments.map((enrollment) => (
-                              <Card key={enrollment.id} className="overflow-hidden">
+                              <Card key={enrollment.id} className="overflow-hidden relative">
+                                {/* Badges/Selos no topo do card */}
+                                <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+                                  {Number(enrollment.progresso) >= 100 && (
+                                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white shadow-lg">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Concluído
+                                    </Badge>
+                                  )}
+                                  {(() => {
+                                    const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                    return certificate && certificate.status === 'emitido' ? (
+                                      <Badge variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg">
+                                        <Award className="h-3 w-3 mr-1" />
+                                        Certificado
+                                      </Badge>
+                                    ) : null;
+                                  })()}
+                                </div>
+
+                                {/* Imagem de capa do curso se disponível */}
+                                {enrollment.curso.imagem_capa && (
+                                  <div className="relative aspect-video overflow-hidden">
+                                    <img 
+                                      src={enrollment.curso.imagem_capa} 
+                                      alt={enrollment.curso.titulo}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                  </div>
+                                )}
+
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
                                   <div className="lg:col-span-2 space-y-3 sm:space-y-4">
                                     <div>
@@ -526,10 +557,21 @@ export const Dashboard = () => {
                                   <div className="flex flex-col justify-between space-y-3 sm:space-y-4">
                                     <div className="space-y-2">
                                       {Number(enrollment.progresso) >= 100 ? (
-                                        <Badge variant="default" className="w-fit text-xs">
-                                          <CheckCircle className="h-3 w-3 mr-1" />
-                                          Concluído
-                                        </Badge>
+                                        <div className="flex flex-col gap-2">
+                                          <Badge variant="default" className="w-fit text-xs bg-green-100 text-green-800 border-green-200">
+                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                            Curso Concluído
+                                          </Badge>
+                                          {(() => {
+                                            const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
+                                            return certificate && certificate.status === 'emitido' ? (
+                                              <Badge variant="default" className="w-fit text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                                                <Award className="h-3 w-3 mr-1" />
+                                                Certificado Disponível
+                                              </Badge>
+                                            ) : null;
+                                          })()}
+                                        </div>
                                       ) : (
                                         <Badge variant="secondary" className="w-fit text-xs">
                                           <PlayCircle className="h-3 w-3 mr-1" />
