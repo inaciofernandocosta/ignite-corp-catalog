@@ -73,7 +73,37 @@ export const useAuth = () => {
     let isInitialized = false;
     let isMounted = true;
     
-    // Set up auth state listener FIRST
+    const initializeAuth = async () => {
+      try {
+        // Check existing session FIRST
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
+        console.log('Initial session check:', !!initialSession?.user);
+        
+        // Set initial state immediately
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        
+        if (initialSession?.user && initialSession.user.email) {
+          await fetchUserProfile(initialSession.user.email);
+        }
+        
+        // CRITICAL: Always resolve loading after initial check
+        setLoading(false);
+        isInitialized = true;
+        
+      } catch (error) {
+        console.error('Error in initial auth check:', error);
+        if (isMounted) {
+          setLoading(false);
+          isInitialized = true;
+        }
+      }
+    };
+
+    // Set up auth state listener 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
@@ -84,11 +114,16 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user && session.user.email) {
-          await fetchUserProfile(session.user.email);
+          setTimeout(() => {
+            if (isMounted) {
+              fetchUserProfile(session.user.email);
+            }
+          }, 0);
         } else {
           setProfile(null);
         }
         
+        // Ensure loading is resolved if not already
         if (!isInitialized) {
           setLoading(false);
           isInitialized = true;
@@ -96,35 +131,7 @@ export const useAuth = () => {
       }
     );
 
-    // THEN check for existing session - but only once
-    const initializeAuth = async () => {
-      if (!isInitialized && isMounted) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!isMounted) return;
-          
-          console.log('Initial session check:', !!session?.user);
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user && session.user.email) {
-            await fetchUserProfile(session.user.email);
-          }
-          
-          setLoading(false);
-          isInitialized = true;
-        } catch (error) {
-          console.error('Error initializing auth:', error);
-          if (isMounted) {
-            setLoading(false);
-            isInitialized = true;
-          }
-        }
-      }
-    };
-
+    // Initialize immediately
     initializeAuth();
 
     return () => {
@@ -132,6 +139,18 @@ export const useAuth = () => {
       subscription.unsubscribe();
     };
   }, [fetchUserProfile]);
+
+  // Timeout de segurança para garantir que loading seja resolvido
+  useEffect(() => {
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.log('Auth - Timeout de segurança: forçando fim do loading');
+        setLoading(false);
+      }
+    }, 3000); // 3 segundos máximo de loading
+
+    return () => clearTimeout(safetyTimeout);
+  }, [loading]);
 
   const signIn = async (email: string, password: string) => {
     try {
