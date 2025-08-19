@@ -148,28 +148,23 @@ export const Auth = () => {
   };
 
   const handleResetSuccess = async () => {
-    
+    console.log('Auth - handleResetSuccess: Iniciando processo de logout após reset');
     
     try {
-      // Fazer logout do usuário após alterar a senha
-      await supabase.auth.signOut();
-      
-      // Resetar estados
+      // Resetar estados primeiro
       setShowResetPassword(false);
       setIsRecoveryMode(false);
       
       // Limpar URL
       window.history.replaceState(null, '', '/auth');
       
-      // Mostrar toast de sucesso
-      // Note: O toast já é mostrado no ResetPasswordForm, mas vamos adicionar uma mensagem específica
-      setTimeout(() => {
-        // O usuário precisa fazer login novamente
-        
-      }, 100);
+      // Fazer logout do usuário após alterar a senha
+      await supabase.auth.signOut();
+      
+      console.log('Auth - handleResetSuccess: Logout realizado com sucesso');
       
     } catch (error) {
-      
+      console.error('Auth - handleResetSuccess: Erro no logout:', error);
     }
   };
 
