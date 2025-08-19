@@ -18,6 +18,54 @@ interface PasswordResetRequest {
   email: string;
 }
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+const MAX_ATTEMPTS_PER_EMAIL = 3;
+const MAX_ATTEMPTS_PER_IP = 5;
+
+// In-memory rate limiting store (in production, use Redis or database)
+const rateLimitStore = new Map<string, { attempts: number; lastAttempt: number }>();
+
+function getRealIP(req: Request): string {
+  // Check various headers for the real IP
+  const forwarded = req.headers.get("x-forwarded-for");
+  const realIP = req.headers.get("x-real-ip");
+  const cfConnectingIP = req.headers.get("cf-connecting-ip");
+  
+  if (cfConnectingIP) return cfConnectingIP;
+  if (realIP) return realIP;
+  if (forwarded) return forwarded.split(',')[0].trim();
+  
+  return "unknown";
+}
+
+function isRateLimited(key: string, maxAttempts: number): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(key);
+  
+  if (!record) {
+    rateLimitStore.set(key, { attempts: 1, lastAttempt: now });
+    return false;
+  }
+  
+  // Reset if window has passed
+  if (now - record.lastAttempt > RATE_LIMIT_WINDOW) {
+    rateLimitStore.set(key, { attempts: 1, lastAttempt: now });
+    return false;
+  }
+  
+  // Check if rate limited
+  if (record.attempts >= maxAttempts) {
+    return true;
+  }
+  
+  // Increment attempts
+  record.attempts++;
+  record.lastAttempt = now;
+  rateLimitStore.set(key, record);
+  return false;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   console.log('Password reset function called - Method:', req.method);
   
@@ -38,6 +86,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIP = getRealIP(req);
+    console.log('Password reset request from IP:', clientIP);
+
     const body = await req.text();
     console.log('Request body:', body);
     
@@ -50,6 +102,46 @@ const handler = async (req: Request): Promise<Response> => {
         error: "Email é obrigatório" 
       }), {
         status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Formato de email inválido" 
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Rate limiting checks
+    const emailKey = `email:${email}`;
+    const ipKey = `ip:${clientIP}`;
+    
+    if (isRateLimited(emailKey, MAX_ATTEMPTS_PER_EMAIL)) {
+      console.log(`Rate limit exceeded for email: ${email}`);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Muitas tentativas para este email. Tente novamente em 1 hora.",
+        isRateLimit: true 
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    
+    if (isRateLimited(ipKey, MAX_ATTEMPTS_PER_IP)) {
+      console.log(`Rate limit exceeded for IP: ${clientIP}`);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Muitas tentativas deste IP. Tente novamente em 1 hora.",
+        isRateLimit: true 
+      }), {
+        status: 429,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
@@ -73,8 +165,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Usuário existe no sistema');
 
-    // Gerar link de redefinição usando Supabase Auth
-    const redirectUrl = `${req.headers.get('origin') || 'https://mentoriafutura.com'}/auth?type=recovery`;
+    // Gerar link de redefinição usando Supabase Auth com URL fixa para segurança
+    const redirectUrl = `https://fauoxtziffljgictcvhi.supabase.co/auth/v1/verify`;
     console.log('Redirect URL:', redirectUrl);
     
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
@@ -280,14 +372,22 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div class="security-notice">
                   <p>
-                    ⚠️ <strong>Importante:</strong> Este link é válido por apenas 24 horas por motivos de segurança. 
-                    Após esse período, será necessário solicitar um novo link de recuperação.
+                    ⚠️ <strong>Importante para sua Segurança:</strong><br>
+                    • Este link é válido por apenas 1 hora por motivos de segurança<br>
+                    • Há um limite de 3 tentativas por email e 5 tentativas por IP por hora<br>
+                    • Use uma senha forte com pelo menos 8 caracteres<br>
+                    • Não compartilhe este link com ninguém
                   </p>
                 </div>
                 
                 <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">
                   Se você não solicitou esta redefinição, pode ignorar este email com segurança. 
                   Sua conta permanecerá protegida e nenhuma alteração será feita.
+                </p>
+                
+                <p style="font-size: 14px; color: #6b7280; margin-top: 16px;">
+                  Para sua segurança, nosso sistema possui proteções contra tentativas excessivas de redefinição. 
+                  Se atingir o limite, aguarde 1 hora antes de tentar novamente.
                 </p>
               </div>
               
