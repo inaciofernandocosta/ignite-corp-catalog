@@ -24,12 +24,9 @@ export const useAuth = () => {
 
   // Remove dependência do toast para evitar loop infinito
   const fetchUserProfile = useCallback(async (email: string) => {
-    // Evitar re-chamadas desnecessárias se o perfil já foi carregado para este email
-    if (profile?.email === email) {
-      return;
-    }
-
     try {
+      console.log('useAuth - Buscando perfil para:', email);
+      
       // Buscar dados da inscrição
       const { data: inscricao, error: inscricaoError } = await supabase
         .from('inscricoes_mentoria')
@@ -39,7 +36,12 @@ export const useAuth = () => {
         .single();
 
       if (inscricaoError) {
-        console.error('Erro ao buscar inscrição:', inscricaoError);
+        console.error('useAuth - Erro ao buscar inscrição:', inscricaoError);
+        return;
+      }
+
+      if (!inscricao) {
+        console.error('useAuth - Inscrição não encontrada para:', email);
         return;
       }
 
@@ -51,7 +53,7 @@ export const useAuth = () => {
         .eq('active', true);
 
       if (roleError) {
-        console.error('Erro ao buscar role:', roleError);
+        console.error('useAuth - Erro ao buscar role:', roleError);
       }
 
       // Usar a primeira role ativa ou 'aluno' como padrão
@@ -68,12 +70,13 @@ export const useAuth = () => {
         role: userRole,
       };
 
+      console.log('useAuth - Perfil carregado:', newProfile);
       setProfile(newProfile);
       
     } catch (error) {
-      console.error('Erro ao buscar perfil do usuário:', error);
+      console.error('useAuth - Erro ao buscar perfil do usuário:', error);
     }
-  }, [profile?.email]); // Adicionar profile.email como dependência para detectar mudanças
+  }, []); // Remover dependências para evitar loops
 
   useEffect(() => {
     let isInitialized = false;
@@ -114,19 +117,21 @@ export const useAuth = () => {
       async (event, session) => {
         if (!isMounted) return;
         
-        
+        console.log('useAuth - Auth state change:', event, session?.user?.email);
         
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only fetch user profile on SIGNED_IN events, not during initialization
-        if (session?.user && session.user.email && event === 'SIGNED_IN' && isInitialized) {
+        // Buscar perfil sempre que há uma sessão válida (após inicialização)
+        if (session?.user && session.user.email && isInitialized) {
+          console.log('useAuth - Buscando perfil após auth change');
           setTimeout(() => {
             if (isMounted) {
               fetchUserProfile(session.user.email);
             }
           }, 0);
         } else if (!session?.user) {
+          console.log('useAuth - Limpando perfil - sem usuário');
           setProfile(null);
         }
         
