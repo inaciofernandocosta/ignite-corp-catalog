@@ -70,12 +70,12 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Criar conta de auth usando a função segura
-    const { data: result, error: createError } = await supabase
-      .rpc('criar_conta_auth_segura', {
-        user_email: email.trim(),
-        user_password: 'TempPassword123!'
-      });
+      // Criar conta de auth usando a função segura
+      const { data: result, error: createError } = await supabase
+        .rpc('criar_conta_auth_segura', {
+          user_email: email.trim(),
+          user_password: 'Mudar@123'
+        });
 
     if (createError) {
       console.error('Erro ao criar conta de auth:', createError);

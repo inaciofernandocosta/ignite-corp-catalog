@@ -190,7 +190,7 @@ const AuthManagementDialog: React.FC<AuthManagementDialogProps> = ({ trigger }) 
             </h3>
             <p className="text-sm text-muted-foreground">
               Criar contas de autenticação para todos os usuários ativos que ainda não possuem. 
-              Isso irá criar contas com senha temporária "TempPassword123!" - usuários precisarão usar "Esqueci a senha".
+              Isso irá criar contas com senha temporária "Mudar@123" - usuários precisarão usar "Esqueci a Senha".
             </p>
 
             <Alert>
