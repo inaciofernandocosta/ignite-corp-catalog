@@ -46,35 +46,27 @@ export const ResetPasswordForm = ({ onSuccess, onBack }: ResetPasswordFormProps)
   });
 
   const onSubmit = async (data: ResetPasswordData) => {
-    console.log('🔥 RESET FORM - onSubmit chamado:', data);
-    alert('RESET FORM SUBMIT: Tentando redefinir senha...');
-    
     setIsSubmitting(true);
     
     try {
-      console.log('📞 Chamando supabase.auth.updateUser...');
-      
       const { data: updateData, error } = await supabase.auth.updateUser({
         password: data.password
       });
       
-      console.log('📋 Resultado updateUser:', { updateData, error });
-      
       if (error) {
-        console.error('❌ Erro ao atualizar senha:', error);
-        alert('ERRO UPDATE: ' + error.message);
+        let errorMessage = error.message;
+        if (error.message.includes('should be different from the old password')) {
+          errorMessage = 'A nova senha deve ser diferente da senha atual. Escolha uma senha diferente.';
+        }
         
         toast({
           title: 'Erro ao redefinir senha',
-          description: error.message,
+          description: errorMessage,
           variant: 'destructive',
         });
         return;
       }
 
-      console.log('✅ Senha atualizada com sucesso');
-      alert('SUCESSO: Senha redefinida com sucesso!');
-      
       setIsSuccess(true);
       
       toast({
@@ -82,15 +74,11 @@ export const ResetPasswordForm = ({ onSuccess, onBack }: ResetPasswordFormProps)
         description: 'Sua senha foi atualizada com sucesso.',
       });
 
-      // Aguardar 2 segundos e chamar onSuccess
       setTimeout(() => {
         onSuccess();
       }, 2000);
 
     } catch (error: any) {
-      console.error('💥 Erro no catch:', error);
-      alert('ERRO CATCH RESET: ' + error.message);
-      
       toast({
         title: 'Erro no sistema',
         description: 'Tente novamente mais tarde.',
