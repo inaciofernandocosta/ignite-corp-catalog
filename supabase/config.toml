@@ -6,9 +6,3 @@ verify_jwt = false
 
 [functions.send-course-enrollment-confirmation]
 verify_jwt = false
-
-[functions.create-auth-account]
-verify_jwt = false
-
-[functions.backfill-auth-accounts]
-verify_jwt = false

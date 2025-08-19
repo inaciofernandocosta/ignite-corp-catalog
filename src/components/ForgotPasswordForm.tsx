@@ -39,13 +39,22 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
     setIsSubmitting(true);
     
     try {
-      // resetPassword now returns void, so we handle success by default
-      await resetPassword(data.email);
-      console.log('ForgotPasswordForm - resetPassword concluído');
+      const { error } = await resetPassword(data.email);
+      console.log('ForgotPasswordForm - resetPassword resultado:', { error });
       
-      // Always show success since resetPassword doesn't throw errors anymore
-      setEmailSent(true);
-      console.log('ForgotPasswordForm - Email enviado com sucesso');
+      if (error) {
+        // Verificar se é erro de rate limit
+        if (error.message?.includes('rate limit') || error.message?.includes('Rate limit')) {
+          setIsBlocked(true);
+          // Desbloquear após 2 minutos
+          setTimeout(() => {
+            setIsBlocked(false);
+          }, 120000); // 2 minutos
+        }
+      } else {
+        setEmailSent(true);
+        console.log('ForgotPasswordForm - Email enviado com sucesso');
+      }
     } catch (error) {
       console.error('ForgotPasswordForm - Erro:', error);
     } finally {

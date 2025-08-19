@@ -43,7 +43,6 @@ import { ViewModulesDialog } from '@/components/admin/ViewModulesDialog';
 import { EnrollmentManagement } from '@/components/admin/EnrollmentManagement';
 import { UserProfile } from '@/components/UserProfile';
 import { CourseModulesViewer } from '@/components/student/CourseModulesViewer';
-import AuthManagementDialog from '@/components/admin/AuthManagementDialog';
 
 interface CourseEnrollment {
   id: string;

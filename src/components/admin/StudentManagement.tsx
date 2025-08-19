@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminStats } from './AdminStats';
 import { StudentCard } from './StudentCard';
 import { CreateUserDialog } from './CreateUserDialog';
-import AuthManagementDialog from './AuthManagementDialog';
 import { Search, UserPlus, Filter, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -274,7 +273,6 @@ export const StudentManagement = React.memo(() => {
               </CardTitle>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <AuthManagementDialog />
               <Button
                 variant="outline"
                 onClick={exportStudents}
