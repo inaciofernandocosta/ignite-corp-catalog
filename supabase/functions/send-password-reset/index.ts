@@ -54,14 +54,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Verificar se o usuário existe na tabela inscricoes_mentoria
+    // Verificar se o usuário existe usando função segura
     console.log('Verificando se usuário existe...');
     const { data: userExists, error: userError } = await supabase
-      .from('inscricoes_mentoria')
-      .select('nome, email, ativo')
-      .eq('email', email)
-      .eq('ativo', true)
-      .single();
+      .rpc('email_exists_for_recovery', { email_to_check: email });
 
     if (userError || !userExists) {
       console.log('Usuário não encontrado:', email);
@@ -75,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log('Usuário encontrado:', userExists.nome);
+    console.log('Usuário existe no sistema');
 
     // Gerar link de redefinição usando Supabase Auth
     const redirectUrl = `${req.headers.get('origin') || 'https://mentoriafutura.com'}/auth?type=recovery`;
@@ -269,7 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               
               <div class="content">
-                <p class="greeting">Olá, ${userExists.nome}! 👋</p>
+                <p class="greeting">Olá! 👋</p>
                 
                 <p class="message">
                   Recebemos uma solicitação para redefinir a senha da sua conta na plataforma <strong>IA na Prática</strong>. 
