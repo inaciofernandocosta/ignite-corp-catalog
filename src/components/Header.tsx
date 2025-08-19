@@ -1,9 +1,8 @@
-import { User, Menu, X } from "lucide-react";
+import { User, Building2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
-import logoTransparent from "@/assets/logo-transparent.png";
 
 interface HeaderProps {
   userState: 'visitor' | 'logged-corporate' | 'logged-personal' | 'logged-no-company';
@@ -38,14 +37,18 @@ export const Header = memo(({ userState, onLogin, onSignOut }: HeaderProps) => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <button 
-            className="flex items-center hover:opacity-80 transition-opacity min-w-0"
+            className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity min-w-0"
             onClick={handleLogoClick}
           >
-            <img 
-              src={logoTransparent} 
-              alt="Mentoria Futura IA - Educação Corporativa" 
-              className="h-8 sm:h-10 lg:h-12 w-auto object-contain"
-            />
+            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-primary rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-4 sm:w-6 h-4 sm:h-6 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-heading font-bold text-base sm:text-lg lg:text-xl text-foreground truncate">
+                Mentoria Futura
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium hidden sm:block">Educação Corporativa</p>
+            </div>
           </button>
 
           {/* Desktop Navigation */}
