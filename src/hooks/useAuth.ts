@@ -198,6 +198,11 @@ export const useAuth = () => {
       });
 
       if (error) {
+        // Detectar rate limit
+        if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
+          return { error: { ...error, isRateLimit: true } };
+        }
+        
         toast({
           title: 'Erro ao enviar email',
           description: error.message,
@@ -213,6 +218,11 @@ export const useAuth = () => {
 
       return { error: null };
     } catch (error: any) {
+      // Detectar rate limit em catch também
+      if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
+        return { error: { ...error, isRateLimit: true } };
+      }
+      
       toast({
         title: 'Erro no sistema',
         description: error.message || 'Erro interno',

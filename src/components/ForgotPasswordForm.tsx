@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
-import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle, Clock } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Por favor, digite um email válido'),
@@ -23,7 +24,7 @@ interface ForgotPasswordFormProps {
 export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: ForgotPasswordFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  const [showRateLimitModal, setShowRateLimitModal] = useState(false);
   const { resetPassword } = useAuth();
 
   const form = useForm<ForgotPasswordData>({
@@ -40,11 +41,13 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
     try {
       const result = await resetPassword(data.email);
       
-      if (!result.error) {
+      if (result.error?.isRateLimit) {
+        setShowRateLimitModal(true);
+      } else if (!result.error) {
         setEmailSent(true);
       }
     } catch (error) {
-      setIsBlocked(true);
+      // Erro genérico já tratado no useAuth
     } finally {
       setIsSubmitting(false);
     }
@@ -137,18 +140,10 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
           <Button
             type="submit"
             className="w-full"
-            disabled={isSubmitting || isBlocked}
+            disabled={isSubmitting}
           >
-            {isSubmitting ? 'Enviando...' : 
-             isBlocked ? 'Aguarde 2 minutos...' : 
-             'Enviar Link de Recuperação'}
+            {isSubmitting ? 'Enviando...' : 'Enviar Link de Recuperação'}
           </Button>
-          
-          {isBlocked && (
-            <p className="text-sm text-orange-600 text-center">
-              Muitas tentativas detectadas. Aguarde alguns minutos antes de tentar novamente.
-            </p>
-          )}
           
           <Button
             type="button"
@@ -162,6 +157,35 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showRateLimitModal} onOpenChange={setShowRateLimitModal}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+              <Clock className="h-6 w-6 text-orange-600" />
+            </div>
+            <AlertDialogTitle className="text-center">
+              Limite de Tentativas Atingido
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center space-y-2">
+              <p>
+                Para sua segurança, há um limite de tentativas de redefinição de senha.
+              </p>
+              <p className="font-medium text-orange-700">
+                Aguarde alguns minutos antes de tentar novamente.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Esta proteção evita uso indevido do sistema e garante a segurança da sua conta.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowRateLimitModal(false)}>
+              Entendi
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Form>
   );
 };
