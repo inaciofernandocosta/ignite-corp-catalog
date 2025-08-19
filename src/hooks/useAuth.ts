@@ -192,34 +192,33 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
+    console.log('🚀 TESTE DIRETO - resetPassword chamado para:', email);
+    alert('TESTE: Função resetPassword foi chamada para: ' + email);
+    
     try {
-      console.log('useAuth - Iniciando resetPassword para:', email);
-      
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      // Usar APENAS o método nativo do Supabase - sem verificações
+      console.log('📧 Chamando supabase.auth.resetPasswordForEmail...');
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
-      if (resetError) {
-        console.error('useAuth - Erro no reset de senha:', resetError);
-        
-        if (resetError.message?.includes('rate limit')) {
-          toast({
-            title: 'Muitas tentativas',
-            description: 'Aguarde alguns minutos antes de tentar novamente.',
-            variant: 'destructive',
-          });
-          return { error: { message: 'Rate limit excedido' } };
-        }
+      console.log('📬 Resposta do Supabase:', { error });
+      
+      if (error) {
+        console.error('❌ Erro do Supabase:', error);
+        alert('ERRO: ' + error.message);
         
         toast({
           title: 'Erro ao enviar email',
-          description: resetError.message || 'Erro interno do servidor',
+          description: error.message,
           variant: 'destructive',
         });
-        return { error: resetError };
+        return { error };
       }
 
-      console.log('useAuth - Email de reset enviado com sucesso');
+      console.log('✅ Sucesso! Email enviado');
+      alert('SUCESSO: Email de recuperação enviado!');
+      
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
@@ -227,20 +226,12 @@ export const useAuth = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('useAuth - Erro geral em resetPassword:', error);
-      
-      if (error.message?.includes('rate limit')) {
-        toast({
-          title: 'Muitas tentativas',
-          description: 'Aguarde alguns minutos antes de tentar novamente.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Rate limit excedido' } };
-      }
+      console.error('💥 Erro na função:', error);
+      alert('ERRO CATCH: ' + error.message);
       
       toast({
         title: 'Erro no sistema',
-        description: 'Tente novamente mais tarde.',
+        description: error.message || 'Erro interno',
         variant: 'destructive',
       });
       return { error };
