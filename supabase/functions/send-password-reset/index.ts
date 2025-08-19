@@ -165,15 +165,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Usuário existe no sistema');
 
-    // Gerar link de redefinição usando Supabase Auth com URL fixa para segurança
-    const redirectUrl = `https://fauoxtziffljgictcvhi.supabase.co/auth/v1/verify`;
+    // Gerar link de redefinição usando Supabase Auth 
+    const redirectUrl = `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?redirect_to=${encodeURIComponent('https://fauoxtziffljgictcvhi.supabase.co/auth?type=recovery')}`;
     console.log('Redirect URL:', redirectUrl);
     
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectUrl
+        redirectTo: 'https://fauoxtziffljgictcvhi.supabase.co/auth?type=recovery'
       }
     });
 
@@ -351,18 +351,18 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div style="padding: 40px 20px;">
             <div class="container">
-              <div class="header">
-                <h1>🔐 Redefinição de Senha</h1>
-                <p>Solicitação de alteração de credenciais</p>
-              </div>
+            <div class="header">
+              <h1>🔐 Redefinição de Senha</h1>
+              <p>Solicitação de alteração de credenciais</p>
+            </div>
+            
+            <div class="content">
+              <p class="greeting">Olá! 👋</p>
               
-              <div class="content">
-                <p class="greeting">Olá! 👋</p>
-                
-                <p class="message">
-                  Recebemos uma solicitação para redefinir a senha da sua conta na plataforma <strong>IA na Prática</strong>. 
-                  Para continuar com o processo, clique no botão abaixo para criar sua nova senha de forma segura.
-                </p>
+              <p class="message">
+                Recebemos uma solicitação para redefinir a senha da sua conta na plataforma <strong>Mentoria Futura</strong>. 
+                Para continuar com o processo, clique no botão abaixo para criar sua nova senha de forma segura.
+              </p>
                 
                 <div class="cta-container">
                   <a href="${resetData.properties?.action_link || '#'}" class="cta-button">
@@ -391,9 +391,9 @@ const handler = async (req: Request): Promise<Response> => {
                 </p>
               </div>
               
-              <div class="footer">
-                <p class="brand">IA na Prática</p>
-                <p>Transformando o futuro através da Inteligência Artificial</p>
+            <div class="footer">
+              <p class="brand">Mentoria Futura</p>
+              <p>Transformando o futuro através da Inteligência Artificial</p>
                 
                 <div class="social-links">
                   <a href="#" style="margin-right: 16px;">📧 Suporte</a>
@@ -401,10 +401,10 @@ const handler = async (req: Request): Promise<Response> => {
                   <a href="#">📱 Contato</a>
                 </div>
                 
-                <p style="font-size: 12px; color: #9ca3af; margin-top: 24px;">
-                  Este é um email automático, não responda diretamente.<br>
-                  © ${new Date().getFullYear()} IA na Prática. Todos os direitos reservados.
-                </p>
+              <p style="font-size: 12px; color: #9ca3af; margin-top: 24px;">
+                Este é um email automático, não responda diretamente.<br>
+                © ${new Date().getFullYear()} Mentoria Futura. Todos os direitos reservados.
+              </p>
               </div>
             </div>
           </div>
@@ -415,10 +415,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar email
     console.log('Tentando enviar email para:', email);
     const emailResponse = await resend.emails.send({
-      from: "IA na Prática <onboarding@resend.dev>",
+      from: "Mentoria Futura <contato@mentoriafutura.com.br>",
       to: [email],
-      subject: "Redefinição de Senha - IA na Prática",
+      subject: "Redefinição de senha — Mentoria Futura",
+      reply_to: "contato@mentoriafutura.com.br",
       html: html,
+      text: `Olá!\n\nRecebemos uma solicitação para redefinir a senha da sua conta na Mentoria Futura.\n\nPara continuar, acesse o link: ${resetData.properties?.action_link}\n\nEste link é válido por 1 hora. Se você não solicitou esta redefinição, ignore este email.\n\nAtenciosamente,\nEquipe Mentoria Futura`
     });
 
     console.log('Resposta do Resend:', JSON.stringify(emailResponse, null, 2));

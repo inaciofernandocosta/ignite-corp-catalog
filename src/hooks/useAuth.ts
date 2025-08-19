@@ -198,22 +198,22 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
       });
 
-      if (error) {
+      if (error || !data?.success) {
         // Detectar rate limit
-        if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
+        if (data?.isRateLimit || error?.message?.includes('rate limit') || error?.message?.includes('too many requests')) {
           return { error: { ...error, isRateLimit: true } };
         }
         
         toast({
           title: 'Erro ao enviar email',
-          description: error.message,
+          description: data?.error || error?.message || 'Erro interno',
           variant: 'destructive',
         });
-        return { error };
+        return { error: error || { message: data?.error } };
       }
 
       toast({
