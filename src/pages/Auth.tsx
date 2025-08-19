@@ -49,7 +49,7 @@ export const Auth = () => {
       const errorDescription = hashParams.get('error_description');
 
       if (error === 'access_denied' && errorCode === 'otp_expired') {
-        console.log('Auth - Token de recovery expirado');
+        
         // Mostrar mensagem de erro e redirecionar para form de esqueci senha
         setShowForgotPassword(true);
         setIsRecoveryMode(false);
@@ -61,7 +61,7 @@ export const Auth = () => {
 
       // Verificar se tem parâmetro type=recovery na URL
       if (searchParams.get('type') === 'recovery') {
-        console.log('Auth - Modo de recovery detectado via URL params');
+        
         setIsRecoveryMode(true);
         setShowResetPassword(true);
         return;
@@ -73,7 +73,7 @@ export const Auth = () => {
       const type = hashParams.get('type');
 
       if (accessToken && refreshToken && type === 'recovery') {
-        console.log('Auth - Link de recovery detectado via hash');
+        
         try {
           // Estabelecer sessão com os tokens do link
           const { error } = await supabase.auth.setSession({
@@ -82,7 +82,7 @@ export const Auth = () => {
           });
 
           if (!error) {
-            console.log('Auth - Sessão de recovery estabelecida');
+            
             setIsRecoveryMode(true);
             setShowResetPassword(true);
             // Limpar hash da URL
@@ -99,7 +99,7 @@ export const Auth = () => {
       if (session && !isRecoveryMode && !showResetPassword) {
         const currentUrl = window.location.href;
         if (currentUrl.includes('type=recovery') || currentUrl.includes('#type=recovery')) {
-          console.log('Auth - Detectando recovery via session + URL');
+          
           setIsRecoveryMode(true);
           setShowResetPassword(true);
         }
@@ -114,7 +114,7 @@ export const Auth = () => {
     // Aguardar um tick para garantir que a verificação de recovery foi processada
     const timer = setTimeout(() => {
       if (!loading && user && !isRecoveryMode && !showResetPassword) {
-        console.log('Auth - Redirecionando para dashboard');
+        
         navigate('/dashboard');
       }
     }, 100);
@@ -123,7 +123,7 @@ export const Auth = () => {
   }, [user, loading, navigate, isRecoveryMode, showResetPassword]);
 
   const onLogin = async (data: LoginFormData) => {
-    console.log('Auth - onLogin chamado:', data);
+    
     setIsLoading(true);
     try {
       const { error } = await signIn(data.email, data.password);
@@ -138,7 +138,7 @@ export const Auth = () => {
   };
 
   const handleBackToLogin = () => {
-    console.log('Auth - Voltando para login');
+    
     setShowForgotPassword(false);
     setShowResetPassword(false);
     setIsRecoveryMode(false);
@@ -150,7 +150,7 @@ export const Auth = () => {
   };
 
   const handleResetSuccess = async () => {
-    console.log('Auth - Reset de senha realizado com sucesso');
+    
     
     try {
       // Fazer logout do usuário após alterar a senha
@@ -167,11 +167,11 @@ export const Auth = () => {
       // Note: O toast já é mostrado no ResetPasswordForm, mas vamos adicionar uma mensagem específica
       setTimeout(() => {
         // O usuário precisa fazer login novamente
-        console.log('Auth - Usuário deve fazer login novamente');
+        
       }, 100);
       
     } catch (error) {
-      console.error('Auth - Erro ao fazer logout após reset:', error);
+      
     }
   };
 
@@ -298,10 +298,7 @@ export const Auth = () => {
                       type="button"
                       variant="ghost"
                       className="w-full text-sm"
-                      onClick={() => {
-                        console.log('Auth - Indo para esqueci senha');
-                        setShowForgotPassword(true);
-                      }}
+                      onClick={() => setShowForgotPassword(true)}
                     >
                       Esqueci minha senha
                     </Button>

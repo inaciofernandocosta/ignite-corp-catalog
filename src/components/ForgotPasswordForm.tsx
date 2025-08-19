@@ -35,38 +35,28 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
   });
 
   const onSubmit = async (data: ForgotPasswordData) => {
-    console.log('🔥 FORM SUBMIT - Dados recebidos:', data);
-    alert('FORM SUBMIT: ' + data.email);
-    
     setIsSubmitting(true);
     
     try {
-      console.log('📞 Chamando resetPassword...');
       const result = await resetPassword(data.email);
       
-      console.log('📋 Resultado:', result);
-      
       if (!result.error) {
-        console.log('✅ Sucesso - mostrando tela de confirmação');
         setEmailSent(true);
       }
     } catch (error) {
-      console.error('💥 Erro no onSubmit:', error);
-      alert('ERRO NO FORM: ' + JSON.stringify(error));
+      setIsBlocked(true);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleBack = () => {
-    console.log('ForgotPasswordForm - Voltando para login');
     setEmailSent(false);
     form.reset();
     onBack();
   };
 
   const handleTryAgain = () => {
-    console.log('ForgotPasswordForm - Tentando novamente');
     setEmailSent(false);
     form.reset();
   };
@@ -135,10 +125,6 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
                     className="pl-10"
                     disabled={isSubmitting}
                     {...field}
-                    onChange={(e) => {
-                      console.log('ForgotPasswordForm - Input onChange:', e.target.value);
-                      field.onChange(e);
-                    }}
                   />
                 </div>
               </FormControl>

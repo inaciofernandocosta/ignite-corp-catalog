@@ -32,7 +32,7 @@ export function ResendEnrollmentEmailDialog({
     setIsLoading(true);
     
     try {
-      console.log('Reenviando e-mail de confirmação para:', enrollment);
+      
       
       const { data, error } = await supabase.functions.invoke('send-course-enrollment-confirmation', {
         body: {
@@ -50,7 +50,7 @@ export function ResendEnrollmentEmailDialog({
         throw error;
       }
 
-      console.log('E-mail reenviado com sucesso:', data);
+      
 
       toast({
         title: "E-mail reenviado!",

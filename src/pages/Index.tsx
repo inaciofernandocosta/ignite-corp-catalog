@@ -80,30 +80,18 @@ const Index = React.memo(() => {
   }, [toast]);
 
   const handleCTAClick = useCallback((course: any) => {
-    console.log('handleCTAClick called with:', {
-      course: course,
-      slug: course?.slug,
-      id: course?.id,
-      user: !!user,
-      profile: !!profile,
-      enrollmentStatus: userEnrollments[course?.id]
-    });
-
     // Se o usuário já está inscrito, não fazer nada
     if (userEnrollments[course?.id]) {
-      console.log('User already enrolled, not opening modal');
       return;
     }
 
     if (!user || !profile) {
-      console.log('User not logged in, showing form');
       setSelectedCourseForApplication(course);
       setShowApplicationForm(true);
       return;
     }
     
     // Para usuários logados, mostrar modal de confirmação de inscrição
-    console.log('User logged in, showing enrollment modal');
     setSelectedCourse(course);
     setShowEnrollmentModal(true);
   }, [user, profile, userEnrollments]);

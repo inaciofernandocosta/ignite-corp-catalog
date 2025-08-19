@@ -50,7 +50,7 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      console.log('MaterialViewer: Buscando materiais para módulo:', moduleId);
+      
       
       const { data, error } = await supabase
         .from('modulo_materiais')
@@ -61,7 +61,7 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
 
       if (error) throw error;
       
-      console.log('MaterialViewer: Materiais encontrados:', data?.length || 0, data);
+      
       setMaterials(data || []);
     } catch (error: any) {
       console.error('Erro ao buscar materiais:', error);

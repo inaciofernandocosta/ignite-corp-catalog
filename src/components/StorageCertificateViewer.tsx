@@ -61,18 +61,17 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
   const loadImageSimple = async (): Promise<HTMLImageElement> => {
     // Se já estiver carregando, aguarde a conclusão
     if (imageLoadPromise) {
-      console.log('Aguardando carregamento em progresso');
       return imageLoadPromise;
     }
 
-    console.log('Iniciando carregamento da imagem (sem cache)');
+    
     
     imageLoadPromise = new Promise(async (resolve, reject) => {
       try {
         // Usar a URL pública direta do Supabase Storage para evitar problemas de CORS
         const timestamp = Date.now();
         const publicUrl = `https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/certificados/Certificado.jpeg?t=${timestamp}`;
-        console.log(`Carregando imagem via URL pública: ${publicUrl}`);
+        
         
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -84,7 +83,6 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
         img.onload = () => {
           clearTimeout(timeout);
           imageLoadPromise = null;
-          console.log('Imagem carregada com sucesso em:', new Date().toLocaleTimeString());
           resolve(img);
         };
 
@@ -153,7 +151,7 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
           // Usar a URL pública direta como fallback
           const timestamp = Date.now();
           const publicUrl = `https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/certificados/Certificado.jpeg?t=${timestamp}`;
-          console.log('Usando URL pública como fallback:', publicUrl);
+          
           
           // Retornar a URL pública como fallback
           toast({
@@ -307,44 +305,6 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       Tentar novamente
-                    </Button>
-                    <Button 
-                      onClick={async () => {
-                        console.log('=== DEBUG INFO ===');
-                        console.log('certificateImage:', certificateImage);
-                        console.log('isLoading:', isLoading);
-                        console.log('error:', error);
-                        console.log('==================');
-                        
-                        try {
-                          // Testar download via Supabase com timestamp para evitar cache
-                          const timestamp = Date.now();
-                          console.log(`Debug: Baixando imagem com timestamp ${timestamp}`);
-                          const { data, error: downloadError } = await supabase.storage
-                            .from('certificados')
-                            .download(`Certificado.jpeg?t=${timestamp}`);
-                            
-                          if (downloadError) {
-                            console.error('Erro ao baixar via Supabase:', downloadError);
-                            alert('Erro ao baixar via Supabase: ' + downloadError.message);
-                            return;
-                          }
-                          
-                          if (data) {
-                            // Criar URL do blob e abrir em nova aba
-                            const blobUrl = URL.createObjectURL(data);
-                            window.open(blobUrl, '_blank');
-                            console.log('Imagem aberta via blob URL');
-                          }
-                        } catch (err) {
-                          console.error('Erro no debug:', err);
-                          alert('Erro no debug: ' + (err as Error).message);
-                        }
-                      }}
-                      variant="outline"
-                      className="bg-gray-600 hover:bg-gray-700"
-                    >
-                      Debug
                     </Button>
                   </div>
                 </div>

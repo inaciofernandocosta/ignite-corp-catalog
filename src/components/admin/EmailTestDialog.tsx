@@ -30,7 +30,7 @@ export function EmailTestDialog({ isOpen, onOpenChange }: EmailTestDialogProps) 
     setLoading(true);
     
     try {
-      console.log('Testando envio de e-mail para:', testEmail);
+      
       
       // Primeiro, vamos criar uma inscrição fictícia para testar
       const mockEnrollmentData = {
@@ -51,7 +51,7 @@ export function EmailTestDialog({ isOpen, onOpenChange }: EmailTestDialogProps) 
         throw error;
       }
 
-      console.log('Resposta do teste de e-mail:', data);
+      
 
       toast({
         title: "Teste realizado!",
@@ -61,7 +61,6 @@ export function EmailTestDialog({ isOpen, onOpenChange }: EmailTestDialogProps) 
       onOpenChange?.(false);
 
     } catch (error) {
-      console.error('Erro ao testar e-mail:', error);
       toast({
         title: "Erro no teste",
         description: "Verifique os logs da edge function para mais detalhes.",

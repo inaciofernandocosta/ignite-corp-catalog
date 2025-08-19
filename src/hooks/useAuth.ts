@@ -69,7 +69,7 @@ export const useAuth = () => {
       };
 
       setProfile(newProfile);
-      console.log('Perfil carregado:', { email, role: userRole });
+      
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
     }
@@ -86,7 +86,7 @@ export const useAuth = () => {
         
         if (!isMounted) return;
         
-        console.log('Initial session check:', !!initialSession?.user);
+        
         
         // Set initial state immediately
         setSession(initialSession);
@@ -114,7 +114,7 @@ export const useAuth = () => {
       async (event, session) => {
         if (!isMounted) return;
         
-        console.log('Auth state change:', event, !!session?.user);
+        
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -192,22 +192,12 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
-    console.log('🚀 TESTE DIRETO - resetPassword chamado para:', email);
-    alert('TESTE: Função resetPassword foi chamada para: ' + email);
-    
     try {
-      // Usar APENAS o método nativo do Supabase - sem verificações
-      console.log('📧 Chamando supabase.auth.resetPasswordForEmail...');
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+        redirectTo: `${window.location.origin}/auth?mode=reset`
       });
 
-      console.log('📬 Resposta do Supabase:', { error });
-      
       if (error) {
-        console.error('❌ Erro do Supabase:', error);
-        alert('ERRO: ' + error.message);
-        
         toast({
           title: 'Erro ao enviar email',
           description: error.message,
@@ -216,9 +206,6 @@ export const useAuth = () => {
         return { error };
       }
 
-      console.log('✅ Sucesso! Email enviado');
-      alert('SUCESSO: Email de recuperação enviado!');
-      
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
@@ -226,9 +213,6 @@ export const useAuth = () => {
 
       return { error: null };
     } catch (error: any) {
-      console.error('💥 Erro na função:', error);
-      alert('ERRO CATCH: ' + error.message);
-      
       toast({
         title: 'Erro no sistema',
         description: error.message || 'Erro interno',
@@ -244,7 +228,7 @@ export const useAuth = () => {
     
     try {
       setLogoutLoading(true);
-      console.log('Iniciando processo de logout...');
+      
       
       // PRIMEIRO: Limpar estado local imediatamente para garantir logout na UI
       setUser(null);
@@ -256,7 +240,7 @@ export const useAuth = () => {
       const { data: currentSession } = await supabase.auth.getSession();
       
       if (currentSession?.session) {
-        console.log('Sessão encontrada, fazendo logout do Supabase...');
+        
         const { error } = await supabase.auth.signOut();
         
         // Ignorar erros conhecidos de sessão
@@ -265,11 +249,11 @@ export const useAuth = () => {
           console.error('Erro no logout do Supabase (mas continuando):', error);
         }
       } else {
-        console.log('Nenhuma sessão ativa encontrada, pulando logout do Supabase');
+        
       }
       
       // TERCEIRO: Sempre mostrar sucesso e redirecionar
-      console.log('Logout concluído com sucesso');
+      
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
