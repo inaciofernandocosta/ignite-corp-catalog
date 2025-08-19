@@ -35,18 +35,14 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
   });
 
   const onSubmit = async (data: ForgotPasswordData) => {
-    console.log('🚀 ForgotPasswordForm - onSubmit chamado:', data);
-    alert('DEBUG: onSubmit foi chamado com email: ' + data.email);
+    console.log('ForgotPasswordForm - onSubmit chamado:', data);
     setIsSubmitting(true);
     
     try {
-      console.log('📞 ForgotPasswordForm - Chamando resetPassword...');
       const { error } = await resetPassword(data.email);
-      console.log('📬 ForgotPasswordForm - resetPassword resultado:', { error });
+      console.log('ForgotPasswordForm - resetPassword resultado:', { error });
       
       if (error) {
-        console.error('❌ ForgotPasswordForm - Erro recebido:', error);
-        alert('DEBUG: Erro recebido: ' + JSON.stringify(error));
         // Verificar se é erro de rate limit
         if (error.message?.includes('rate limit') || error.message?.includes('Rate limit')) {
           setIsBlocked(true);
@@ -56,13 +52,11 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
           }, 120000); // 2 minutos
         }
       } else {
-        console.log('✅ ForgotPasswordForm - Email enviado com sucesso');
-        alert('DEBUG: Email enviado com sucesso!');
         setEmailSent(true);
+        console.log('ForgotPasswordForm - Email enviado com sucesso');
       }
     } catch (error) {
-      console.error('💥 ForgotPasswordForm - Erro no catch:', error);
-      alert('DEBUG: Erro no catch: ' + JSON.stringify(error));
+      console.error('ForgotPasswordForm - Erro:', error);
     } finally {
       setIsSubmitting(false);
     }

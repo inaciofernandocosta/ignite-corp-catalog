@@ -193,15 +193,14 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('🔍 useAuth - Iniciando resetPassword para:', email);
-      console.log('⚠️ MODO DEBUG: Pulando verificação e enviando reset diretamente');
+      console.log('useAuth - Iniciando resetPassword para:', email);
       
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (resetError) {
-        console.error('❌ useAuth - Erro no reset de senha:', resetError);
+        console.error('useAuth - Erro no reset de senha:', resetError);
         
         if (resetError.message?.includes('rate limit')) {
           toast({
@@ -220,7 +219,7 @@ export const useAuth = () => {
         return { error: resetError };
       }
 
-      console.log('✅ useAuth - Email de reset enviado com sucesso');
+      console.log('useAuth - Email de reset enviado com sucesso');
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
