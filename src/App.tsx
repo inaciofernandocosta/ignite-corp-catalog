@@ -12,19 +12,13 @@ import { TermsOfUse } from "./pages/TermsOfUse";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { LGPD } from "./pages/LGPD";
 import NotFound from "./pages/NotFound";
-import { TestAuthDebug } from "./test-auth-debug";
 
 const queryClient = new QueryClient();
 
-console.log('React available:', typeof React);
-console.log('QueryClient created:', queryClient);
-
 const App = () => {
-  console.log('App component rendering');
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <TestAuthDebug />
         <Toaster />
         <Sonner />
         <BrowserRouter>
