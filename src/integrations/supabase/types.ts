@@ -781,6 +781,10 @@ export type Database = {
         Args: { email_to_check: string }
         Returns: boolean
       }
+      generate_signed_url: {
+        Args: { bucket_name: string; expires_in?: number; object_path: string }
+        Returns: string
+      }
       generate_slug: {
         Args: { title: string }
         Returns: string
