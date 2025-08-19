@@ -149,24 +149,7 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Primeiro verificar se o usuário existe na tabela inscricoes_mentoria
-      const { data: inscricao, error: inscricaoError } = await supabase
-        .from('inscricoes_mentoria')
-        .select('*')
-        .eq('email', email)
-        .eq('ativo', true)
-        .single();
-
-      if (inscricaoError || !inscricao) {
-        toast({
-          title: 'Usuário não encontrado',
-          description: 'Email não cadastrado ou não ativo no sistema.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Usuário não encontrado' } };
-      }
-
-      // Tentar fazer login no Supabase Auth
+      // Tentar fazer login no Supabase Auth diretamente
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -183,7 +166,7 @@ export const useAuth = () => {
 
       toast({
         title: 'Login realizado com sucesso!',
-        description: `Bem-vindo(a), ${inscricao.nome}!`,
+        description: 'Bem-vindo(a)!',
       });
 
       return { error: null };
@@ -212,13 +195,9 @@ export const useAuth = () => {
     try {
       console.log('useAuth - Iniciando resetPassword para:', email);
       
-      // Primeiro verificar se usuário existe no sistema
+      // Verificar se usuário existe usando função segura
       const { data: userExists, error: userCheckError } = await supabase
-        .from('inscricoes_mentoria')
-        .select('email, nome')
-        .eq('email', email)
-        .eq('ativo', true)
-        .maybeSingle();
+        .rpc('email_exists_for_recovery', { email_to_check: email });
 
       console.log('useAuth - Resultado da busca:', { userExists, userCheckError });
 
@@ -242,7 +221,7 @@ export const useAuth = () => {
         return { error: { message: 'Email não encontrado' } };
       }
 
-      console.log('useAuth - Usuário encontrado:', userExists.nome);
+      console.log('useAuth - Usuário encontrado, enviando reset');
       
       // Usar método nativo do Supabase
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {

@@ -175,6 +175,18 @@ export const CreateUserDialog = ({ open, onOpenChange, onUserCreated }: CreateUs
 
       if (error) throw error;
 
+      // Create authentication account for the user
+      const { error: authError } = await supabase
+        .rpc('criar_conta_auth_segura', {
+          user_email: data.email,
+          user_password: data.senha
+        });
+
+      if (authError) {
+        console.error('Erro ao criar conta de autenticação:', authError);
+        // Don't throw here - user was created successfully, just log the auth error
+      }
+
       toast({
         title: 'Usuário cadastrado!',
         description: `${data.nome} foi cadastrado com sucesso.`,
