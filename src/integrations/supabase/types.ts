@@ -749,7 +749,7 @@ export type Database = {
         Args: { data: string }
         Returns: string
       }
-      call_edge_function: {
+      call_edge_function_secure: {
         Args: { function_name: string; payload?: Json }
         Returns: undefined
       }
