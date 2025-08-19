@@ -89,38 +89,36 @@ export const Auth = () => {
             window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
           } else {
             console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
+            // Se falhar, limpar estado e mostrar esqueci senha
+            setIsRecoveryMode(false);
+            setShowResetPassword(false);
+            setShowForgotPassword(true);
           }
         } catch (error) {
           console.error('Auth - Erro ao processar link de recovery:', error);
-        }
-      }
-
-      // Verificar se tem sessão de recovery (fallback)
-      if (session && !isRecoveryMode && !showResetPassword) {
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('type=recovery') || currentUrl.includes('#type=recovery')) {
-          
-          setIsRecoveryMode(true);
-          setShowResetPassword(true);
+          // Se falhar, limpar estado e mostrar esqueci senha
+          setIsRecoveryMode(false);
+          setShowResetPassword(false);
+          setShowForgotPassword(true);
         }
       }
     };
 
     checkRecoveryMode();
-  }, [searchParams]); // Removido session da dependência para evitar loops
+  }, [searchParams, supabase.auth]);
 
   // Redirect if already authenticated (but not in recovery mode) - RUNS AFTER recovery check
   useEffect(() => {
     // Aguardar um tick para garantir que a verificação de recovery foi processada
     const timer = setTimeout(() => {
-      if (!loading && user && !isRecoveryMode && !showResetPassword) {
+      if (!loading && user && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
         
         navigate('/dashboard');
       }
-    }, 100);
+    }, 200); // Aumentar o timeout para dar mais tempo para recovery mode ser detectado
 
     return () => clearTimeout(timer);
-  }, [user, loading, navigate, isRecoveryMode, showResetPassword]);
+  }, [user, loading, navigate, isRecoveryMode, showResetPassword, showForgotPassword]);
 
   const onLogin = async (data: LoginFormData) => {
     
