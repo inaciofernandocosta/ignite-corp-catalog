@@ -57,7 +57,7 @@ interface CourseEnrollment {
     duracao: string;
     nivel: string;
     imagem_capa: string;
-  };
+  } | null;
 }
 
 interface Certificate {
@@ -131,7 +131,10 @@ export const Dashboard = () => {
         .eq('aluno_id', profile.id);
 
       if (enrollmentsError) throw enrollmentsError;
-      setCourseEnrollments(enrollments || []);
+      
+      // Filtrar apenas inscrições com cursos válidos
+      const validEnrollments = (enrollments || []).filter(enrollment => enrollment.curso !== null);
+      setCourseEnrollments(validEnrollments);
 
       // Para admins, buscar todos os cursos disponíveis
       if (profile.role === 'admin') {
@@ -523,30 +526,30 @@ export const Dashboard = () => {
                                 </div>
 
                                 {/* Imagem de capa do curso se disponível */}
-                                {enrollment.curso.imagem_capa && (
+                                {enrollment.curso?.imagem_capa && (
                                   <div className="relative aspect-video overflow-hidden">
                                     <img 
                                       src={enrollment.curso.imagem_capa} 
-                                      alt={enrollment.curso.titulo}
+                                      alt={enrollment.curso?.titulo || 'Curso'}
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
                                 )}
 
                                 <CardHeader className="p-3 sm:p-4">
-                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso.titulo}</CardTitle>
-                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso.descricao}</CardDescription>
+                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso?.titulo || 'Curso não encontrado'}</CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso?.descricao || 'Informações do curso não disponíveis'}</CardDescription>
                                 </CardHeader>
 
                                 <CardContent className="p-3 sm:p-4 pt-0">
                                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
                                     <div className="flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
-                                      <span>{enrollment.curso.duracao}</span>
+                                      <span>{enrollment.curso?.duracao || 'Duração não informada'}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <GraduationCap className="h-3 w-3" />
-                                      <span>{enrollment.curso.nivel}</span>
+                                      <span>{enrollment.curso?.nivel || 'Nível não informado'}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
@@ -565,7 +568,7 @@ export const Dashboard = () => {
                                   <div className="space-y-2">
                                     <CourseModulesViewer
                                       courseId={enrollment.curso_id}
-                                      courseTitle={enrollment.curso.titulo}
+                                      courseTitle={enrollment.curso?.titulo || 'Curso'}
                                     />
                                     {Number(enrollment.progresso) >= 100 && (() => {
                                       const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
@@ -624,30 +627,30 @@ export const Dashboard = () => {
                                 </div>
 
                                 {/* Imagem de capa do curso se disponível */}
-                                {enrollment.curso.imagem_capa && (
+                                {enrollment.curso?.imagem_capa && (
                                   <div className="relative aspect-video overflow-hidden">
                                     <img 
                                       src={enrollment.curso.imagem_capa} 
-                                      alt={enrollment.curso.titulo}
+                                      alt={enrollment.curso?.titulo || 'Curso'}
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
                                 )}
 
                                 <CardHeader className="p-3 sm:p-4">
-                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso.titulo}</CardTitle>
-                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso.descricao}</CardDescription>
+                                  <CardTitle className="text-sm sm:text-base line-clamp-2">{enrollment.curso?.titulo || 'Curso não encontrado'}</CardTitle>
+                                  <CardDescription className="text-xs sm:text-sm line-clamp-3">{enrollment.curso?.descricao || 'Informações do curso não disponíveis'}</CardDescription>
                                 </CardHeader>
 
                                 <CardContent className="p-3 sm:p-4 pt-0">
                                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-3 sm:mb-4">
                                     <div className="flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
-                                      <span>{enrollment.curso.duracao}</span>
+                                      <span>{enrollment.curso?.duracao || 'Duração não informada'}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <GraduationCap className="h-3 w-3" />
-                                      <span>{enrollment.curso.nivel}</span>
+                                      <span>{enrollment.curso?.nivel || 'Nível não informado'}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
@@ -666,7 +669,7 @@ export const Dashboard = () => {
                                   <div className="space-y-2">
                                     <CourseModulesViewer
                                       courseId={enrollment.curso_id}
-                                      courseTitle={enrollment.curso.titulo}
+                                      courseTitle={enrollment.curso?.titulo || 'Curso'}
                                     />
                                     {Number(enrollment.progresso) >= 100 && (() => {
                                       const certificate = certificates.find(cert => cert.inscricao_curso_id === enrollment.id);
