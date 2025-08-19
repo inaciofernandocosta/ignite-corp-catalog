@@ -12,6 +12,7 @@ import { TermsOfUse } from "./pages/TermsOfUse";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { LGPD } from "./pages/LGPD";
 import NotFound from "./pages/NotFound";
+import { TestAuthDebug } from "./test-auth-debug";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <TestAuthDebug />
         <Toaster />
         <Sonner />
         <BrowserRouter>
