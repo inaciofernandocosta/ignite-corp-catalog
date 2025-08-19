@@ -193,56 +193,15 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('useAuth - Iniciando resetPassword para:', email);
-      console.log('useAuth - Teste inicial: Checando conectividade com Supabase...');
+      console.log('🔍 useAuth - Iniciando resetPassword para:', email);
+      console.log('⚠️ MODO DEBUG: Pulando verificação e enviando reset diretamente');
       
-      // Verificar se usuário existe usando função segura
-      console.log('useAuth - Chamando função email_exists_for_recovery...');
-      const { data: userExists, error: userCheckError } = await supabase
-        .rpc('email_exists_for_recovery', { email_to_check: email });
-
-      console.log('useAuth - Resultado completo da RPC:', { 
-        data: userExists, 
-        error: userCheckError,
-        email_testado: email 
-      });
-
-      if (userCheckError) {
-        console.error('useAuth - Erro específico na consulta RPC:', {
-          message: userCheckError.message,
-          code: userCheckError.code,
-          details: userCheckError.details,
-          hint: userCheckError.hint
-        });
-        toast({
-          title: 'Erro no sistema',
-          description: `Erro na verificação: ${userCheckError.message}`,
-          variant: 'destructive',
-        });
-        return { error: userCheckError };
-      }
-
-      console.log('useAuth - Valor de userExists:', userExists, typeof userExists);
-
-      if (!userExists) {
-        console.log('useAuth - Usuário não encontrado na verificação:', email);
-        toast({
-          title: 'Email não encontrado',
-          description: 'Este email não está cadastrado no sistema.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Email não encontrado' } };
-      }
-
-      console.log('useAuth - ✅ Usuário encontrado, prosseguindo com reset para:', email);
-      
-      // Usar método nativo do Supabase
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (resetError) {
-        console.error('useAuth - Erro no reset de senha:', resetError);
+        console.error('❌ useAuth - Erro no reset de senha:', resetError);
         
         if (resetError.message?.includes('rate limit')) {
           toast({
@@ -261,7 +220,7 @@ export const useAuth = () => {
         return { error: resetError };
       }
 
-      console.log('useAuth - Email de reset enviado com sucesso');
+      console.log('✅ useAuth - Email de reset enviado com sucesso');
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
