@@ -799,6 +799,10 @@ export type Database = {
         Args: { admin_email: string }
         Returns: string
       }
+      email_exists_for_recovery: {
+        Args: { email_to_check: string }
+        Returns: boolean
+      }
       generate_slug: {
         Args: { title: string }
         Returns: string
@@ -814,6 +818,16 @@ export type Database = {
       gerar_token_unico: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_by_email: {
+        Args: { user_email: string }
+        Returns: {
+          ativo: boolean
+          email: string
+          id: string
+          senha_hash: string
+          status: string
+        }[]
       }
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
