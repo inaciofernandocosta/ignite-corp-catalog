@@ -555,36 +555,6 @@ export type Database = {
           },
         ]
       }
-      nome_da_tabela: {
-        Row: {
-          ativo: boolean | null
-          created_at: string
-          email: string | null
-          id: string
-          idade: number | null
-          nome: string
-          updated_at: string
-        }
-        Insert: {
-          ativo?: boolean | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          idade?: number | null
-          nome: string
-          updated_at?: string
-        }
-        Update: {
-          ativo?: boolean | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          idade?: number | null
-          nome?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       progresso_aulas: {
         Row: {
           aula_id: string
@@ -909,14 +879,6 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
-      }
-      send_test_email: {
-        Args: {
-          email_body: string
-          email_subject: string
-          recipient_email: string
-        }
-        Returns: string
       }
       text_to_bytea: {
         Args: { data: string }
