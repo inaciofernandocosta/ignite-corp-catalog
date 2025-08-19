@@ -193,86 +193,35 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('useAuth - Iniciando resetPassword para:', email);
+      const cleanEmail = email.trim();
       
-      // Verificar se usuário existe usando função segura
-      const { data: userExists, error: userCheckError } = await supabase
-        .rpc('email_exists_for_recovery', { email_to_check: email });
+      // Check if user exists using our secure function
+      const { data: userExists, error: checkError } = await supabase
+        .rpc('email_exists_for_recovery', { email_to_check: cleanEmail });
 
-      console.log('useAuth - Resultado da busca:', { userExists, userCheckError });
-
-      if (userCheckError) {
-        console.error('useAuth - Erro na consulta:', userCheckError);
-        toast({
-          title: 'Erro no sistema',
-          description: 'Tente novamente mais tarde.',
-          variant: 'destructive',
-        });
-        return { error: userCheckError };
+      if (checkError) {
+        console.error('Error checking user existence:', checkError);
+        // Don't reveal the actual error to prevent enumeration
+        return;
       }
 
-      if (!userExists) {
-        console.log('useAuth - Usuário não encontrado:', email);
-        toast({
-          title: 'Email não encontrado',
-          description: 'Este email não está cadastrado no sistema.',
-          variant: 'destructive',
+      // Only proceed if user exists
+      if (userExists) {
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: `${window.location.origin}/auth?mode=reset`,
         });
-        return { error: { message: 'Email não encontrado' } };
-      }
-
-      console.log('useAuth - Usuário encontrado, enviando reset');
-      
-      // Usar método nativo do Supabase
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
-      });
-
-      if (resetError) {
-        console.error('useAuth - Erro no reset de senha:', resetError);
         
-        if (resetError.message?.includes('rate limit')) {
-          toast({
-            title: 'Muitas tentativas',
-            description: 'Aguarde alguns minutos antes de tentar novamente.',
-            variant: 'destructive',
-          });
-          return { error: { message: 'Rate limit excedido' } };
+        if (error) {
+          console.error('Password reset error:', error);
+          // Don't throw error to prevent enumeration - just log it
         }
-        
-        toast({
-          title: 'Erro ao enviar email',
-          description: resetError.message || 'Erro interno do servidor',
-          variant: 'destructive',
-        });
-        return { error: resetError };
       }
-
-      console.log('useAuth - Email de reset enviado com sucesso');
-      toast({
-        title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
-      });
-
-      return { error: null };
+      
+      // Always return success to prevent email enumeration
+      // The actual result is handled by the email being sent or not
     } catch (error: any) {
-      console.error('useAuth - Erro geral em resetPassword:', error);
-      
-      if (error.message?.includes('rate limit')) {
-        toast({
-          title: 'Muitas tentativas',
-          description: 'Aguarde alguns minutos antes de tentar novamente.',
-          variant: 'destructive',
-        });
-        return { error: { message: 'Rate limit excedido' } };
-      }
-      
-      toast({
-        title: 'Erro no sistema',
-        description: 'Tente novamente mais tarde.',
-        variant: 'destructive',
-      });
-      return { error };
+      console.error('Reset password error:', error);
+      // Don't throw error to prevent enumeration
     }
   };
 
