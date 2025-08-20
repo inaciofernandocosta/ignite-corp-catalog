@@ -152,7 +152,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ trigger }) => {
       <DialogTrigger asChild>
         {trigger || defaultTrigger}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
@@ -165,21 +165,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({ trigger }) => {
 
         <div className="space-y-6">
           {/* Profile Header */}
-          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-            <Avatar className="w-16 h-16">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-muted/30 rounded-lg">
+            <Avatar className="w-16 h-16 mx-auto sm:mx-0">
               <AvatarFallback className="text-lg font-semibold">
                 {profile?.nome ? getInitials(profile.nome) : 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+            <div className="flex-1 text-center sm:text-left">
               <h3 className="text-lg font-semibold">{profile?.nome || 'Nome não informado'}</h3>
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <p className="text-sm text-muted-foreground flex items-center justify-center sm:justify-start gap-1 flex-wrap">
                 <Mail className="w-4 h-4" />
-                {profile?.email}
+                <span className="break-all">{profile?.email}</span>
               </p>
             </div>
             <Button
               variant={isEditing ? "destructive" : "outline"}
+              size="sm"
+              className="w-full sm:w-auto"
               onClick={() => {
                 if (isEditing) {
                   // Reset form data
@@ -270,7 +272,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ trigger }) => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="departamento">Departamento</Label>
                   {isEditing ? (
@@ -340,9 +342,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ trigger }) => {
 
           {/* Action Buttons */}
           {isEditing && (
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setFormData({
                     nome: profile?.nome || '',
@@ -359,6 +362,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ trigger }) => {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
+                className="w-full sm:w-auto"
               >
                 {isSaving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
