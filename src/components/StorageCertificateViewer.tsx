@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Certificate } from "@/hooks/useCertificates";
 import { useCertificates } from "@/hooks/useCertificates";
 import { Eye, Download, FileText, Save } from "lucide-react";
@@ -13,9 +13,6 @@ interface StorageCertificateViewerProps {
   showControls?: boolean;
 }
 
-// Sem cache global - sempre carrega do storage
-let imageLoadPromise: Promise<HTMLImageElement> | null = null;
-
 export const StorageCertificateViewer = ({ certificate, showControls = true }: StorageCertificateViewerProps) => {
   const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -26,13 +23,6 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { saveCertificatePDF } = useCertificates();
   const { toast } = useToast();
-
-  // Pré-carregar imagem quando o componente monta
-  useEffect(() => {
-    loadImageSimple().catch(err => {
-      console.warn('Pré-carregamento falhou:', err);
-    });
-  }, []);
 
   // Carregar o template do certificado
   const loadCertificateTemplate = async () => {
@@ -57,52 +47,69 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
     }
   }, [open]);
 
-  // Função para carregar a imagem diretamente do Supabase - sem cache
-  const loadImageSimple = async (): Promise<HTMLImageElement> => {
-    // Se já estiver carregando, aguarde a conclusão
-    if (imageLoadPromise) {
-      return imageLoadPromise;
-    }
+  // Generate signed URL for private storage access
+  const getSignedUrl = useCallback(async (filePath: string): Promise<string> => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('certificados')
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
 
-    
-    
-    imageLoadPromise = new Promise(async (resolve, reject) => {
+      if (error) {
+        console.error('Erro ao gerar URL assinada:', error);
+        throw new Error('Falha ao gerar URL de acesso');
+      }
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Erro no getSignedUrl:', error);
+      throw error;
+    }
+  }, []);
+
+  // Image loading function with proper CORS setup
+  const loadImageSimple = useCallback(async (): Promise<HTMLImageElement> => {
+    return new Promise(async (resolve, reject) => {
       try {
-        // Usar a URL pública direta do Supabase Storage para evitar problemas de CORS
-        const timestamp = Date.now();
-        const publicUrl = `https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/certificados/Certificado.jpeg?t=${timestamp}`;
+        let imageUrl: string;
         
-        
+        // Try to get signed URL for private bucket access
+        try {
+          imageUrl = await getSignedUrl('Certificado.jpeg');
+          console.log('Using signed URL for certificate template');
+        } catch (signedUrlError) {
+          console.warn('Failed to get signed URL, trying fallback:', signedUrlError);
+          // Fallback to a placeholder or local image
+          imageUrl = '/placeholder.svg'; // Use Lovable's placeholder
+        }
+
         const img = new Image();
-        img.crossOrigin = "anonymous";
+        
+        // Set CORS properties for canvas compatibility
+        img.crossOrigin = 'anonymous';
+        img.referrerPolicy = 'no-referrer';
         
         const timeout = setTimeout(() => {
-          reject(new Error('Timeout - imagem não carregou em 20 segundos'));
-        }, 20000);
+          reject(new Error('Timeout ao carregar imagem'));
+        }, 15000);
 
         img.onload = () => {
           clearTimeout(timeout);
-          imageLoadPromise = null;
           resolve(img);
         };
-
-        img.onerror = (err) => {
+        
+        img.onerror = (error) => {
           clearTimeout(timeout);
-          imageLoadPromise = null;
-          console.error('Erro ao carregar imagem:', err);
-          reject(new Error('Falha ao carregar a imagem'));
+          console.error('Erro ao carregar imagem:', error);
+          reject(new Error('Falha ao carregar a imagem do certificado'));
         };
-
-        img.src = publicUrl;
+        
+        img.src = imageUrl;
       } catch (err) {
-        console.error('Erro ao carregar imagem:', err);
-        imageLoadPromise = null;
+        console.error('Erro geral no loadImageSimple:', err);
         reject(err);
       }
     });
-
-    return imageLoadPromise;
-  };
+  }, [getSignedUrl]);
 
   // Gerar o certificado com o nome do aluno
   const generateCertificate = async () => {
@@ -286,6 +293,9 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
               <FileText className="h-5 w-5" />
               Certificado de {certificate.aluno_nome}
             </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Visualize, baixe ou salve o certificado de conclusão do curso
+            </DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 flex flex-col gap-4">
