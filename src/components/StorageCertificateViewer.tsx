@@ -50,15 +50,18 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
   // Generate signed URL for private storage access
   const getSignedUrl = useCallback(async (filePath: string): Promise<string> => {
     try {
+      console.log(`Tentando gerar URL assinada para: ${filePath}`);
+      
       const { data, error } = await supabase.storage
         .from('certificados')
         .createSignedUrl(filePath, 3600); // 1 hour expiry
 
       if (error) {
         console.error('Erro ao gerar URL assinada:', error);
-        throw new Error('Falha ao gerar URL de acesso');
+        throw new Error(`Falha ao gerar URL de acesso: ${error.message}`);
       }
 
+      console.log('URL assinada gerada com sucesso:', data.signedUrl);
       return data.signedUrl;
     } catch (error) {
       console.error('Erro no getSignedUrl:', error);
@@ -66,41 +69,80 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
     }
   }, []);
 
-  // Image loading function with proper CORS setup
+  // Image loading function with proper CORS setup and multiple fallbacks
   const loadImageSimple = useCallback(async (): Promise<HTMLImageElement> => {
     return new Promise(async (resolve, reject) => {
       try {
         let imageUrl: string;
+        let fallbackUsed = false;
         
-        // Try to get signed URL for private bucket access
+        // Try multiple approaches to get the certificate template
         try {
-          imageUrl = await getSignedUrl('Certificado.jpeg');
-          console.log('Using signed URL for certificate template');
-        } catch (signedUrlError) {
-          console.warn('Failed to get signed URL, trying fallback:', signedUrlError);
-          // Fallback to a placeholder or local image
-          imageUrl = '/placeholder.svg'; // Use Lovable's placeholder
+          // First try: Public access (bucket might be public)
+          const publicUrl = supabase.storage
+            .from('certificados')
+            .getPublicUrl('Certificado.jpeg').data.publicUrl;
+          
+          console.log('Tentando URL pública:', publicUrl);
+          
+          // Test if public URL works
+          const response = await fetch(publicUrl, { method: 'HEAD' });
+          if (response.ok) {
+            imageUrl = publicUrl;
+            console.log('Usando URL pública para o template do certificado');
+          } else {
+            throw new Error(`Erro na URL pública: ${response.status}`);
+          }
+        } catch (publicError) {
+          console.warn('URL pública falhou, tentando URL assinada:', publicError);
+          
+          // Second try: Signed URL for private bucket access
+          try {
+            imageUrl = await getSignedUrl('Certificado.jpeg');
+            console.log('Usando URL assinada para o template do certificado');
+          } catch (signedUrlError) {
+            console.warn('URL assinada também falhou, usando fallback:', signedUrlError);
+            
+            // Final fallback: Use a local template or placeholder
+            imageUrl = '/placeholder.svg';
+            fallbackUsed = true;
+            console.log('Usando imagem placeholder como fallback');
+          }
         }
 
         const img = new Image();
         
-        // Set CORS properties for canvas compatibility
-        img.crossOrigin = 'anonymous';
-        img.referrerPolicy = 'no-referrer';
+        // Set CORS properties for canvas compatibility only if not using fallback
+        if (!fallbackUsed) {
+          img.crossOrigin = 'anonymous';
+          img.referrerPolicy = 'no-referrer';
+        }
         
         const timeout = setTimeout(() => {
-          reject(new Error('Timeout ao carregar imagem'));
+          reject(new Error('Timeout ao carregar imagem (15s)'));
         }, 15000);
 
         img.onload = () => {
           clearTimeout(timeout);
+          console.log('Imagem carregada com sucesso:', imageUrl);
           resolve(img);
         };
         
         img.onerror = (error) => {
           clearTimeout(timeout);
           console.error('Erro ao carregar imagem:', error);
-          reject(new Error('Falha ao carregar a imagem do certificado'));
+          console.error('URL que falhou:', imageUrl);
+          
+          // If we haven't used fallback yet, try it now
+          if (!fallbackUsed) {
+            console.log('Tentando fallback após erro na imagem...');
+            const fallbackImg = new Image();
+            fallbackImg.onload = () => resolve(fallbackImg);
+            fallbackImg.onerror = () => reject(new Error('Falha ao carregar a imagem do certificado'));
+            fallbackImg.src = '/placeholder.svg';
+          } else {
+            reject(new Error('Falha ao carregar a imagem do certificado'));
+          }
         };
         
         img.src = imageUrl;
