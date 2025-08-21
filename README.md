@@ -62,7 +62,25 @@ This project is built with:
 
 ## How can I deploy this project?
 
+### Lovable Deploy
 Simply open [Lovable](https://lovable.dev/projects/fbd33601-ca9c-4969-be9c-afdb8e44b26c) and click on Share -> Publish.
+
+### Netlify Deploy
+Para fazer deploy no Netlify:
+
+1. **Build do projeto:**
+   ```bash
+   npm install
+   npm run build
+   ```
+
+2. **Deploy manual:** Faça drag & drop da pasta `dist` no Netlify
+
+3. **Deploy automático:** Conecte seu repositório Git no Netlify com as configurações:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+
+O arquivo `public/_redirects` está configurado para resolver problemas de SPA routing.
 
 ## Can I connect a custom domain to my Lovable project?
 
