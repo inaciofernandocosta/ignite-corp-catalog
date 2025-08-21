@@ -155,19 +155,14 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
         
         // Tentar usar a imagem original como fallback
         try {
-          // Usar a URL pública direta como fallback
-          const timestamp = Date.now();
-          const publicUrl = `https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/certificados/Certificado.jpeg?t=${timestamp}`;
-          
-          
-          // Retornar a URL pública como fallback
+          // Use placeholder image as fallback
           toast({
             title: "Aviso",
             description: "Usando versão simplificada do certificado devido a restrições de segurança.",
             variant: "default"
           });
           
-          return publicUrl;
+          return '/placeholder.svg'; // Use Lovable's placeholder as fallback
         } catch (fallbackError) {
           console.error('Erro ao usar fallback:', fallbackError);
           toast({
