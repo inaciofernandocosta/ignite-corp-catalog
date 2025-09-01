@@ -22,39 +22,26 @@ export const useAuth = () => {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const { toast } = useToast();
 
-  // Remove dependência e adiciona flag para evitar múltiplas chamadas simultâneas
-  const [isProfileFetching, setIsProfileFetching] = useState(false);
-  
+  // Remove dependência do toast para evitar loop infinito
   const fetchUserProfile = useCallback(async (email: string) => {
-    // Evitar múltiplas chamadas simultâneas
-    if (isProfileFetching) {
-      console.log('useAuth - Já buscando perfil, ignorando nova chamada');
-      return;
-    }
-    
     try {
-      setIsProfileFetching(true);
       console.log('useAuth - Buscando perfil para:', email);
       
-      // Usar limit(1) ao invés de single/maybeSingle para evitar 406
-      const { data: inscricoes, error: inscricaoError } = await supabase
+      // Buscar dados da inscrição
+      const { data: inscricao, error: inscricaoError } = await supabase
         .from('inscricoes_mentoria')
         .select('*')
         .eq('email', email)
         .eq('ativo', true)
-        .limit(1);
+        .single();
 
       if (inscricaoError) {
         console.error('useAuth - Erro ao buscar inscrição:', inscricaoError);
-        setProfile(null);
         return;
       }
 
-      const inscricao = inscricoes && inscricoes.length > 0 ? inscricoes[0] : null;
-
       if (!inscricao) {
-        console.log('useAuth - Usuário autenticado mas sem perfil ativo na plataforma');
-        setProfile(null);
+        console.error('useAuth - Inscrição não encontrada para:', email);
         return;
       }
 
@@ -88,11 +75,8 @@ export const useAuth = () => {
       
     } catch (error) {
       console.error('useAuth - Erro ao buscar perfil do usuário:', error);
-      setProfile(null);
-    } finally {
-      setIsProfileFetching(false);
     }
-  }, [isProfileFetching]); // Adicionar dependência da flag
+  }, []); // Remover dependências para evitar loops
 
   useEffect(() => {
     let isInitialized = false;
@@ -259,25 +243,41 @@ export const useAuth = () => {
     
     try {
       setLogoutLoading(true);
-      console.log('useAuth - Iniciando processo de logout');
+      
       
       // PRIMEIRO: Limpar estado local imediatamente para garantir logout na UI
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.clear(); // Limpar todo o localStorage para garantir
+      localStorage.removeItem('dashboard-tab-initialized');
       
-      // SEGUNDO: Fazer logout do Supabase forçadamente
-      try {
-        const { error } = await supabase.auth.signOut({ scope: 'global' });
-        if (error) {
-          console.warn('Erro no logout do Supabase:', error);
+      // SEGUNDO: Tentar fazer logout do Supabase apenas se existe uma sessão
+      const { data: currentSession } = await supabase.auth.getSession();
+      
+      if (currentSession?.session) {
+        
+        const { error } = await supabase.auth.signOut();
+        
+        // Ignorar erros conhecidos de sessão
+        if (error && !error.message?.includes('session') && !error.message?.includes('Session') && 
+            !error.message?.includes('Auth session missing')) {
+          console.error('Erro no logout do Supabase (mas continuando):', error);
         }
-      } catch (e) {
-        console.warn('Erro ao chamar signOut:', e);
+      } else {
+        
       }
       
-      console.log('useAuth - Logout concluído, estado limpo');
+      // TERCEIRO: Sempre mostrar sucesso e redirecionar
+      
+      toast({
+        title: 'Logout realizado',
+        description: 'Até logo!',
+      });
+      
+      // Forçar redirecionamento para home
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
       
     } catch (error: any) {
       console.error('Erro durante logout:', error);
@@ -286,7 +286,18 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.clear();
+      localStorage.removeItem('dashboard-tab-initialized');
+      
+      // Sempre mostrar sucesso para o usuário (a limpeza local já foi feita)
+      toast({
+        title: 'Logout realizado',
+        description: 'Até logo!',
+      });
+      
+      // Forçar redirecionamento mesmo com erro
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } finally {
       setLogoutLoading(false);
     }

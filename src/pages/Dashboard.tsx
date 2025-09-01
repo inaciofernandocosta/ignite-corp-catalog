@@ -201,27 +201,11 @@ export const Dashboard = () => {
     }
   }, [profile?.id, profile?.role, profile?.nome]);
 
-  // Redirect to auth if no user
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
-
-  // Track profile loading timeout to show appropriate message
-  const [profileTimeout, setProfileTimeout] = useState(false);
-  
-  useEffect(() => {
-    if (user && !profile && !loading) {
-      const timer = setTimeout(() => {
-        setProfileTimeout(true);
-      }, 2000); // Wait 2 seconds before showing "profile not found" message
-      
-      return () => clearTimeout(timer);
-    } else {
-      setProfileTimeout(false);
-    }
-  }, [user, profile, loading]);
 
   // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
@@ -254,72 +238,12 @@ export const Dashboard = () => {
       .slice(0, 2);
   };
 
-  // Show different loading states based on the situation
-  if (loading) {
+  if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user exists but no profile after timeout, show appropriate message
-  if (user && !profile) {
-    if (profileTimeout) {
-      return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <Card className="max-w-md w-full">
-            <CardContent className="text-center py-12">
-              <div className="text-destructive mb-4">
-                <User className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">Registro não encontrado</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Não conseguimos encontrar seu registro ativo na plataforma.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <Button onClick={signOut} variant="outline" className="w-full">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Fazer logout
-                </Button>
-                
-                <Button onClick={() => navigate('/')} variant="ghost" className="w-full">
-                  <Home className="h-4 w-4 mr-2" />
-                  Voltar ao início
-                </Button>
-              </div>
-              
-              <p className="text-xs text-muted-foreground mt-4">
-                Precisa de ajuda? Entre em contato com o suporte.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    } else {
-      // Still loading profile
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando perfil...</p>
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // If no user at all, this should redirect to auth (handled by useEffect above)
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Redirecionando...</p>
         </div>
       </div>
     );

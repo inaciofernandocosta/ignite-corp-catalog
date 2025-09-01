@@ -29,7 +29,7 @@ export const Auth = () => {
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, user, profile, loading, session, signOut } = useAuth();
+  const { signIn, user, loading, session } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -107,28 +107,18 @@ export const Auth = () => {
     checkRecoveryMode();
   }, [searchParams, supabase.auth]);
 
-  // Handle logout if URL contains logout parameter
-  useEffect(() => {
-    if (searchParams.get('logout') === '1') {
-      console.log('Auth - Forçando logout via URL');
-      signOut().then(() => {
-        // Remove the logout parameter after signing out
-        window.history.replaceState(null, '', '/auth');
-      });
-    }
-  }, [searchParams, signOut]);
-
-  // Redirect if already authenticated AND has profile (but not in recovery mode) - RUNS AFTER recovery check
+  // Redirect if already authenticated (but not in recovery mode) - RUNS AFTER recovery check
   useEffect(() => {
     // Aguardar um tick para garantir que a verificação de recovery foi processada
     const timer = setTimeout(() => {
-      if (!loading && user && profile && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
+      if (!loading && user && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
+        
         navigate('/dashboard');
       }
     }, 200); // Aumentar o timeout para dar mais tempo para recovery mode ser detectado
 
     return () => clearTimeout(timer);
-  }, [user, profile, loading, navigate, isRecoveryMode, showResetPassword, showForgotPassword]);
+  }, [user, loading, navigate, isRecoveryMode, showResetPassword, showForgotPassword]);
 
   const onLogin = async (data: LoginFormData) => {
     
@@ -227,47 +217,6 @@ export const Auth = () => {
               <ResetPasswordForm onSuccess={handleResetSuccess} onBack={handleBackToLogin} />
             ) : showForgotPassword ? (
               <ForgotPasswordForm onBack={handleBackToLogin} showExpiredMessage={searchParams.get('expired') === 'true'} />
-            ) : user && !profile ? (
-              // Usuário autenticado mas sem perfil válido
-              <div className="space-y-4 text-center">
-                <div className="text-destructive">
-                  <h3 className="font-semibold mb-2">Conta não encontrada</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sua conta não está ativa ou não foi encontrada em nosso sistema.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Button
-                    onClick={async () => {
-                      console.log('Auth - Fazendo logout para entrar com outra conta');
-                      await signOut();
-                      window.location.href = '/auth';
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Entrar com outra conta
-                  </Button>
-                  
-                  <Button
-                    onClick={async () => {
-                      console.log('Auth - Fazendo logout para voltar ao início');
-                      await signOut();
-                      window.location.href = '/';
-                    }}
-                    variant="ghost"
-                    className="w-full text-sm"
-                  >
-                    Voltar ao início
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-muted-foreground">
-                  Precisa de ajuda? Entre em contato com o suporte.
-                </p>
-              </div>
             ) : (
               // Formulário de Login
               <Form {...loginForm}>
