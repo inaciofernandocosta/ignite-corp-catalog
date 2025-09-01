@@ -22,27 +22,39 @@ export const useAuth = () => {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const { toast } = useToast();
 
-  // Remove dependência do toast para evitar loop infinito
+  // Remove dependência e adiciona flag para evitar múltiplas chamadas simultâneas
+  const [isProfileFetching, setIsProfileFetching] = useState(false);
+  
   const fetchUserProfile = useCallback(async (email: string) => {
+    // Evitar múltiplas chamadas simultâneas
+    if (isProfileFetching) {
+      console.log('useAuth - Já buscando perfil, ignorando nova chamada');
+      return;
+    }
+    
     try {
+      setIsProfileFetching(true);
       console.log('useAuth - Buscando perfil para:', email);
       
-      // Buscar dados da inscrição - usar maybeSingle para lidar com usuários não cadastrados
-      const { data: inscricao, error: inscricaoError } = await supabase
+      // Usar limit(1) ao invés de single/maybeSingle para evitar 406
+      const { data: inscricoes, error: inscricaoError } = await supabase
         .from('inscricoes_mentoria')
         .select('*')
         .eq('email', email)
         .eq('ativo', true)
-        .maybeSingle();
+        .limit(1);
 
       if (inscricaoError) {
         console.error('useAuth - Erro ao buscar inscrição:', inscricaoError);
+        setProfile(null);
         return;
       }
 
+      const inscricao = inscricoes && inscricoes.length > 0 ? inscricoes[0] : null;
+
       if (!inscricao) {
-        console.error('useAuth - Inscrição não encontrada para:', email);
-        console.log('useAuth - Usuário existe no auth mas não na tabela de inscrições');
+        console.log('useAuth - Usuário autenticado mas sem perfil ativo na plataforma');
+        setProfile(null);
         return;
       }
 
@@ -76,8 +88,11 @@ export const useAuth = () => {
       
     } catch (error) {
       console.error('useAuth - Erro ao buscar perfil do usuário:', error);
+      setProfile(null);
+    } finally {
+      setIsProfileFetching(false);
     }
-  }, []); // Remover dependências para evitar loops
+  }, [isProfileFetching]); // Adicionar dependência da flag
 
   useEffect(() => {
     let isInitialized = false;
