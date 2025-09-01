@@ -27,13 +27,13 @@ export const useAuth = () => {
     try {
       console.log('useAuth - Buscando perfil para:', email);
       
-      // Buscar dados da inscrição
+      // Buscar dados da inscrição - usar maybeSingle para lidar com usuários não cadastrados
       const { data: inscricao, error: inscricaoError } = await supabase
         .from('inscricoes_mentoria')
         .select('*')
         .eq('email', email)
         .eq('ativo', true)
-        .single();
+        .maybeSingle();
 
       if (inscricaoError) {
         console.error('useAuth - Erro ao buscar inscrição:', inscricaoError);
@@ -42,6 +42,7 @@ export const useAuth = () => {
 
       if (!inscricao) {
         console.error('useAuth - Inscrição não encontrada para:', email);
+        console.log('useAuth - Usuário existe no auth mas não na tabela de inscrições');
         return;
       }
 
