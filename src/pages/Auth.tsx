@@ -112,7 +112,6 @@ export const Auth = () => {
     // Aguardar um tick para garantir que a verificação de recovery foi processada
     const timer = setTimeout(() => {
       if (!loading && user && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
-        
         navigate('/dashboard');
       }
     }, 200); // Aumentar o timeout para dar mais tempo para recovery mode ser detectado

@@ -238,13 +238,46 @@ export const Dashboard = () => {
       .slice(0, 2);
   };
 
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Carregando...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (user && !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="text-center py-8">
+            <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Conta não encontrada</h3>
+            <p className="text-muted-foreground mb-6">
+              Não foi possível encontrar seus dados no sistema. Entre em contato com o administrador.
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={signOut} 
+                variant="outline" 
+                className="w-full"
+                disabled={logoutLoading}
+              >
+                {logoutLoading ? 'Saindo...' : 'Entrar com outra conta'}
+              </Button>
+              <Button 
+                onClick={() => navigate('/')} 
+                variant="ghost" 
+                className="w-full"
+              >
+                Voltar ao início
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -33,15 +33,18 @@ export const useAuth = () => {
         .select('*')
         .eq('email', email)
         .eq('ativo', true)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (inscricaoError) {
         console.error('useAuth - Erro ao buscar inscrição:', inscricaoError);
+        setProfile(null);
         return;
       }
 
       if (!inscricao) {
         console.error('useAuth - Inscrição não encontrada para:', email);
+        setProfile(null);
         return;
       }
 
