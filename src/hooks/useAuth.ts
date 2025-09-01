@@ -259,41 +259,25 @@ export const useAuth = () => {
     
     try {
       setLogoutLoading(true);
-      
+      console.log('useAuth - Iniciando processo de logout');
       
       // PRIMEIRO: Limpar estado local imediatamente para garantir logout na UI
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.removeItem('dashboard-tab-initialized');
+      localStorage.clear(); // Limpar todo o localStorage para garantir
       
-      // SEGUNDO: Tentar fazer logout do Supabase apenas se existe uma sessão
-      const { data: currentSession } = await supabase.auth.getSession();
-      
-      if (currentSession?.session) {
-        
-        const { error } = await supabase.auth.signOut();
-        
-        // Ignorar erros conhecidos de sessão
-        if (error && !error.message?.includes('session') && !error.message?.includes('Session') && 
-            !error.message?.includes('Auth session missing')) {
-          console.error('Erro no logout do Supabase (mas continuando):', error);
+      // SEGUNDO: Fazer logout do Supabase forçadamente
+      try {
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        if (error) {
+          console.warn('Erro no logout do Supabase:', error);
         }
-      } else {
-        
+      } catch (e) {
+        console.warn('Erro ao chamar signOut:', e);
       }
       
-      // TERCEIRO: Sempre mostrar sucesso e redirecionar
-      
-      toast({
-        title: 'Logout realizado',
-        description: 'Até logo!',
-      });
-      
-      // Forçar redirecionamento para home
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      console.log('useAuth - Logout concluído, estado limpo');
       
     } catch (error: any) {
       console.error('Erro durante logout:', error);
@@ -302,18 +286,7 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.removeItem('dashboard-tab-initialized');
-      
-      // Sempre mostrar sucesso para o usuário (a limpeza local já foi feita)
-      toast({
-        title: 'Logout realizado',
-        description: 'Até logo!',
-      });
-      
-      // Forçar redirecionamento mesmo com erro
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      localStorage.clear();
     } finally {
       setLogoutLoading(false);
     }

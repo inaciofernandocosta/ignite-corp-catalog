@@ -110,7 +110,11 @@ export const Auth = () => {
   // Handle logout if URL contains logout parameter
   useEffect(() => {
     if (searchParams.get('logout') === '1') {
-      signOut();
+      console.log('Auth - Forçando logout via URL');
+      signOut().then(() => {
+        // Remove the logout parameter after signing out
+        window.history.replaceState(null, '', '/auth');
+      });
     }
   }, [searchParams, signOut]);
 
@@ -235,7 +239,11 @@ export const Auth = () => {
                 
                 <div className="space-y-2">
                   <Button
-                    onClick={() => navigate('/?logout=1')}
+                    onClick={async () => {
+                      console.log('Auth - Fazendo logout para entrar com outra conta');
+                      await signOut();
+                      window.location.href = '/auth';
+                    }}
                     variant="outline"
                     className="w-full"
                   >
@@ -244,7 +252,11 @@ export const Auth = () => {
                   </Button>
                   
                   <Button
-                    onClick={() => navigate('/')}
+                    onClick={async () => {
+                      console.log('Auth - Fazendo logout para voltar ao início');
+                      await signOut();
+                      window.location.href = '/';
+                    }}
                     variant="ghost"
                     className="w-full text-sm"
                   >
