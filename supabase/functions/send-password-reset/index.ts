@@ -46,7 +46,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://mentoriafutura.com.br/auth'
+        redirectTo: 'https://fbd33601-ca9c-4969-be9c-afdb8e44b26c.sandbox.lovable.dev/alterar-senha'
       }
     });
 
