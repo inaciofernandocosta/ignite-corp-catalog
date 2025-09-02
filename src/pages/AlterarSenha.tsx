@@ -14,6 +14,9 @@ export const AlterarSenha = () => {
   useEffect(() => {
     const checkRecoveryToken = async () => {
       const hash = window.location.hash;
+      console.log('AlterarSenha - URL completa:', window.location.href);
+      console.log('AlterarSenha - Hash:', hash);
+      console.log('AlterarSenha - Search:', window.location.search);
       
       if (hash.includes('access_token') && hash.includes('type=recovery')) {
         console.log('AlterarSenha - Token de recovery detectado');

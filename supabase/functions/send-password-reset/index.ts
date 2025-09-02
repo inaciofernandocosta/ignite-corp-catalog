@@ -46,7 +46,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://mentoriafutura.com.br/alterar-senha'
+        redirectTo: 'https://mentoriafutura.com.br/#/alterar-senha'
       }
     });
 
