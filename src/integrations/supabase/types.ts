@@ -745,6 +745,14 @@ export type Database = {
           resultado: string
         }[]
       }
+      backfill_missing_auth_accounts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string
+          nome: string
+          resultado: string
+        }[]
+      }
       bytea_to_text: {
         Args: { data: string }
         Returns: string
