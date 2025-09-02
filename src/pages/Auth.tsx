@@ -21,20 +21,20 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
-  console.log('=== AUTH COMPONENT MOUNTED ===');
-  console.log('URL atual:', window.location.href);
+  console.log('=== AUTH COMPONENT RENDERIZOU ===');
+  console.log('URL completa:', window.location.href);
   console.log('Hash:', window.location.hash);
-  console.log('Search params:', window.location.search);
+  console.log('Pathname:', window.location.pathname);
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, user, loading, session } = useAuth();
+  const { signIn, user, loading } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -44,104 +44,96 @@ const Auth = () => {
     },
   });
 
-  // Check for password recovery mode FIRST - before any redirects
+  // Verificar modo de recovery
   useEffect(() => {
     const checkRecoveryMode = async () => {
-      console.log('Auth - Verificando modo de recovery. URL completa:', window.location.href);
-      console.log('Auth - Hash da URL:', window.location.hash);
+      console.log('=== VERIFICANDO RECOVERY MODE ===');
       
-      // Verificar se há erro na URL (token expirado, etc.)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const error = hashParams.get('error');
-      const errorCode = hashParams.get('error_code');
-      
-      console.log('Auth - Parâmetros do hash:', {
-        error,
-        errorCode,
-        accessToken: hashParams.get('access_token') ? 'presente' : 'ausente',
-        refreshToken: hashParams.get('refresh_token') ? 'presente' : 'ausente',
-        type: hashParams.get('type')
-      });
-
-      if (error === 'access_denied' && errorCode === 'otp_expired') {
-        console.log('Auth - Token expirado detectado, redirecionando para forgot password');
-        setShowForgotPassword(true);
-        setIsRecoveryMode(false);
-        setShowResetPassword(false);
-        window.history.replaceState(null, '', '/auth?expired=true');
-        return;
-      }
-
-      // Verificar se tem parâmetro type=recovery na URL
-      if (searchParams.get('type') === 'recovery') {
-        console.log('Auth - Parâmetro type=recovery encontrado na URL');
-        setIsRecoveryMode(true);
-        setShowResetPassword(true);
-        return;
-      }
-
-      // Verificar se é um link de recovery via hash fragment
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const type = hashParams.get('type');
-
-      if (accessToken && refreshToken && type === 'recovery') {
-        console.log('Auth - Link de recovery detectado, estabelecendo sessão');
+      try {
+        // Verificar se há tokens de recovery no hash
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
         
-        try {
-          // Estabelecer sessão com os tokens do link
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        const error = hashParams.get('error');
+        
+        console.log('Parâmetros encontrados:', {
+          accessToken: accessToken ? 'presente' : 'ausente',
+          refreshToken: refreshToken ? 'presente' : 'ausente',
+          type,
+          error
+        });
 
-          if (!error) {
-            console.log('Auth - Sessão de recovery estabelecida com sucesso');
-            setIsRecoveryMode(true);
-            setShowResetPassword(true);
-            // Limpar hash da URL
-            window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
-          } else {
-            console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
-            setIsRecoveryMode(false);
-            setShowResetPassword(false);
+        // Se há erro de token expirado
+        if (error === 'access_denied') {
+          console.log('Token expirado, mostrando forgot password');
+          setShowForgotPassword(true);
+          setShowResetPassword(false);
+          window.history.replaceState(null, '', '/auth?expired=true');
+          setIsInitialized(true);
+          return;
+        }
+
+        // Se é um link de recovery válido
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('Link de recovery válido detectado');
+          
+          try {
+            // Estabelecer sessão
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+
+            if (!sessionError) {
+              console.log('Sessão estabelecida, mostrando reset password');
+              setShowResetPassword(true);
+              setShowForgotPassword(false);
+              // Limpar hash
+              window.history.replaceState(null, '', '/auth?type=recovery');
+            } else {
+              console.error('Erro ao estabelecer sessão:', sessionError);
+              setShowForgotPassword(true);
+            }
+          } catch (err) {
+            console.error('Erro ao processar recovery:', err);
             setShowForgotPassword(true);
           }
-        } catch (error) {
-          console.error('Auth - Erro ao processar link de recovery:', error);
-          setIsRecoveryMode(false);
-          setShowResetPassword(false);
-          setShowForgotPassword(true);
         }
-      } else if (window.location.hash.includes('access_token') && window.location.hash.includes('type=recovery')) {
-        // Fallback para casos onde a URL pode estar malformada
-        console.log('Auth - Fallback: Link de recovery detectado mas parâmetros podem estar malformados');
-        console.log('Auth - Forçando modo de reset de senha');
-        setIsRecoveryMode(true);
-        setShowResetPassword(true);
-        window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
+        // Se já tem parâmetro type=recovery na URL
+        else if (searchParams.get('type') === 'recovery') {
+          console.log('Parâmetro type=recovery encontrado');
+          setShowResetPassword(true);
+          setShowForgotPassword(false);
+        }
+        // Se tem expired=true, mostrar forgot password
+        else if (searchParams.get('expired') === 'true') {
+          console.log('Parâmetro expired=true encontrado');
+          setShowForgotPassword(true);
+          setShowResetPassword(false);
+        }
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Erro na verificação de recovery:', error);
+        setIsInitialized(true);
       }
     };
 
     checkRecoveryMode();
-  }, [searchParams, supabase.auth]);
+  }, [searchParams]);
 
-  // Redirect if already authenticated (but not in recovery mode) - RUNS AFTER recovery check
+  // Redirecionar se já autenticado (mas não em recovery mode)
   useEffect(() => {
-    // Só redirecionar se não estiver em recovery mode, reset password ou forgot password
-    // E aguardar um tempo suficiente para que todos os estados sejam processados
-    const timer = setTimeout(() => {
-      if (!loading && user && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
-        console.log('Auth - Redirecionando para dashboard - usuário autenticado e não em recovery');
-        navigate('/dashboard');
-      }
-    }, 500); // Aumentar timeout para 500ms para dar mais tempo
-
-    return () => clearTimeout(timer);
-  }, [user, loading, navigate, isRecoveryMode, showResetPassword, showForgotPassword]);
+    if (isInitialized && !loading && user && !showResetPassword && !showForgotPassword) {
+      console.log('Usuário autenticado, redirecionando para dashboard');
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate, showResetPassword, showForgotPassword, isInitialized]);
 
   const onLogin = async (data: LoginFormData) => {
-    
     setIsLoading(true);
     try {
       const { error } = await signIn(data.email, data.password);
@@ -149,46 +141,41 @@ const Auth = () => {
         navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Auth - Erro no login:', error);
+      console.error('Erro no login:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBackToLogin = () => {
-    
+    console.log('Voltando para login');
     setShowForgotPassword(false);
     setShowResetPassword(false);
-    setIsRecoveryMode(false);
     loginForm.reset();
-    // Remover parâmetro expired se existir
-    if (searchParams.get('expired')) {
-      window.history.replaceState(null, '', '/auth');
-    }
+    window.history.replaceState(null, '', '/auth');
   };
 
   const handleResetSuccess = async () => {
-    console.log('Auth - handleResetSuccess: Iniciando processo de logout após reset');
+    console.log('Reset realizado com sucesso');
     
     try {
-      // Resetar estados primeiro
+      // Fazer logout
+      await supabase.auth.signOut();
+      
+      // Resetar estados
       setShowResetPassword(false);
-      setIsRecoveryMode(false);
+      setShowForgotPassword(false);
       
       // Limpar URL
       window.history.replaceState(null, '', '/auth');
       
-      // Fazer logout do usuário após alterar a senha
-      await supabase.auth.signOut();
-      
-      console.log('Auth - handleResetSuccess: Logout realizado com sucesso');
-      
     } catch (error) {
-      console.error('Auth - handleResetSuccess: Erro no logout:', error);
+      console.error('Erro no logout após reset:', error);
     }
   };
 
-  if (loading) {
+  // Mostrar loading inicial
+  if (!isInitialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="text-center">
