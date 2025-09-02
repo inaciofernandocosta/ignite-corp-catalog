@@ -52,10 +52,13 @@ serve(async (req) => {
       console.log('Erro na query, continuando com o processo de reset...');
     }
 
-    // Gerar link de reset usando o método correto
+    // Gerar link de reset usando o método correto com redirect para auth
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
+      options: {
+        redirectTo: 'https://mentoriafutura.com/auth'
+      }
     });
 
     if (error) {
