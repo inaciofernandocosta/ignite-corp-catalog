@@ -77,6 +77,8 @@ serve(async (req) => {
 
     // Enviar email usando Resend
     try {
+      console.log(`Tentando enviar email via Resend para: ${email}`);
+      
       const emailResponse = await resend.emails.send({
         from: "Mentoria Futura <noreply@resend.dev>",
         to: [email],
@@ -105,7 +107,13 @@ serve(async (req) => {
         `,
       });
 
-      console.log("Email de reset enviado:", emailResponse);
+      console.log("Email de reset enviado com sucesso:", JSON.stringify(emailResponse));
+
+      // Verificar se houve erro no Resend
+      if (emailResponse.error) {
+        console.error("Erro no Resend:", JSON.stringify(emailResponse.error));
+        throw new Error(`Resend error: ${emailResponse.error.message}`);
+      }
 
       return new Response(
         JSON.stringify({ 
@@ -119,13 +127,15 @@ serve(async (req) => {
       );
 
     } catch (emailError) {
-      console.error('Erro ao enviar email:', emailError);
+      console.error('Erro detalhado ao enviar email:', JSON.stringify(emailError));
+      console.error('Stack trace:', emailError.stack);
       
       // Retornar sucesso mesmo se o email falhar (para não revelar se o usuário existe)
       return new Response(
         JSON.stringify({ 
           message: 'Link de reset de senha enviado para seu email',
           success: true,
+          debug_error: emailError.message, // Para debug temporário
           reset_link: resetLink // Para debug, remover em produção
         }),
         { 
