@@ -109,12 +109,14 @@ export const Auth = () => {
 
   // Redirect if already authenticated (but not in recovery mode) - RUNS AFTER recovery check
   useEffect(() => {
-    // Aguardar um tick para garantir que a verificação de recovery foi processada
+    // Só redirecionar se não estiver em recovery mode, reset password ou forgot password
+    // E aguardar um tempo suficiente para que todos os estados sejam processados
     const timer = setTimeout(() => {
       if (!loading && user && !isRecoveryMode && !showResetPassword && !showForgotPassword) {
+        console.log('Auth - Redirecionando para dashboard - usuário autenticado e não em recovery');
         navigate('/dashboard');
       }
-    }, 200); // Aumentar o timeout para dar mais tempo para recovery mode ser detectado
+    }, 500); // Aumentar timeout para 500ms para dar mais tempo
 
     return () => clearTimeout(timer);
   }, [user, loading, navigate, isRecoveryMode, showResetPassword, showForgotPassword]);
