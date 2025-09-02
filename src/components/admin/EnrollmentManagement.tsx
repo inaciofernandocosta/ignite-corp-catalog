@@ -112,10 +112,41 @@ export function EnrollmentManagement() {
 
       if (error) throw error;
 
-      toast({
-        title: "Status atualizado!",
-        description: `Status da inscrição foi alterado para ${newStatus}.`,
-      });
+      // Se estiver aprovando, enviar email de aprovação
+      if (newStatus === 'aprovado') {
+        const enrollment = enrollments.find(e => e.id === enrollmentId);
+        if (enrollment) {
+          try {
+            await supabase.functions.invoke('send-approval-email', {
+              body: {
+                enrollmentData: {
+                  enrollment_id: enrollment.id,
+                  course_id: enrollment.curso_id,
+                  student_id: enrollment.aluno_id,
+                  status: newStatus
+                }
+              }
+            });
+            
+            toast({
+              title: "Aprovado com sucesso!",
+              description: `Inscrição aprovada e e-mail enviado para ${enrollment.inscricoes_mentoria.nome}.`,
+            });
+          } catch (emailError) {
+            console.error('Erro ao enviar e-mail de aprovação:', emailError);
+            toast({
+              title: "Status atualizado, mas e-mail não enviado",
+              description: "A inscrição foi aprovada, mas houve problema no envio do e-mail.",
+              variant: "destructive"
+            });
+          }
+        }
+      } else {
+        toast({
+          title: "Status atualizado!",
+          description: `Status da inscrição foi alterado para ${newStatus}.`,
+        });
+      }
 
       fetchEnrollments(); // Recarregar dados
     } catch (error) {

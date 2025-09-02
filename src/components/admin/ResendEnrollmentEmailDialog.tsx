@@ -32,17 +32,43 @@ export function ResendEnrollmentEmailDialog({
     setIsLoading(true);
     
     try {
-      
-      
-      const { data, error } = await supabase.functions.invoke('send-course-enrollment-confirmation', {
-        body: {
+      // Buscar dados completos da inscrição para verificar o status
+      const { data: enrollmentData, error: fetchError } = await supabase
+        .from('inscricoes_cursos')
+        .select('status')
+        .eq('id', enrollment.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      let emailFunction = '';
+      let emailData = {};
+
+      // Determinar qual função de email usar baseado no status
+      if (enrollmentData.status === 'aprovado') {
+        emailFunction = 'send-approval-email';
+        emailData = {
+          enrollmentData: {
+            enrollment_id: enrollment.id,
+            course_id: enrollment.curso_id,
+            student_id: enrollment.aluno_id,
+            status: enrollmentData.status
+          }
+        };
+      } else {
+        emailFunction = 'send-course-enrollment-confirmation';
+        emailData = {
           enrollmentData: {
             enrollment_id: enrollment.id,
             course_id: enrollment.curso_id,
             student_id: enrollment.aluno_id,
             enrollment_date: enrollment.data_inscricao
           }
-        }
+        };
+      }
+
+      const { data, error } = await supabase.functions.invoke(emailFunction, {
+        body: emailData
       });
 
       if (error) {
@@ -50,11 +76,10 @@ export function ResendEnrollmentEmailDialog({
         throw error;
       }
 
-      
-
+      const emailType = enrollmentData.status === 'aprovado' ? 'aprovação' : 'confirmação';
       toast({
         title: "E-mail reenviado!",
-        description: `E-mail de confirmação foi enviado novamente para ${studentName}.`,
+        description: `E-mail de ${emailType} foi enviado novamente para ${studentName}.`,
       });
 
       onClose();
