@@ -26,28 +26,42 @@ const App = () => {
     console.log('App - Hash:', hash);
     console.log('App - Pathname:', pathname);
     
-    // Se estamos em qualquer página com hash contendo recovery
-    if (hash.includes('type=recovery') && hash.includes('access_token')) {
-      console.log('App - Link de recovery detectado');
+    // Verificar se há tokens de recovery em qualquer parte da URL
+    const hasRecoveryTokens = (hash.includes('type=recovery') && hash.includes('access_token')) ||
+                             (hash.includes('recovery') && hash.includes('access_token'));
+    
+    if (hasRecoveryTokens) {
+      console.log('App - Tokens de recovery detectados!');
       
-      // Se não estamos já na página /alterar-senha, redirecionar
+      // Se não estamos na página /alterar-senha, redirecionar SEMPRE
       if (pathname !== '/alterar-senha') {
         console.log('App - Redirecionando para /alterar-senha com hash:', hash);
         
-        // Usar replace em vez de href para manter o hash
-        window.history.replaceState(null, '', '/alterar-senha' + hash);
-        
-        // Forçar reload para garantir que a página AlterarSenha seja carregada
-        window.location.reload();
+        // Forçar navegação para a página de alterar senha
+        window.location.href = '/alterar-senha' + hash;
         return;
       }
     }
-    
-    // Se estamos na página raiz mas há tokens de recovery, redirecionar
-    if (pathname === '/' && hash.includes('access_token') && hash.includes('type=recovery')) {
-      console.log('App - Tokens de recovery detectados na home, redirecionando');
-      window.location.href = '/alterar-senha' + hash;
-    }
+  }, []);
+
+  // Também verificar mudanças na URL após o carregamento inicial
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const pathname = window.location.pathname;
+      
+      console.log('App - Hash mudou:', hash);
+      
+      if ((hash.includes('type=recovery') || hash.includes('recovery')) && hash.includes('access_token')) {
+        if (pathname !== '/alterar-senha') {
+          console.log('App - Hash change: Redirecionando para /alterar-senha');
+          window.location.href = '/alterar-senha' + hash;
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   return (
