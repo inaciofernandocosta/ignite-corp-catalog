@@ -201,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Determine email type based on user existence in Auth
     const isNewUser = !existingUser;
-    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://fauoxtziffljgictcvhi.supabase.co";
+    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://preview--ignite-corp-catalog.lovable.app";
 
     // Sanitize all user inputs
     const safeName = sanitizeString(studentData.nome);
@@ -344,6 +344,15 @@ const handler = async (req: Request): Promise<Response> => {
                style="display: inline-block; background-color: #1e40af; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; margin: 10px 0;">
               🚀 Fazer Login na Plataforma
             </a>
+          </div>
+
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+            <p style="color: #92400e; margin: 0; font-weight: 500;">
+              💡 <strong>Dica:</strong><br>
+              • Use as mesmas credenciais que você já possui<br>
+              • Se esqueceu a senha, use a opção "Esqueci minha senha" na tela de login<br>
+              • Após o login, você verá o novo curso disponível no seu painel
+            </p>
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
