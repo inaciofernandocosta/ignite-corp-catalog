@@ -19,49 +19,48 @@ const queryClient = new QueryClient();
 const App = () => {
   // Detectar se é um link de recovery e redirecionar se necessário
   useEffect(() => {
+    const fullUrl = window.location.href;
     const hash = window.location.hash;
+    const search = window.location.search;
     const pathname = window.location.pathname;
     
-    console.log('App - Verificando URL:', window.location.href);
+    console.log('=== VERIFICANDO RECOVERY MODE ===');
+    console.log('App - URL completa:', fullUrl);
     console.log('App - Hash:', hash);
+    console.log('App - Search:', search);
     console.log('App - Pathname:', pathname);
     
-    // Verificar se há tokens de recovery em qualquer parte da URL
-    const hasRecoveryTokens = (hash.includes('type=recovery') && hash.includes('access_token')) ||
-                             (hash.includes('recovery') && hash.includes('access_token'));
+    // Verificar tokens de recovery em hash OU search params
+    const hasRecoveryInHash = hash.includes('type=recovery') && hash.includes('access_token');
+    const hasRecoveryInSearch = search.includes('type=recovery') && search.includes('access_token');
+    const hasRecoveryTokens = hasRecoveryInHash || hasRecoveryInSearch;
+    
+    console.log('App - Recovery no hash:', hasRecoveryInHash);
+    console.log('App - Recovery no search:', hasRecoveryInSearch);
+    console.log('App - Tem tokens de recovery:', hasRecoveryTokens);
     
     if (hasRecoveryTokens) {
-      console.log('App - Tokens de recovery detectados!');
+      console.log('App - 🔐 TOKENS DE RECOVERY DETECTADOS!');
       
       // Se não estamos na página /alterar-senha, redirecionar SEMPRE
       if (pathname !== '/alterar-senha') {
-        console.log('App - Redirecionando para /alterar-senha com hash:', hash);
+        console.log('App - ➡️ Redirecionando para /alterar-senha');
+        
+        // Preservar todos os parâmetros (hash + search)
+        const queryString = hash || search;
+        const targetUrl = '/alterar-senha' + queryString;
+        
+        console.log('App - URL destino:', targetUrl);
         
         // Forçar navegação para a página de alterar senha
-        window.location.href = '/alterar-senha' + hash;
+        window.location.href = targetUrl;
         return;
+      } else {
+        console.log('App - ✅ Já estamos na página /alterar-senha');
       }
+    } else {
+      console.log('App - ❌ Nenhum token de recovery encontrado');
     }
-  }, []);
-
-  // Também verificar mudanças na URL após o carregamento inicial
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      const pathname = window.location.pathname;
-      
-      console.log('App - Hash mudou:', hash);
-      
-      if ((hash.includes('type=recovery') || hash.includes('recovery')) && hash.includes('access_token')) {
-        if (pathname !== '/alterar-senha') {
-          console.log('App - Hash change: Redirecionando para /alterar-senha');
-          window.location.href = '/alterar-senha' + hash;
-        }
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   return (
