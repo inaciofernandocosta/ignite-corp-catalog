@@ -103,6 +103,33 @@ export function EnrollmentManagement() {
     setResendDialogOpen(true);
   };
 
+  const handleResendApprovalEmail = async (enrollment: Enrollment) => {
+    try {
+      await supabase.functions.invoke('send-approval-email', {
+        body: {
+          enrollmentData: {
+            enrollment_id: enrollment.id,
+            course_id: enrollment.curso_id,
+            student_id: enrollment.aluno_id,
+            status: 'aprovado'
+          }
+        }
+      });
+      
+      toast({
+        title: "E-mail de aprovação reenviado!",
+        description: `E-mail de aprovação foi enviado novamente para ${enrollment.inscricoes_mentoria.nome}.`,
+      });
+    } catch (error) {
+      console.error('Erro ao reenviar e-mail de aprovação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reenviar o e-mail de aprovação.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleUpdateStatus = async (enrollmentId: string, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -228,6 +255,12 @@ export function EnrollmentManagement() {
                             <Mail className="w-4 h-4 mr-2" />
                             Reenviar E-mail
                           </DropdownMenuItem>
+                          {enrollment.status === 'aprovado' && (
+                            <DropdownMenuItem onClick={() => handleResendApprovalEmail(enrollment)}>
+                              <Mail className="w-4 h-4 mr-2" />
+                              Reenviar E-mail de Aprovação
+                            </DropdownMenuItem>
+                          )}
                           {enrollment.status === 'pendente' && (
                             <>
                               <DropdownMenuItem onClick={() => handleUpdateStatus(enrollment.id, 'aprovado')}>
