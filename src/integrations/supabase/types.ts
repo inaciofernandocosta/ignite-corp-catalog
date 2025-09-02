@@ -761,6 +761,10 @@ export type Database = {
         Args: { admin_email: string }
         Returns: Json
       }
+      criar_conta_auth_admin: {
+        Args: { user_email: string; user_password?: string }
+        Returns: string
+      }
       criar_conta_auth_para_inscrito: {
         Args: { user_email: string }
         Returns: string
