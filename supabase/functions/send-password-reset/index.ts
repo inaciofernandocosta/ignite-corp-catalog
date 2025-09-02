@@ -46,7 +46,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://mentoriafutura.com/auth'
+        redirectTo: 'https://mentoriafutura.com.br/auth'
       }
     });
 
