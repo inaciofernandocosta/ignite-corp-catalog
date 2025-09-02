@@ -27,13 +27,25 @@ const App = () => {
     
     // Se estamos em qualquer página com hash contendo recovery
     if (hash.includes('type=recovery') && hash.includes('access_token')) {
-      console.log('App - Link de recovery detectado, redirecionando para /auth');
+      console.log('App - Link de recovery detectado');
       
       // Se não estamos já na página /auth, redirecionar
       if (pathname !== '/auth') {
-        window.location.href = '/auth' + hash;
+        console.log('App - Redirecionando para /auth com hash:', hash);
+        
+        // Usar replace em vez de href para manter o hash
+        window.history.replaceState(null, '', '/auth' + hash);
+        
+        // Forçar reload para garantir que a página Auth seja carregada
+        window.location.reload();
         return;
       }
+    }
+    
+    // Se estamos na página raiz mas há tokens de recovery, redirecionar
+    if (pathname === '/' && hash.includes('access_token') && hash.includes('type=recovery')) {
+      console.log('App - Tokens de recovery detectados na home, redirecionando');
+      window.location.href = '/auth' + hash;
     }
   }, []);
 
