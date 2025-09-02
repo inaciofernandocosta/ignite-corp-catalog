@@ -21,6 +21,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Auth = () => {
+  console.log('=== AUTH COMPONENT MOUNTED ===');
+  console.log('URL atual:', window.location.href);
+  console.log('Hash:', window.location.hash);
+  console.log('Search params:', window.location.search);
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
