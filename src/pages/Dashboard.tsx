@@ -137,7 +137,7 @@ export const Dashboard = () => {
       setCourseEnrollments(validEnrollments);
 
       // Para admins, buscar todos os cursos disponíveis
-      if (profile.role === 'admin') {
+      if (profile?.role === 'admin') {
         const { data: allCoursesData, error: allCoursesError } = await supabase
           .from('cursos')
           .select('*')
@@ -292,9 +292,9 @@ export const Dashboard = () => {
                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
                  Mentoria Futura
                </h1>
-               <Badge variant="secondary" className="hidden sm:inline-flex text-xs whitespace-nowrap">
-                 {profile.role === 'aluno' ? 'Área do Aluno' : profile.role}
-               </Badge>
+                <Badge variant="secondary" className="hidden sm:inline-flex text-xs whitespace-nowrap">
+                  {profile?.role === 'aluno' ? 'Área do Aluno' : profile?.role || 'Usuário'}
+                </Badge>
              </div>
 
              <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
@@ -308,10 +308,10 @@ export const Dashboard = () => {
                  <span className="hidden sm:inline">Catálogo</span>
                </Button>
                
-               <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
-                 <User className="h-4 w-4" />
-                 <span className="truncate max-w-32">{profile.nome}</span>
-               </div>
+                <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span className="truncate max-w-32">{profile?.nome}</span>
+                </div>
                <UserProfile />
                 <Button 
                   variant="outline" 
@@ -334,33 +334,33 @@ export const Dashboard = () => {
           <div className="lg:col-span-1 order-2 lg:order-1">
             <Card className="lg:sticky lg:top-24">
               <CardHeader className="text-center pb-4 sm:pb-6 px-3 sm:px-6">
-                <Avatar className="h-12 sm:h-16 lg:h-20 w-12 sm:w-16 lg:w-20 mx-auto mb-2 sm:mb-3 lg:mb-4">
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-sm sm:text-lg lg:text-xl">
-                    {getInitials(profile.nome)}
-                  </AvatarFallback>
-                </Avatar>
-                <CardTitle className="text-base sm:text-lg lg:text-xl truncate px-1 sm:px-2">{profile.nome}</CardTitle>
-                <CardDescription className="text-xs sm:text-sm truncate px-1 sm:px-2">{profile.email}</CardDescription>
+                 <Avatar className="h-12 sm:h-16 lg:h-20 w-12 sm:w-16 lg:w-20 mx-auto mb-2 sm:mb-3 lg:mb-4">
+                   <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-sm sm:text-lg lg:text-xl">
+                     {getInitials(profile?.nome || 'Usuario')}
+                   </AvatarFallback>
+                 </Avatar>
+                 <CardTitle className="text-base sm:text-lg lg:text-xl truncate px-1 sm:px-2">{profile?.nome}</CardTitle>
+                 <CardDescription className="text-xs sm:text-sm truncate px-1 sm:px-2">{profile?.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 lg:px-6">
-                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Building className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate text-xs sm:text-sm">{profile.empresa}</span>
-                  </div>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Briefcase className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate text-xs sm:text-sm">{profile.departamento}</span>
-                  </div>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <User className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate text-xs sm:text-sm">{profile.cargo}</span>
-                  </div>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MapPin className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate text-xs sm:text-sm">{profile.unidade}</span>
-                  </div>
-                </div>
+                 <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+                   <div className="flex items-center gap-2 min-w-0">
+                     <Building className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                     <span className="truncate text-xs sm:text-sm">{profile?.empresa}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                     <Briefcase className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                     <span className="truncate text-xs sm:text-sm">{profile?.departamento}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                     <User className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                     <span className="truncate text-xs sm:text-sm">{profile?.cargo}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                     <MapPin className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground flex-shrink-0" />
+                     <span className="truncate text-xs sm:text-sm">{profile?.unidade}</span>
+                   </div>
+                 </div>
                 
                 <Separator />
                 
