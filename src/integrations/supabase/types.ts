@@ -781,6 +781,10 @@ export type Database = {
         Args: { admin_email: string }
         Returns: string
       }
+      delete_user_completely: {
+        Args: { user_email: string }
+        Returns: string
+      }
       email_exists_for_recovery: {
         Args: { email_to_check: string }
         Returns: boolean
