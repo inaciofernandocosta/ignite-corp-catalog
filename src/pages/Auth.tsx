@@ -42,26 +42,34 @@ export const Auth = () => {
   // Check for password recovery mode FIRST - before any redirects
   useEffect(() => {
     const checkRecoveryMode = async () => {
+      console.log('Auth - Verificando modo de recovery. URL completa:', window.location.href);
+      console.log('Auth - Hash da URL:', window.location.hash);
+      
       // Verificar se há erro na URL (token expirado, etc.)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const error = hashParams.get('error');
       const errorCode = hashParams.get('error_code');
-      const errorDescription = hashParams.get('error_description');
+      
+      console.log('Auth - Parâmetros do hash:', {
+        error,
+        errorCode,
+        accessToken: hashParams.get('access_token') ? 'presente' : 'ausente',
+        refreshToken: hashParams.get('refresh_token') ? 'presente' : 'ausente',
+        type: hashParams.get('type')
+      });
 
       if (error === 'access_denied' && errorCode === 'otp_expired') {
-        
-        // Mostrar mensagem de erro e redirecionar para form de esqueci senha
+        console.log('Auth - Token expirado detectado, redirecionando para forgot password');
         setShowForgotPassword(true);
         setIsRecoveryMode(false);
         setShowResetPassword(false);
-        // Limpar hash da URL e adicionar parâmetro expired
         window.history.replaceState(null, '', '/auth?expired=true');
         return;
       }
 
       // Verificar se tem parâmetro type=recovery na URL
       if (searchParams.get('type') === 'recovery') {
-        
+        console.log('Auth - Parâmetro type=recovery encontrado na URL');
         setIsRecoveryMode(true);
         setShowResetPassword(true);
         return;
@@ -73,6 +81,7 @@ export const Auth = () => {
       const type = hashParams.get('type');
 
       if (accessToken && refreshToken && type === 'recovery') {
+        console.log('Auth - Link de recovery detectado, estabelecendo sessão');
         
         try {
           // Estabelecer sessão com os tokens do link
@@ -82,25 +91,30 @@ export const Auth = () => {
           });
 
           if (!error) {
-            
+            console.log('Auth - Sessão de recovery estabelecida com sucesso');
             setIsRecoveryMode(true);
             setShowResetPassword(true);
             // Limpar hash da URL
             window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
           } else {
             console.error('Auth - Erro ao estabelecer sessão de recovery:', error);
-            // Se falhar, limpar estado e mostrar esqueci senha
             setIsRecoveryMode(false);
             setShowResetPassword(false);
             setShowForgotPassword(true);
           }
         } catch (error) {
           console.error('Auth - Erro ao processar link de recovery:', error);
-          // Se falhar, limpar estado e mostrar esqueci senha
           setIsRecoveryMode(false);
           setShowResetPassword(false);
           setShowForgotPassword(true);
         }
+      } else if (window.location.hash.includes('access_token') && window.location.hash.includes('type=recovery')) {
+        // Fallback para casos onde a URL pode estar malformada
+        console.log('Auth - Fallback: Link de recovery detectado mas parâmetros podem estar malformados');
+        console.log('Auth - Forçando modo de reset de senha');
+        setIsRecoveryMode(true);
+        setShowResetPassword(true);
+        window.history.replaceState(null, '', window.location.pathname + '?type=recovery');
       }
     };
 
