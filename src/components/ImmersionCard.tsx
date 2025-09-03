@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,8 @@ import { Clock, Calendar, Lock, CheckCircle, HelpCircle, XCircle } from 'lucide-
 import { formatDateWithoutTimezone } from "@/lib/dateUtils";
 import { useNavigate } from "react-router-dom";
 import { generateSlug } from "@/hooks/useCourseDetails";
+import { useCourseEnrollmentLimits } from "@/hooks/useCourseEnrollmentLimits";
+import { CourseEnrollmentLimitModal } from "@/components/CourseEnrollmentLimitModal";
 
 interface Immersion {
   id: string;
@@ -43,11 +46,32 @@ const levelColors = {
 
 export function ImmersionCard({ immersion, userState, accessState, enrollmentStatus, onCTAClick }: ImmersionCardProps) {
   const navigate = useNavigate();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  
+  // Hook para verificar limites de vagas do curso
+  const { status: enrollmentLimitStatus, courseData } = useCourseEnrollmentLimits(immersion.id);
+  
+  // Mostrar modal automaticamente quando o limite for atingido e o usuário clicar no botão
+  useEffect(() => {
+    // O modal só aparece quando necessário, não automaticamente na página
+  }, [enrollmentLimitStatus.limitReached]);
   
   const handleCardClick = () => {
     // Use existing slug or generate from title
     const slug = immersion.slug || generateSlug(immersion.title);
     navigate(`/curso/${slug}`);
+  };
+  
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when button is clicked
+    
+    // Se o curso atingiu o limite, mostrar modal em vez de chamar onCTAClick
+    if (enrollmentLimitStatus.limitReached && courseData?.limite_alunos) {
+      setShowLimitModal(true);
+      return;
+    }
+    
+    onCTAClick(immersion);
   };
   
   const getAccessInfo = () => {
@@ -223,15 +247,24 @@ export function ImmersionCard({ immersion, userState, accessState, enrollmentSta
           <Button
             variant={accessInfo.ctaVariant}
             size="sm"
-            className="w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent card click when button is clicked
-              onCTAClick(immersion);
-            }}
+            className={`w-full font-semibold py-2 sm:py-3 text-xs sm:text-sm ${
+              enrollmentLimitStatus.limitReached ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : ''
+            }`}
+            onClick={handleButtonClick}
+            disabled={enrollmentLimitStatus.limitReached}
           >
-            {accessInfo.ctaText}
+            {enrollmentLimitStatus.limitReached ? 'Vagas esgotadas' : accessInfo.ctaText}
           </Button>
         )}
+        
+        {/* Modal de limite atingido */}
+        <CourseEnrollmentLimitModal
+          open={showLimitModal}
+          onOpenChange={setShowLimitModal}
+          courseName={immersion.title}
+          totalEnrolled={enrollmentLimitStatus.totalEnrolled}
+          maxLimit={courseData?.limite_alunos || 0}
+        />
       </CardFooter>
     </Card>
   );
