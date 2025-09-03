@@ -43,36 +43,51 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
         if (courseError) throw courseError;
         setCourseData(course);
 
-        // Buscar inscrições aprovadas no curso
+        // Buscar inscrições aprovadas no curso com join correto
         const { data: enrollments, error: enrollmentError } = await supabase
           .from('inscricoes_cursos')
           .select(`
+            id,
             aluno_id,
-            inscricoes_mentoria!inner(departamento)
+            status,
+            inscricoes_mentoria!inner(
+              id,
+              departamento
+            )
           `)
           .eq('curso_id', courseId)
           .eq('status', 'aprovado');
 
-        if (enrollmentError) throw enrollmentError;
+        if (enrollmentError) {
+          console.error('Erro ao buscar inscrições:', enrollmentError);
+          throw enrollmentError;
+        }
 
         const totalEnrolled = enrollments?.length || 0;
+        console.log('Total de inscrições aprovadas:', totalEnrolled);
 
         // Contar por departamento
         const departmentCounts: { [key: string]: number } = {};
         enrollments?.forEach((enrollment: any) => {
-          const dept = enrollment.inscricoes_mentoria.departamento || 'Sem departamento';
+          const dept = enrollment.inscricoes_mentoria?.departamento || 'Sem departamento';
           departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
         });
+
+        console.log('Contagem por departamento:', departmentCounts);
+        console.log('Limite por departamento:', course.limite_por_departamento);
 
         // Verificar limites por departamento
         const departmentLimitsReached: string[] = [];
         if (course.limite_por_departamento) {
           Object.entries(departmentCounts).forEach(([dept, count]) => {
+            console.log(`Departamento ${dept}: ${count}/${course.limite_por_departamento}`);
             if (count >= course.limite_por_departamento!) {
               departmentLimitsReached.push(dept);
             }
           });
         }
+
+        console.log('Departamentos com limite atingido:', departmentLimitsReached);
 
         // Verificar limite total
         const limitReached = course.limite_alunos ? totalEnrolled >= course.limite_alunos : false;
@@ -124,8 +139,13 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
       const { data: enrollments, error } = await supabase
         .from('inscricoes_cursos')
         .select(`
+          id,
           aluno_id,
-          inscricoes_mentoria!inner(departamento)
+          status,
+          inscricoes_mentoria!inner(
+            id,
+            departamento
+          )
         `)
         .eq('curso_id', courseId)
         .eq('status', 'aprovado');
@@ -133,8 +153,10 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
       if (error) throw error;
 
       const departmentCount = enrollments?.filter(
-        (e: any) => e.inscricoes_mentoria.departamento === departamento
+        (e: any) => e.inscricoes_mentoria?.departamento === departamento
       ).length || 0;
+
+      console.log(`CheckDepartmentLimit - Departamento ${departamento}: ${departmentCount}/${courseData.limite_por_departamento}`);
 
       return departmentCount < courseData.limite_por_departamento;
     } catch (error) {
