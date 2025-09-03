@@ -636,15 +636,6 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
           maxLimit={courseData.limite_alunos || 0}
         />
       )}
-
-      {/* Exibir departamentos com limite atingido */}
-      {isCourseEnrollment && enrollmentStatus.departmentLimitsReached.length > 0 && (
-        <Card className="w-full max-w-2xl mt-4">
-          <CardContent className="p-4">
-            <DepartmentLimitsDisplay departmentLimitsReached={enrollmentStatus.departmentLimitsReached} />
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
