@@ -1,0 +1,1 @@
+UPDATE departamentos SET status = 'ativo', updated_at = now() WHERE empresa_id = '655b266b-0f04-4353-9af5-e6ecd642346b' AND nome = 'DP';
