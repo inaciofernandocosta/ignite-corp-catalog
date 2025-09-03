@@ -246,41 +246,38 @@ export const useAuth = () => {
     
     try {
       setLogoutLoading(true);
+      console.log('Iniciando processo de logout...');
       
+      // PRIMEIRO: Fazer logout do Supabase antes de limpar estado local
+      const { error } = await supabase.auth.signOut();
       
-      // PRIMEIRO: Limpar estado local imediatamente para garantir logout na UI
+      if (error) {
+        console.error('Erro no logout do Supabase:', error);
+        // Mesmo com erro, continuar com limpeza local
+      } else {
+        console.log('Logout do Supabase realizado com sucesso');
+      }
+      
+      // SEGUNDO: Limpar estado local após logout do Supabase
       setUser(null);
       setSession(null);
       setProfile(null);
       localStorage.removeItem('dashboard-tab-initialized');
       
-      // SEGUNDO: Tentar fazer logout do Supabase apenas se existe uma sessão
-      const { data: currentSession } = await supabase.auth.getSession();
+      console.log('Estado local limpo');
       
-      if (currentSession?.session) {
-        
-        const { error } = await supabase.auth.signOut();
-        
-        // Ignorar erros conhecidos de sessão
-        if (error && !error.message?.includes('session') && !error.message?.includes('Session') && 
-            !error.message?.includes('Auth session missing')) {
-          console.error('Erro no logout do Supabase (mas continuando):', error);
-        }
-      } else {
-        
-      }
-      
-      // TERCEIRO: Sempre mostrar sucesso e redirecionar
-      
+      // TERCEIRO: Mostrar feedback e redirecionar
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
       });
       
-      // Forçar redirecionamento para home
+      // Aguardar um pouco antes de redirecionar para garantir que o estado foi atualizado
       setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+        console.log('Redirecionando para home...');
+        // Usar navigate em vez de window.location para melhor controle
+        window.location.replace('/');
+      }, 500);
       
     } catch (error: any) {
       console.error('Erro durante logout:', error);
@@ -291,7 +288,6 @@ export const useAuth = () => {
       setProfile(null);
       localStorage.removeItem('dashboard-tab-initialized');
       
-      // Sempre mostrar sucesso para o usuário (a limpeza local já foi feita)
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
@@ -299,8 +295,8 @@ export const useAuth = () => {
       
       // Forçar redirecionamento mesmo com erro
       setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+        window.location.replace('/');
+      }, 500);
     } finally {
       setLogoutLoading(false);
     }
