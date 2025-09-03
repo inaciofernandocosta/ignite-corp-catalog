@@ -49,6 +49,35 @@ export const ResetPasswordForm = ({ onSuccess, onBack }: ResetPasswordFormProps)
     setIsSubmitting(true);
     
     try {
+      // Recuperar tokens temporários do sessionStorage
+      const accessToken = sessionStorage.getItem('recovery_access_token');
+      const refreshToken = sessionStorage.getItem('recovery_refresh_token');
+      
+      if (!accessToken || !refreshToken) {
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Sessão expirou. Por favor, solicite um novo link de alteração de senha.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Estabelecer sessão temporária apenas para a operação
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+      
+      if (sessionError) {
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Link expirado. Por favor, solicite um novo link de alteração de senha.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Atualizar a senha
       const { data: updateData, error } = await supabase.auth.updateUser({
         password: data.password
       });

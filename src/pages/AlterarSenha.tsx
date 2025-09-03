@@ -27,30 +27,31 @@ export const AlterarSenha = () => {
         const refresh_token = params.get('refresh_token');
         
         if (access_token && refresh_token) {
+          // Apenas validar os tokens sem estabelecer sessão persistente
           try {
-            // Estabelecer sessão com os tokens
-            const { data, error } = await supabase.auth.setSession({
-              access_token,
-              refresh_token
+            // Validar os tokens fazendo uma verificação simples
+            const response = await fetch(`https://fauoxtziffljgictcvhi.supabase.co/auth/v1/user`, {
+              headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhdW94dHppZmZsamdpY3RjdmhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTcwNzYsImV4cCI6MjA2NjA5MzA3Nn0.rox_ZN0RwGHW4lY_HtVrOLZ4acVcQ237FfewAOOaQ0s'
+              }
             });
             
-            if (error) {
-              console.error('Erro ao estabelecer sessão:', error);
-              toast({
-                title: "Link inválido",
-                description: "Este link de alteração de senha expirou ou é inválido.",
-                variant: "destructive",
-              });
-              navigate("/auth");
-            } else {
-              console.log('Sessão estabelecida com sucesso');
+            if (response.ok) {
+              console.log('Tokens válidos - permitindo alteração de senha');
               setHasValidToken(true);
+              
+              // Armazenar tokens temporariamente para uso no formulário
+              sessionStorage.setItem('recovery_access_token', access_token);
+              sessionStorage.setItem('recovery_refresh_token', refresh_token);
+            } else {
+              throw new Error('Tokens inválidos');
             }
           } catch (error) {
-            console.error('Erro:', error);
+            console.error('Erro ao validar tokens:', error);
             toast({
-              title: "Erro",
-              description: "Ocorreu um erro ao processar o link de alteração de senha.",
+              title: "Link inválido",
+              description: "Este link de alteração de senha expirou ou é inválido.",
               variant: "destructive",
             });
             navigate("/auth");
@@ -78,9 +79,11 @@ export const AlterarSenha = () => {
       description: "Sua senha foi atualizada. Você será redirecionado para o login.",
     });
     
-    // Limpar a sessão e redirecionar para login após alguns segundos
-    setTimeout(async () => {
-      await supabase.auth.signOut();
+    // Limpar tokens temporários e redirecionar para login
+    sessionStorage.removeItem('recovery_access_token');
+    sessionStorage.removeItem('recovery_refresh_token');
+    
+    setTimeout(() => {
       navigate("/auth");
     }, 2000);
   };
