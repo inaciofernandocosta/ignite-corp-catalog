@@ -220,19 +220,43 @@ const handler = async (req: Request): Promise<Response> => {
     if (isNewUser) {
       // New user - needs to activate account
       // Send a password reset email instead of custom token
-      const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(safeEmail, {
-        redirectTo: `${APP_BASE_URL}/alterar-senha`
-      });
-
-      if (resetError) {
-        console.error('Erro ao gerar reset:', resetError);
-        return new Response(JSON.stringify({ 
-          error: "Failed to send activation email",
-          success: false 
-        }), {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+      try {
+        const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(safeEmail, {
+          redirectTo: `${APP_BASE_URL}/alterar-senha`
         });
+
+        if (resetError) {
+          console.error('Erro ao gerar reset:', resetError);
+          
+          // Check if it's a rate limit error
+          if (resetError.message?.includes('rate limit') || resetError.message?.includes('too many requests')) {
+            console.warn('Rate limit hit for password reset, but continuing with email');
+            // Continue with the email - user will need to use "forgot password" later
+          } else {
+            return new Response(JSON.stringify({ 
+              error: "Failed to send activation email",
+              success: false,
+              details: resetError.message
+            }), {
+              status: 500,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
+          }
+        }
+      } catch (authError: any) {
+        console.error('Auth error caught:', authError);
+        if (authError.message?.includes('rate limit') || authError.status === 429) {
+          console.warn('Rate limit detected, continuing with informational email');
+          // Continue with the email but adjust the message
+        } else {
+          return new Response(JSON.stringify({ 
+            error: "Authentication service error",
+            success: false 
+          }), {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
       }
 
       emailSubject = `🎉 Sua inscrição no curso "${safeCourseTitle}" foi aprovada!`;
@@ -248,7 +272,7 @@ const handler = async (req: Request): Promise<Response> => {
             <h3 style="color: #15803d; margin-top: 0;">Olá, ${safeName}!</h3>
             <p style="color: #166534; line-height: 1.6; margin: 15px 0;">
               Temos o prazer de informar que sua inscrição no curso <strong>"${safeCourseTitle}"</strong> foi aprovada! 
-              Você receberá em instantes um email separado com o link para definir sua senha de acesso.
+              Para acessar a plataforma, você precisará definir sua senha.
             </p>
           </div>
 
@@ -266,17 +290,23 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
 
           <div style="background-color: #1e40af; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
-            <h3 style="margin-top: 0; color: white;">🚀 Próximos passos</h3>
+            <h3 style="margin-top: 0; color: white;">🚀 Como acessar a plataforma</h3>
             <p style="margin: 15px 0; opacity: 0.9;">
-              1. Verifique sua caixa de entrada para o email "Redefinir sua senha"<br>
-              2. Clique no link do email para definir sua senha<br>
-              3. Após definir a senha, faça login na plataforma
+              1. Acesse a plataforma pelo link abaixo<br>
+              2. Clique em "Esqueci minha senha" na tela de login<br>
+              3. Digite seu email (${safeEmail}) para receber o link de definição de senha<br>
+              4. Após definir a senha, faça login normalmente
             </p>
+            <a href="${APP_BASE_URL}/auth" 
+               style="display: inline-block; background-color: #16a34a; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; margin: 10px 0;">
+              🌐 Acessar Plataforma
+            </a>
           </div>
 
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
             <p style="color: #92400e; margin: 0; font-weight: 500;">
               ⚠️ <strong>Importante:</strong><br>
+              • Use exatamente este email: <strong>${safeEmail}</strong><br>
               • Verifique também a pasta de spam/lixo eletrônico<br>
               • O link de definição de senha é válido por algumas horas<br>
               • Guarde bem suas credenciais para futuros acessos
