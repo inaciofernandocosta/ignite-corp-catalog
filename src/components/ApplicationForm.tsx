@@ -223,7 +223,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
 
         if (cursoError) throw cursoError;
       } else {
-        // Regular user registration flow
+        // Regular user registration flow - must use 'pendente' and 'false' for RLS policy
         const { error } = await supabase
           .from('inscricoes_mentoria')
           .insert({
@@ -234,8 +234,8 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             departamento: selectedDepartment?.nome || '',
             cargo: data.cargo,
             unidade: selectedLocation?.nome || '',
-            status: 'aprovado',
-            ativo: true,
+            status: 'pendente',
+            ativo: false,
             curso_nome: 'IA na Prática',
           });
 
