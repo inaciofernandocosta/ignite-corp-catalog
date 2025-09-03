@@ -14,19 +14,6 @@ interface DepartmentCount {
   count: number;
 }
 
-interface CourseEnrollmentCheckResult {
-  totalEnrolled: number;
-  limitReached: boolean;
-  departmentLimitsReached: string[];
-  canEnroll: boolean;
-  departmentCounts: { [key: string]: number };
-  courseData: {
-    limite_alunos: number | null;
-    limite_por_departamento: number | null;
-  };
-  error?: string;
-}
-
 export const useCourseEnrollmentLimits = (courseId: string) => {
   const [status, setStatus] = useState<CourseEnrollmentStatus>({
     totalEnrolled: 0,
@@ -51,23 +38,24 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
       setLoading(true);
       console.log('🔄 Usando função segura para verificar limites do curso:', courseId);
 
-      // Usar função segura para verificar limites (não depende de RLS)
+      // Usar a função segura do banco que bypassa RLS
       const { data: result, error } = await supabase.rpc('verificar_limites_curso', {
         p_curso_id: courseId
       });
 
       if (error) {
-        console.error('❌ Erro ao chamar função de verificação:', error);
+        console.error('❌ Erro ao chamar função de limites:', error);
         throw error;
       }
 
-      console.log('📋 Resultado da função de verificação:', result);
+      console.log('📊 Resultado da função segura:', result);
 
-      // Cast do resultado para o tipo correto
-      const courseResult = result as unknown as CourseEnrollmentCheckResult;
+      // Fazer cast do resultado para o tipo correto
+      const limitsResult = result as any;
 
-      if (courseResult.error) {
-        console.error('❌ Erro retornado pela função:', courseResult.error);
+      // Verificar se houve erro na função
+      if (limitsResult?.error) {
+        console.error('❌ Erro retornado pela função:', limitsResult.error);
         setStatus({
           totalEnrolled: 0,
           limitReached: false,
@@ -75,44 +63,58 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
           canEnroll: false,
           departmentCounts: {},
         });
-        setCourseData(null);
         return;
       }
 
       // Extrair dados do curso
-      const courseInfo = courseResult.courseData;
-      setCourseData({
-        limite_alunos: courseInfo.limite_alunos,
-        limite_por_departamento: courseInfo.limite_por_departamento
-      });
+      if (limitsResult?.courseData) {
+        setCourseData({
+          limite_alunos: limitsResult.courseData.limite_alunos,
+          limite_por_departamento: limitsResult.courseData.limite_por_departamento
+        });
+        console.log('📋 Dados do curso configurados:', limitsResult.courseData);
+      }
 
-      console.log('📊 Total de inscrições encontradas:', courseResult.totalEnrolled);
-      console.log('🎯 Limite total atingido:', courseResult.limitReached);
-      console.log('🏢 Departamentos com limite atingido:', courseResult.departmentLimitsReached);
-      console.log('📈 Contagem por departamento:', courseResult.departmentCounts);
+      // Configurar status com base no resultado
+      const newStatus: CourseEnrollmentStatus = {
+        totalEnrolled: limitsResult?.totalEnrolled || 0,
+        limitReached: limitsResult?.limitReached || false,
+        departmentLimitsReached: limitsResult?.departmentLimitsReached || [],
+        canEnroll: limitsResult?.canEnroll !== false, // Default true se não especificado
+        departmentCounts: limitsResult?.departmentCounts || {},
+      };
 
-      // Atualizar status
-      setStatus({
-        totalEnrolled: courseResult.totalEnrolled,
-        limitReached: courseResult.limitReached,
-        departmentLimitsReached: courseResult.departmentLimitsReached || [],
-        canEnroll: courseResult.canEnroll,
-        departmentCounts: courseResult.departmentCounts || {},
-      });
+      console.log('✅ Status configurado:', newStatus);
 
-      console.log('✅ Status atualizado com sucesso');
+      // Logs detalhados para debug
+      console.log('📊 RESUMO DOS LIMITES:');
+      console.log(`   📈 Total inscrições: ${newStatus.totalEnrolled}`);
+      console.log(`   🎯 Limite do curso: ${limitsResult?.courseData?.limite_alunos || 'ilimitado'}`);
+      console.log(`   🚫 Curso esgotado: ${newStatus.limitReached ? 'SIM' : 'NÃO'}`);
+      console.log(`   🏢 Limite por depto: ${limitsResult?.courseData?.limite_por_departamento || 'sem limite'}`);
+      
+      if (newStatus.departmentLimitsReached.length > 0) {
+        console.log(`   🚫 Departamentos esgotados: ${newStatus.departmentLimitsReached.join(', ')}`);
+      }
+      
+      if (Object.keys(newStatus.departmentCounts).length > 0) {
+        console.log('   📊 Contagem por departamento:');
+        Object.entries(newStatus.departmentCounts).forEach(([dept, count]) => {
+          console.log(`      - ${dept}: ${count}`);
+        });
+      }
+
+      setStatus(newStatus);
 
     } catch (error) {
       console.error('💥 Erro ao verificar limites do curso:', error);
-      // Em caso de erro, manter estado seguro
       setStatus({
         totalEnrolled: 0,
         limitReached: false,
         departmentLimitsReached: [],
-        canEnroll: true,
+        canEnroll: false,
         departmentCounts: {},
       });
-      setCourseData(null);
     } finally {
       setLoading(false);
     }
@@ -153,16 +155,18 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
     }
 
     // Usar dados já carregados se disponível
-    if (status.departmentCounts[departamento]) {
+    if (status.departmentCounts[departamento] !== undefined) {
       const count = status.departmentCounts[departamento];
       const canEnroll = count < courseData.limite_por_departamento;
       console.log(`📊 Usando dados em cache: ${departamento} ${count}/${courseData.limite_por_departamento} - Can enroll: ${canEnroll}`);
       return canEnroll;
     }
 
-    console.log(`⚠️ Dados não encontrados em cache para ${departamento}, fazendo consulta direta`);
-    return true; // Se não tiver dados em cache, permite por enquanto
-  }, [courseData, status.departmentCounts]);
+    // Se não há dados em cache, verificar se departamento está na lista de bloqueados
+    const isBlocked = status.departmentLimitsReached.includes(departamento);
+    console.log(`📊 Departamento ${departamento} ${isBlocked ? 'BLOQUEADO' : 'LIBERADO'} (sem contagem específica)`);
+    return !isBlocked;
+  }, [courseData, status.departmentCounts, status.departmentLimitsReached]);
 
   return {
     status,
