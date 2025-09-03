@@ -49,7 +49,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
 
       toast({
         title: 'Aluno removido',
-        description: `${student.nome} foi removido com sucesso.`,
+        description: `${student.nome || 'Usuário'} foi removido com sucesso.`,
       });
 
       onStudentUpdate();
@@ -76,7 +76,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
 
       toast({
         title: 'Status atualizado',
-        description: `${student.nome} foi ${newStatus === 'aprovado' ? 'aprovado' : 'rejeitado'}.`,
+        description: `${student.nome || 'Usuário'} foi ${newStatus === 'aprovado' ? 'aprovado' : 'rejeitado'}.`,
       });
 
       onStudentUpdate();
@@ -117,7 +117,7 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-2 sm:space-y-0">
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">{student.nome}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">{student.nome || 'Nome não informado'}</h3>
               {getStatusBadge()}
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground">
