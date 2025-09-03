@@ -52,11 +52,11 @@ export const StudentManagement = React.memo(() => {
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(student =>
-        student.nome.toLowerCase().includes(term) ||
-        student.email.toLowerCase().includes(term) ||
-        student.empresa?.toLowerCase().includes(term) ||
-        student.departamento?.toLowerCase().includes(term) ||
-        student.cargo?.toLowerCase().includes(term)
+        (student.nome?.toLowerCase() || '').includes(term) ||
+        (student.email?.toLowerCase() || '').includes(term) ||
+        (student.empresa?.toLowerCase() || '').includes(term) ||
+        (student.departamento?.toLowerCase() || '').includes(term) ||
+        (student.cargo?.toLowerCase() || '').includes(term)
       );
     }
 

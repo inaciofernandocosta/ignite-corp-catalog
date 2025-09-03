@@ -118,7 +118,7 @@ export function EnrollmentManagement() {
       
       toast({
         title: "E-mail de aprovação reenviado!",
-        description: `E-mail de aprovação foi enviado novamente para ${enrollment.inscricoes_mentoria.nome}.`,
+        description: `E-mail de aprovação foi enviado novamente para ${enrollment.inscricoes_mentoria?.nome || 'usuário'}.`,
       });
     } catch (error) {
       console.error('Erro ao reenviar e-mail de aprovação:', error);
@@ -157,7 +157,7 @@ export function EnrollmentManagement() {
             
             toast({
               title: "Aprovado com sucesso!",
-              description: `Inscrição aprovada e e-mail enviado para ${enrollment.inscricoes_mentoria.nome}.`,
+              description: `Inscrição aprovada e e-mail enviado para ${enrollment.inscricoes_mentoria?.nome || 'usuário'}.`,
             });
           } catch (emailError) {
             console.error('Erro ao enviar e-mail de aprovação:', emailError);
@@ -231,16 +231,16 @@ export function EnrollmentManagement() {
                   <div className="flex justify-between items-start mb-3">
                     <div className="space-y-1">
                       <h3 className="font-semibold">{enrollment.cursos.titulo}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="w-4 h-4" />
-                        <span>{enrollment.inscricoes_mentoria.nome}</span>
-                        <span>({enrollment.inscricoes_mentoria.email})</span>
-                      </div>
-                      {enrollment.inscricoes_mentoria.empresa && (
-                        <p className="text-sm text-muted-foreground">
-                          {enrollment.inscricoes_mentoria.empresa}
-                        </p>
-                      )}
+                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                         <User className="w-4 h-4" />
+                         <span>{enrollment.inscricoes_mentoria?.nome || 'Nome não informado'}</span>
+                         <span>({enrollment.inscricoes_mentoria?.email || 'Email não informado'})</span>
+                       </div>
+                       {enrollment.inscricoes_mentoria?.empresa && (
+                         <p className="text-sm text-muted-foreground">
+                           {enrollment.inscricoes_mentoria.empresa}
+                         </p>
+                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(enrollment.status)}
@@ -326,7 +326,7 @@ export function EnrollmentManagement() {
             aluno_id: selectedEnrollment.aluno_id,
             data_inscricao: selectedEnrollment.data_inscricao
           }}
-          studentName={selectedEnrollment.inscricoes_mentoria.nome}
+          studentName={selectedEnrollment.inscricoes_mentoria?.nome || 'Nome não informado'}
           courseName={selectedEnrollment.cursos.titulo}
         />
       )}
