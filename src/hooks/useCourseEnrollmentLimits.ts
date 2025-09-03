@@ -43,33 +43,57 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
         if (courseError) throw courseError;
         setCourseData(course);
 
-        // Buscar inscrições aprovadas no curso com join correto
+        // Buscar inscrições no curso diretamente
         const { data: enrollments, error: enrollmentError } = await supabase
           .from('inscricoes_cursos')
           .select(`
             id,
             aluno_id,
-            status,
-            inscricoes_mentoria!inner(
-              id,
-              departamento
-            )
+            status
           `)
           .eq('curso_id', courseId)
-          .in('status', ['aprovado', 'pendente']); // MUDANÇA: incluir pendentes também
+          .in('status', ['aprovado', 'pendente']);
+
+        console.log('Inscrições encontradas para curso:', courseId, enrollments);
 
         if (enrollmentError) {
           console.error('Erro ao buscar inscrições:', enrollmentError);
           throw enrollmentError;
         }
 
-        const totalEnrolled = enrollments?.length || 0;
+        // Se há inscrições, buscar departamentos separadamente
+        let enrollmentsWithDepartments = [];
+        if (enrollments && enrollments.length > 0) {
+          const alunoIds = enrollments.map(e => e.aluno_id);
+          
+          const { data: alunos, error: alunosError } = await supabase
+            .from('inscricoes_mentoria')
+            .select('id, departamento')
+            .in('id', alunoIds);
+
+          if (alunosError) {
+            console.error('Erro ao buscar dados dos alunos:', alunosError);
+            throw alunosError;
+          }
+
+          // Combinar dados
+          enrollmentsWithDepartments = enrollments.map(enrollment => {
+            const aluno = alunos?.find(a => a.id === enrollment.aluno_id);
+            return {
+              ...enrollment,
+              departamento: aluno?.departamento || 'Sem departamento'
+            };
+          });
+        }
+
+        const totalEnrolled = enrollmentsWithDepartments?.length || 0;
         console.log('Total de inscrições (aprovadas + pendentes):', totalEnrolled);
+        console.log('Inscrições com departamentos:', enrollmentsWithDepartments);
 
         // Contar por departamento
         const departmentCounts: { [key: string]: number } = {};
-        enrollments?.forEach((enrollment: any) => {
-          const dept = enrollment.inscricoes_mentoria?.departamento || 'Sem departamento';
+        enrollmentsWithDepartments?.forEach((enrollment: any) => {
+          const dept = enrollment.departamento || 'Sem departamento';
           departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
         });
 
@@ -136,24 +160,32 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
     if (!courseData?.limite_por_departamento) return true;
 
     try {
-      const { data: enrollments, error } = await supabase
+      // Buscar inscrições no curso
+      const { data: enrollments, error: enrollmentError } = await supabase
         .from('inscricoes_cursos')
-        .select(`
-          id,
-          aluno_id,
-          status,
-          inscricoes_mentoria!inner(
-            id,
-            departamento
-          )
-        `)
+        .select('id, aluno_id, status')
         .eq('curso_id', courseId)
-        .in('status', ['aprovado', 'pendente']); // MUDANÇA: incluir pendentes também
+        .in('status', ['aprovado', 'pendente']);
 
-      if (error) throw error;
+      if (enrollmentError) throw enrollmentError;
 
-      const departmentCount = enrollments?.filter(
-        (e: any) => e.inscricoes_mentoria?.departamento === departamento
+      if (!enrollments || enrollments.length === 0) {
+        console.log(`CheckDepartmentLimit - Departamento ${departamento}: 0/${courseData.limite_por_departamento} (incluindo pendentes)`);
+        return true;
+      }
+
+      // Buscar departamentos dos alunos
+      const alunoIds = enrollments.map(e => e.aluno_id);
+      const { data: alunos, error: alunosError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('id, departamento')
+        .in('id', alunoIds);
+
+      if (alunosError) throw alunosError;
+
+      // Contar quantos do departamento específico
+      const departmentCount = alunos?.filter(
+        aluno => aluno.departamento === departamento
       ).length || 0;
 
       console.log(`CheckDepartmentLimit - Departamento ${departamento}: ${departmentCount}/${courseData.limite_por_departamento} (incluindo pendentes)`);
