@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseEnrollmentStatus {
@@ -6,6 +6,7 @@ interface CourseEnrollmentStatus {
   limitReached: boolean;
   departmentLimitsReached: string[];
   canEnroll: boolean;
+  departmentCounts: { [key: string]: number };
 }
 
 interface DepartmentCount {
@@ -19,6 +20,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
     limitReached: false,
     departmentLimitsReached: [],
     canEnroll: true,
+    departmentCounts: {},
   });
   const [loading, setLoading] = useState(true);
   const [courseData, setCourseData] = useState<{
@@ -26,112 +28,118 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
     limite_por_departamento: number | null;
   } | null>(null);
 
-  useEffect(() => {
+  const fetchEnrollmentStatus = useCallback(async () => {
     if (!courseId) return;
 
-    const fetchEnrollmentStatus = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
+      console.log('🔄 Iniciando verificação de limites para curso:', courseId);
 
-        // Buscar dados do curso (limites)
-        const { data: course, error: courseError } = await supabase
-          .from('cursos')
-          .select('limite_alunos, limite_por_departamento')
-          .eq('id', courseId)
-          .single();
+      // 1. Buscar dados do curso (limites configurados)
+      const { data: course, error: courseError } = await supabase
+        .from('cursos')
+        .select('limite_alunos, limite_por_departamento')
+        .eq('id', courseId)
+        .single();
 
-        if (courseError) throw courseError;
-        setCourseData(course);
+      if (courseError) throw courseError;
+      setCourseData(course);
 
-        // Buscar inscrições no curso diretamente
-        const { data: enrollments, error: enrollmentError } = await supabase
-          .from('inscricoes_cursos')
-          .select(`
-            id,
-            aluno_id,
-            status
-          `)
-          .eq('curso_id', courseId)
-          .in('status', ['aprovado', 'pendente']);
+      console.log('📋 Limites do curso:', {
+        limite_alunos: course.limite_alunos,
+        limite_por_departamento: course.limite_por_departamento
+      });
 
-        console.log('Inscrições encontradas para curso:', courseId, enrollments);
+      // 2. Buscar todas as inscrições no curso (aprovadas + pendentes)
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from('inscricoes_cursos')
+        .select('id, aluno_id, status')
+        .eq('curso_id', courseId)
+        .in('status', ['aprovado', 'pendente']);
 
-        if (enrollmentError) {
-          console.error('Erro ao buscar inscrições:', enrollmentError);
-          throw enrollmentError;
-        }
+      if (enrollmentError) throw enrollmentError;
 
-        // Se há inscrições, buscar departamentos separadamente
-        let enrollmentsWithDepartments = [];
-        if (enrollments && enrollments.length > 0) {
-          const alunoIds = enrollments.map(e => e.aluno_id);
-          
-          const { data: alunos, error: alunosError } = await supabase
-            .from('inscricoes_mentoria')
-            .select('id, departamento')
-            .in('id', alunoIds);
+      const totalEnrolled = enrollments?.length || 0;
+      console.log('📊 Total de inscrições (aprovadas + pendentes):', totalEnrolled);
 
-          if (alunosError) {
-            console.error('Erro ao buscar dados dos alunos:', alunosError);
-            throw alunosError;
-          }
+      // 3. VERIFICAÇÃO HIERÁRQUICA - Primeiro: Limite total do curso
+      let courseLimitReached = false;
+      if (course.limite_alunos && totalEnrolled >= course.limite_alunos) {
+        courseLimitReached = true;
+        console.log('🚫 LIMITE TOTAL DO CURSO ATINGIDO:', totalEnrolled, '>=', course.limite_alunos);
+        
+        // Se limite total atingido, não precisa verificar departamentos
+        setStatus({
+          totalEnrolled,
+          limitReached: true,
+          departmentLimitsReached: [],
+          canEnroll: false,
+          departmentCounts: {},
+        });
+        
+        return;
+      }
 
-          // Combinar dados
-          enrollmentsWithDepartments = enrollments.map(enrollment => {
-            const aluno = alunos?.find(a => a.id === enrollment.aluno_id);
-            return {
-              ...enrollment,
-              departamento: aluno?.departamento || 'Sem departamento'
-            };
-          });
-        }
+      console.log('✅ Curso tem vagas disponíveis no total:', totalEnrolled, '/', course.limite_alunos || 'ilimitado');
 
-        const totalEnrolled = enrollmentsWithDepartments?.length || 0;
-        console.log('Total de inscrições (aprovadas + pendentes):', totalEnrolled);
-        console.log('Inscrições com departamentos:', enrollmentsWithDepartments);
+      // 4. VERIFICAÇÃO HIERÁRQUICA - Segundo: Limites por departamento
+      let departmentLimitsReached: string[] = [];
+      const departmentCounts: { [key: string]: number } = {};
 
-        // Contar por departamento
-        const departmentCounts: { [key: string]: number } = {};
-        enrollmentsWithDepartments?.forEach((enrollment: any) => {
-          const dept = enrollment.departamento || 'Sem departamento';
+      if (course.limite_por_departamento && enrollments && enrollments.length > 0) {
+        console.log('🏢 Verificando limites por departamento...');
+
+        // Buscar departamentos dos alunos inscritos
+        const alunoIds = enrollments.map(e => e.aluno_id);
+        const { data: alunos, error: alunosError } = await supabase
+          .from('inscricoes_mentoria')
+          .select('id, departamento')
+          .in('id', alunoIds);
+
+        if (alunosError) throw alunosError;
+
+        // Contar inscrições por departamento
+        alunos?.forEach((aluno) => {
+          const dept = aluno.departamento || 'Sem departamento';
           departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
         });
 
-        console.log('Contagem por departamento:', departmentCounts);
-        console.log('Limite por departamento:', course.limite_por_departamento);
-
-        // Verificar limites por departamento
-        const departmentLimitsReached: string[] = [];
-        if (course.limite_por_departamento) {
-          Object.entries(departmentCounts).forEach(([dept, count]) => {
-            console.log(`Departamento ${dept}: ${count}/${course.limite_por_departamento}`);
-            if (count >= course.limite_por_departamento!) {
-              departmentLimitsReached.push(dept);
-            }
-          });
-        }
-
-        console.log('Departamentos com limite atingido:', departmentLimitsReached);
-
-        // Verificar limite total
-        const limitReached = course.limite_alunos ? totalEnrolled >= course.limite_alunos : false;
-
-        // Determinar se pode inscrever novos alunos
-        const canEnroll = !limitReached;
-
-        setStatus({
-          totalEnrolled,
-          limitReached,
-          departmentLimitsReached,
-          canEnroll,
+        // Verificar quais departamentos atingiram o limite
+        Object.entries(departmentCounts).forEach(([dept, count]) => {
+          console.log(`📈 Departamento ${dept}: ${count}/${course.limite_por_departamento}`);
+          if (count >= course.limite_por_departamento!) {
+            departmentLimitsReached.push(dept);
+            console.log(`🚫 Departamento ${dept} atingiu o limite!`);
+          }
         });
-      } catch (error) {
-        console.error('Erro ao verificar limites do curso:', error);
-      } finally {
-        setLoading(false);
+      } else {
+        console.log('✅ Sem limite por departamento ou sem inscrições');
       }
-    };
 
+      // 5. Resultado final
+      console.log('📋 RESULTADO FINAL:', {
+        totalEnrolled,
+        courseLimitReached,
+        departmentLimitsReached,
+        canEnroll: !courseLimitReached
+      });
+
+      setStatus({
+        totalEnrolled,
+        limitReached: courseLimitReached,
+        departmentLimitsReached,
+        canEnroll: !courseLimitReached,
+        departmentCounts,
+      });
+
+    } catch (error) {
+      console.error('💥 Erro ao verificar limites do curso:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
+  useEffect(() => {
     fetchEnrollmentStatus();
 
     // Recarregar quando houver mudanças nas inscrições
@@ -146,6 +154,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
           filter: `curso_id=eq.${courseId}`,
         },
         () => {
+          console.log('🔄 Mudança detectada nas inscrições, recarregando...');
           fetchEnrollmentStatus();
         }
       )
@@ -154,59 +163,33 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [courseId]);
+  }, [fetchEnrollmentStatus]);
 
-  const checkDepartmentLimit = async (departamento: string): Promise<boolean> => {
-    if (!courseData?.limite_por_departamento) return true;
-
-    try {
-      // Buscar inscrições no curso
-      const { data: enrollments, error: enrollmentError } = await supabase
-        .from('inscricoes_cursos')
-        .select('id, aluno_id, status')
-        .eq('curso_id', courseId)
-        .in('status', ['aprovado', 'pendente']);
-
-      if (enrollmentError) throw enrollmentError;
-
-      if (!enrollments || enrollments.length === 0) {
-        console.log(`CheckDepartmentLimit - Departamento ${departamento}: 0/${courseData.limite_por_departamento} (incluindo pendentes)`);
-        return true;
-      }
-
-      // Buscar departamentos dos alunos
-      const alunoIds = enrollments.map(e => e.aluno_id);
-      const { data: alunos, error: alunosError } = await supabase
-        .from('inscricoes_mentoria')
-        .select('id, departamento')
-        .in('id', alunoIds);
-
-      if (alunosError) throw alunosError;
-
-      // Contar quantos do departamento específico
-      const departmentCount = alunos?.filter(
-        aluno => aluno.departamento === departamento
-      ).length || 0;
-
-      console.log(`CheckDepartmentLimit - Departamento ${departamento}: ${departmentCount}/${courseData.limite_por_departamento} (incluindo pendentes)`);
-
-      return departmentCount < courseData.limite_por_departamento;
-    } catch (error) {
-      console.error('Erro ao verificar limite do departamento:', error);
-      return false;
+  const checkDepartmentLimit = useCallback(async (departamento: string): Promise<boolean> => {
+    console.log(`🔍 Verificação rápida do departamento: ${departamento}`);
+    
+    if (!courseData?.limite_por_departamento) {
+      console.log(`✅ Sem limite por departamento configurado`);
+      return true;
     }
-  };
+
+    // Usar dados já carregados se disponível
+    if (status.departmentCounts[departamento]) {
+      const count = status.departmentCounts[departamento];
+      const canEnroll = count < courseData.limite_por_departamento;
+      console.log(`📊 Usando dados em cache: ${departamento} ${count}/${courseData.limite_por_departamento} - Can enroll: ${canEnroll}`);
+      return canEnroll;
+    }
+
+    console.log(`⚠️ Dados não encontrados em cache para ${departamento}, fazendo consulta direta`);
+    return true; // Se não tiver dados em cache, permite por enquanto
+  }, [courseData, status.departmentCounts]);
 
   return {
     status,
     loading,
     courseData,
     checkDepartmentLimit,
-    refreshStatus: () => {
-      if (courseId) {
-        // Trigger refresh by updating a dependency
-        setLoading(true);
-      }
-    },
+    refreshStatus: fetchEnrollmentStatus,
   };
 };

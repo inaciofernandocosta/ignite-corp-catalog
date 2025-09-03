@@ -102,27 +102,49 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   const availableDepartments = selectedCompanyId ? getDepartmentsByCompany(selectedCompanyId) : [];
   const availableLocations = selectedCompanyId ? getLocationsByCompany(selectedCompanyId) : [];
 
-  // Verificar limites de departamento quando a empresa for selecionada
+  // Aplicar limites usando dados já carregados (sem loops)
   React.useEffect(() => {
-    if (isCourseEnrollment && selectedCompanyId && availableDepartments.length > 0 && course?.id) {
-      const checkLimits = async () => {
+    if (isCourseEnrollment && selectedCompanyId && availableDepartments.length > 0 && course?.id && !enrollmentLoading) {
+      console.log('🎯 Aplicando limites com dados carregados...');
+      
+      // HIERARQUIA 1: Verificar limite total do curso primeiro
+      if (enrollmentStatus.limitReached) {
+        console.log('🚫 CURSO ESGOTADO - Limite total atingido');
+        setShowLimitModal(true);
+        setDepartmentLimits({}); // Limpar limites de departamento
+        return;
+      }
+
+      console.log('✅ Curso tem vagas disponíveis no total');
+
+      // HIERARQUIA 2: Aplicar limites por departamento usando dados já processados
+      if (courseData?.limite_por_departamento) {
         const limits: { [key: string]: boolean } = {};
         
-        console.log('Verificando limites para departamentos:', availableDepartments.map(d => d.nome));
+        availableDepartments.forEach(dept => {
+          const isLimitReached = enrollmentStatus.departmentLimitsReached.includes(dept.nome);
+          limits[dept.nome] = isLimitReached;
+          
+          console.log(`🏢 ${dept.nome}: ${isLimitReached ? '🚫 Bloqueado' : '✅ Disponível'}`);
+        });
         
-        for (const dept of availableDepartments) {
-          const canEnroll = await checkDepartmentLimit(dept.nome);
-          limits[dept.nome] = !canEnroll; // true = atingiu limite
-          console.log(`Departamento ${dept.nome}: limite atingido = ${!canEnroll}`);
-        }
-        
-        console.log('Limites finais:', limits);
         setDepartmentLimits(limits);
-      };
-      
-      checkLimits();
+        console.log('📋 Limites aplicados:', limits);
+      } else {
+        console.log('✅ Sem limites por departamento');
+        setDepartmentLimits({});
+      }
     }
-  }, [selectedCompanyId, availableDepartments, isCourseEnrollment, checkDepartmentLimit, course?.id]);
+  }, [
+    isCourseEnrollment, 
+    selectedCompanyId, 
+    availableDepartments, 
+    course?.id, 
+    enrollmentLoading, 
+    enrollmentStatus.limitReached, 
+    enrollmentStatus.departmentLimitsReached, 
+    courseData?.limite_por_departamento
+  ]);
 
   // Reset department and location when company changes
   React.useEffect(() => {
