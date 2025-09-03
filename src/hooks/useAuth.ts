@@ -20,6 +20,7 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { toast } = useToast();
 
   // Remove dependência do toast para evitar loop infinito
@@ -90,9 +91,9 @@ export const useAuth = () => {
         // Check existing session FIRST
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        if (!isMounted) return;
+        if (!isMounted || isLoggingOut) return;
         
-        
+        console.log('useAuth - Sessão inicial:', initialSession ? 'encontrada' : 'não encontrada');
         
         // Set initial state immediately
         setSession(initialSession);
@@ -122,14 +123,20 @@ export const useAuth = () => {
         
         console.log('useAuth - Auth state change:', event, session?.user?.email);
         
+        // Se estamos fazendo logout, ignorar mudanças de estado
+        if (isLoggingOut && event !== 'SIGNED_OUT') {
+          console.log('useAuth - Ignorando auth state change durante logout');
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         // Buscar perfil sempre que há uma sessão válida (após inicialização)
-        if (session?.user && session.user.email && isInitialized) {
+        if (session?.user && session.user.email && isInitialized && !isLoggingOut) {
           console.log('useAuth - Buscando perfil após auth change');
           setTimeout(() => {
-            if (isMounted) {
+            if (isMounted && !isLoggingOut) {
               fetchUserProfile(session.user.email);
             }
           }, 0);
@@ -153,7 +160,7 @@ export const useAuth = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, isLoggingOut]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -242,23 +249,14 @@ export const useAuth = () => {
 
   const signOut = async () => {
     // Evitar múltiplos cliques
-    if (logoutLoading) return;
+    if (logoutLoading || isLoggingOut) return;
     
     try {
       setLogoutLoading(true);
+      setIsLoggingOut(true);
       console.log('Iniciando processo de logout...');
       
-      // PRIMEIRO: Fazer logout do Supabase antes de limpar estado local
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Erro no logout do Supabase:', error);
-        // Mesmo com erro, continuar com limpeza local
-      } else {
-        console.log('Logout do Supabase realizado com sucesso');
-      }
-      
-      // SEGUNDO: Limpar estado local após logout do Supabase
+      // PRIMEIRO: Limpar estado local imediatamente
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -266,23 +264,31 @@ export const useAuth = () => {
       
       console.log('Estado local limpo');
       
+      // SEGUNDO: Fazer logout do Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error && !error.message?.includes('session')) {
+        console.error('Erro no logout do Supabase:', error);
+      } else {
+        console.log('Logout do Supabase realizado');
+      }
+      
       // TERCEIRO: Mostrar feedback e redirecionar
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
       });
       
-      // Aguardar um pouco antes de redirecionar para garantir que o estado foi atualizado
+      // Aguardar um pouco antes de redirecionar
       setTimeout(() => {
         console.log('Redirecionando para home...');
-        // Usar navigate em vez de window.location para melhor controle
         window.location.replace('/');
-      }, 500);
+      }, 200);
       
     } catch (error: any) {
       console.error('Erro durante logout:', error);
       
-      // Mesmo com erro, garantir que o estado seja limpo
+      // Garantir limpeza mesmo com erro
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -293,12 +299,12 @@ export const useAuth = () => {
         description: 'Até logo!',
       });
       
-      // Forçar redirecionamento mesmo com erro
       setTimeout(() => {
         window.location.replace('/');
-      }, 500);
+      }, 200);
     } finally {
       setLogoutLoading(false);
+      setIsLoggingOut(false);
     }
   };
 
