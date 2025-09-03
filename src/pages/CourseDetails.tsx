@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCourseDetails } from '@/hooks/useCourseDetails';
+import { useCourseEnrollmentLimits } from '@/hooks/useCourseEnrollmentLimits';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ApplicationForm } from '@/components/ApplicationForm';
 import { CourseEnrollmentModal } from '@/components/CourseEnrollmentModal';
+import { CourseEnrollmentLimitModal } from '@/components/CourseEnrollmentLimitModal';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { 
@@ -35,7 +37,11 @@ export const CourseDetails = () => {
   const { user, profile } = useAuth();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [existingEnrollment, setExistingEnrollment] = useState<{status: string; data_inscricao: string} | null>(null);
+
+  // Hook para verificar limites de vagas do curso
+  const { status: enrollmentLimitStatus, courseData } = useCourseEnrollmentLimits(course?.id || '');
 
   // Determine user state based on authentication (memoized)
   const userState = useMemo(() => {
@@ -71,6 +77,12 @@ export const CourseDetails = () => {
   }, []);
 
   const handleCTAClick = useCallback(() => {
+    // Se o curso atingiu o limite, mostrar modal de limite em vez do formulário
+    if (enrollmentLimitStatus.limitReached && courseData?.limite_alunos) {
+      setShowLimitModal(true);
+      return;
+    }
+    
     if (!user || !profile) {
       setShowApplicationForm(true);
       return;
@@ -78,7 +90,7 @@ export const CourseDetails = () => {
     
     // Para usuários logados, mostrar modal de confirmação de inscrição
     setShowEnrollmentModal(true);
-  }, [user, profile]);
+  }, [user, profile, enrollmentLimitStatus.limitReached, courseData?.limite_alunos]);
 
   const handleApplicationFormClose = useCallback(() => {
     setShowApplicationForm(false);
@@ -286,16 +298,18 @@ export const CourseDetails = () => {
                        existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
                        existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
                        existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' :
-                       existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' : ''
+                       existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' :
+                       enrollmentLimitStatus.limitReached ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : ''
                      }`}
                     onClick={handleCTAClick}
-                    disabled={!!existingEnrollment}
+                    disabled={!!existingEnrollment || enrollmentLimitStatus.limitReached}
                   >
                     {existingEnrollment ? 
                       (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
                        existingEnrollment.status === 'aprovado' ? 'Inscrito' :
                        existingEnrollment.status === 'reprovado' ? 'Inscrição negada' :
                        existingEnrollment.status === 'concluido' ? 'Concluído' : 'Inscrever-se') :
+                      enrollmentLimitStatus.limitReached ? 'Vagas esgotadas' :
                       (user && profile ? 'Inscrever-se' : 'Quero me aplicar')
                     }
                   </Button>
@@ -328,6 +342,11 @@ export const CourseDetails = () => {
                              <span className="text-primary">Curso concluído com sucesso</span>
                            </>
                          )}
+                      </>
+                    ) : enrollmentLimitStatus.limitReached ? (
+                      <>
+                        <XCircle className="w-4 h-4 inline mr-1 text-destructive" />
+                        <span className="text-destructive">Vagas esgotadas - {enrollmentLimitStatus.totalEnrolled}/{courseData?.limite_alunos} inscritos</span>
                       </>
                     ) : (
                       <>
@@ -511,16 +530,18 @@ export const CourseDetails = () => {
                existingEnrollment && existingEnrollment.status === 'pendente' ? 'bg-warning hover:bg-warning/90' :
                existingEnrollment && existingEnrollment.status === 'aprovado' ? 'bg-success hover:bg-success/90' :
                existingEnrollment && existingEnrollment.status === 'reprovado' ? 'bg-destructive hover:bg-destructive/90' :
-               existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' : ''
+               existingEnrollment && existingEnrollment.status === 'concluido' ? 'bg-primary hover:bg-primary/90' :
+               enrollmentLimitStatus.limitReached ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : ''
              }`}
             onClick={handleCTAClick}
-            disabled={!!existingEnrollment}
+            disabled={!!existingEnrollment || enrollmentLimitStatus.limitReached}
           >
             {existingEnrollment ? 
               (existingEnrollment.status === 'pendente' ? 'Aguardando aprovação' :
                existingEnrollment.status === 'aprovado' ? 'Inscrito' :
                existingEnrollment.status === 'reprovado' ? 'Inscrição negada' :
                existingEnrollment.status === 'concluido' ? 'Concluído' : 'Inscreva-se agora') :
+              enrollmentLimitStatus.limitReached ? 'Vagas esgotadas' :
               (user && profile ? 'Inscrever-se agora' : 'Quero me aplicar')
             }
           </Button>
@@ -560,6 +581,15 @@ export const CourseDetails = () => {
           existingEnrollment={existingEnrollment}
         />
       )}
+
+      {/* Course Enrollment Limit Modal */}
+      <CourseEnrollmentLimitModal
+        open={showLimitModal}
+        onOpenChange={setShowLimitModal}
+        courseName={course?.titulo || ''}
+        totalEnrolled={enrollmentLimitStatus.totalEnrolled}
+        maxLimit={courseData?.limite_alunos || 0}
+      />
     </div>
   );
 };
