@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -65,6 +66,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailError, setEmailError] = useState<string>('');
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [departmentLimits, setDepartmentLimits] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
   
@@ -99,6 +101,24 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   const selectedCompanyId = form.watch('empresa_id');
   const availableDepartments = selectedCompanyId ? getDepartmentsByCompany(selectedCompanyId) : [];
   const availableLocations = selectedCompanyId ? getLocationsByCompany(selectedCompanyId) : [];
+
+  // Verificar limites de departamento quando a empresa for selecionada
+  React.useEffect(() => {
+    if (isCourseEnrollment && selectedCompanyId && availableDepartments.length > 0) {
+      const checkLimits = async () => {
+        const limits: { [key: string]: boolean } = {};
+        
+        for (const dept of availableDepartments) {
+          const canEnroll = await checkDepartmentLimit(dept.nome);
+          limits[dept.nome] = !canEnroll; // true = atingiu limite
+        }
+        
+        setDepartmentLimits(limits);
+      };
+      
+      checkLimits();
+    }
+  }, [selectedCompanyId, availableDepartments, isCourseEnrollment, checkDepartmentLimit]);
 
   // Reset department and location when company changes
   React.useEffect(() => {
@@ -408,11 +428,26 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {availableDepartments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.id}>
-                              {dept.nome}
-                            </SelectItem>
-                          ))}
+                          {availableDepartments.map((dept) => {
+                            const isLimitReached = departmentLimits[dept.nome];
+                            return (
+                              <SelectItem 
+                                key={dept.id} 
+                                value={dept.id}
+                                disabled={isLimitReached}
+                                className={isLimitReached ? "opacity-50" : ""}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{dept.nome}</span>
+                                  {isLimitReached && (
+                                    <Badge variant="secondary" className="ml-2 text-xs bg-gray-100 text-gray-600">
+                                      Limite atingido
+                                    </Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
