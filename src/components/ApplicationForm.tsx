@@ -207,8 +207,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             ativo: false,
             curso_nome: course.title,
           })
-          .select('id')
-          .single();
+          .select('id');
 
         if (mentoriaError) throw mentoriaError;
 
@@ -216,7 +215,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
         const { error: cursoError } = await supabase
           .from('inscricoes_cursos')
           .insert({
-            aluno_id: mentoriaData.id,
+            aluno_id: mentoriaData[0].id,
             curso_id: course.id,
             status: 'pendente',
           });
