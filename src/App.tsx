@@ -13,6 +13,7 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { LGPD } from "./pages/LGPD";
 import { AlterarSenha } from "./pages/AlterarSenha";
 import NotFound from "./pages/NotFound";
+import { IaNaPratica } from "./pages/IaNaPratica";
 
 const queryClient = new QueryClient();
 
@@ -70,7 +71,8 @@ const App = () => {
         <Sonner />
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/index" replace />} />
+            <Route path="/" element={<Navigate to="/ianapratica" replace />} />
+            <Route path="/ianapratica" element={<IaNaPratica />} />
             <Route path="/index" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/alterar-senha" element={<AlterarSenha />} />
