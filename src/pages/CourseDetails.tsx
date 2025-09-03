@@ -531,7 +531,13 @@ export const CourseDetails = () => {
 
       {/* Application Form Modal */}
       {showApplicationForm && (
-        <ApplicationForm onClose={handleApplicationFormClose} />
+        <ApplicationForm 
+          onClose={handleApplicationFormClose}
+          course={course ? {
+            id: course.id,
+            titulo: course.titulo
+          } : undefined}
+        />
       )}
 
       {/* Course Enrollment Modal */}

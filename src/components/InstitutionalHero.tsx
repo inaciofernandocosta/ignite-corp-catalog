@@ -180,7 +180,13 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
       </div>
       
       {showApplicationForm && (
-        <ApplicationForm onClose={() => setShowApplicationForm(false)} />
+        <ApplicationForm 
+          onClose={() => setShowApplicationForm(false)}
+          course={{
+            id: "01994310-7306-4bec-9ee9-16d51140dbca",
+            titulo: "IA na Prática"
+          }}
+        />
       )}
     </section>
   );
