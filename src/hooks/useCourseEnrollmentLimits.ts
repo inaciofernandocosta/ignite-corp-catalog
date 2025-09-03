@@ -29,7 +29,10 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
   } | null>(null);
 
   const fetchEnrollmentStatus = useCallback(async () => {
-    if (!courseId) return;
+    if (!courseId) {
+      console.log('❌ CourseId não fornecido');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -42,23 +45,28 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
         .eq('id', courseId)
         .single();
 
-      if (courseError) throw courseError;
+      if (courseError) {
+        console.error('❌ Erro ao buscar dados do curso:', courseError);
+        throw courseError;
+      }
+      
       setCourseData(course);
-
-      console.log('📋 Limites do curso:', {
-        limite_alunos: course.limite_alunos,
-        limite_por_departamento: course.limite_por_departamento
-      });
+      console.log('📋 Dados do curso encontrados:', course);
 
       // 2. Buscar todas as inscrições no curso (aprovadas + pendentes)
+      console.log('🔍 Buscando inscrições para curso:', courseId);
       const { data: enrollments, error: enrollmentError } = await supabase
         .from('inscricoes_cursos')
         .select('id, aluno_id, status')
         .eq('curso_id', courseId)
         .in('status', ['aprovado', 'pendente']);
 
-      if (enrollmentError) throw enrollmentError;
+      if (enrollmentError) {
+        console.error('❌ Erro ao buscar inscrições:', enrollmentError);
+        throw enrollmentError;
+      }
 
+      console.log('📊 Inscrições encontradas:', enrollments);
       const totalEnrolled = enrollments?.length || 0;
       console.log('📊 Total de inscrições (aprovadas + pendentes):', totalEnrolled);
 
@@ -91,18 +99,27 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
 
         // Buscar departamentos dos alunos inscritos
         const alunoIds = enrollments.map(e => e.aluno_id);
+        console.log('👥 IDs dos alunos para buscar departamentos:', alunoIds);
+        
         const { data: alunos, error: alunosError } = await supabase
           .from('inscricoes_mentoria')
           .select('id, departamento')
           .in('id', alunoIds);
 
-        if (alunosError) throw alunosError;
+        if (alunosError) {
+          console.error('❌ Erro ao buscar dados dos alunos:', alunosError);
+          throw alunosError;
+        }
+
+        console.log('👥 Dados dos alunos encontrados:', alunos);
 
         // Contar inscrições por departamento
         alunos?.forEach((aluno) => {
           const dept = aluno.departamento || 'Sem departamento';
           departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
         });
+
+        console.log('📈 Contagem por departamento:', departmentCounts);
 
         // Verificar quais departamentos atingiram o limite
         Object.entries(departmentCounts).forEach(([dept, count]) => {
