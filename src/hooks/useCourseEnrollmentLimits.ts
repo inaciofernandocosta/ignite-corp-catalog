@@ -14,6 +14,19 @@ interface DepartmentCount {
   count: number;
 }
 
+interface CourseEnrollmentCheckResult {
+  totalEnrolled: number;
+  limitReached: boolean;
+  departmentLimitsReached: string[];
+  canEnroll: boolean;
+  departmentCounts: { [key: string]: number };
+  courseData: {
+    limite_alunos: number | null;
+    limite_por_departamento: number | null;
+  };
+  error?: string;
+}
+
 export const useCourseEnrollmentLimits = (courseId: string) => {
   const [status, setStatus] = useState<CourseEnrollmentStatus>({
     totalEnrolled: 0,
@@ -36,121 +49,70 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
 
     try {
       setLoading(true);
-      console.log('🔄 Iniciando verificação de limites para curso:', courseId);
+      console.log('🔄 Usando função segura para verificar limites do curso:', courseId);
 
-      // 1. Buscar dados do curso (limites configurados)
-      const { data: course, error: courseError } = await supabase
-        .from('cursos')
-        .select('limite_alunos, limite_por_departamento')
-        .eq('id', courseId)
-        .single();
+      // Usar função segura para verificar limites (não depende de RLS)
+      const { data: result, error } = await supabase.rpc('verificar_limites_curso', {
+        p_curso_id: courseId
+      });
 
-      if (courseError) {
-        console.error('❌ Erro ao buscar dados do curso:', courseError);
-        throw courseError;
-      }
-      
-      setCourseData(course);
-      console.log('📋 Dados do curso encontrados:', course);
-
-      // 2. Buscar todas as inscrições no curso (aprovadas + pendentes)
-      console.log('🔍 Buscando inscrições para curso:', courseId);
-      const { data: enrollments, error: enrollmentError } = await supabase
-        .from('inscricoes_cursos')
-        .select('id, aluno_id, status')
-        .eq('curso_id', courseId)
-        .in('status', ['aprovado', 'pendente']);
-
-      if (enrollmentError) {
-        console.error('❌ Erro ao buscar inscrições:', enrollmentError);
-        throw enrollmentError;
+      if (error) {
+        console.error('❌ Erro ao chamar função de verificação:', error);
+        throw error;
       }
 
-      console.log('📊 Inscrições encontradas:', enrollments);
-      const totalEnrolled = enrollments?.length || 0;
-      console.log('📊 Total de inscrições (aprovadas + pendentes):', totalEnrolled);
+      console.log('📋 Resultado da função de verificação:', result);
 
-      // 3. VERIFICAÇÃO HIERÁRQUICA - Primeiro: Limite total do curso
-      let courseLimitReached = false;
-      if (course.limite_alunos && totalEnrolled >= course.limite_alunos) {
-        courseLimitReached = true;
-        console.log('🚫 LIMITE TOTAL DO CURSO ATINGIDO:', totalEnrolled, '>=', course.limite_alunos);
-        
-        // Se limite total atingido, não precisa verificar departamentos
+      // Cast do resultado para o tipo correto
+      const courseResult = result as unknown as CourseEnrollmentCheckResult;
+
+      if (courseResult.error) {
+        console.error('❌ Erro retornado pela função:', courseResult.error);
         setStatus({
-          totalEnrolled,
-          limitReached: true,
+          totalEnrolled: 0,
+          limitReached: false,
           departmentLimitsReached: [],
           canEnroll: false,
           departmentCounts: {},
         });
-        
+        setCourseData(null);
         return;
       }
 
-      console.log('✅ Curso tem vagas disponíveis no total:', totalEnrolled, '/', course.limite_alunos || 'ilimitado');
-
-      // 4. VERIFICAÇÃO HIERÁRQUICA - Segundo: Limites por departamento
-      let departmentLimitsReached: string[] = [];
-      const departmentCounts: { [key: string]: number } = {};
-
-      if (course.limite_por_departamento && enrollments && enrollments.length > 0) {
-        console.log('🏢 Verificando limites por departamento...');
-
-        // Buscar departamentos dos alunos inscritos
-        const alunoIds = enrollments.map(e => e.aluno_id);
-        console.log('👥 IDs dos alunos para buscar departamentos:', alunoIds);
-        
-        const { data: alunos, error: alunosError } = await supabase
-          .from('inscricoes_mentoria')
-          .select('id, departamento')
-          .in('id', alunoIds);
-
-        if (alunosError) {
-          console.error('❌ Erro ao buscar dados dos alunos:', alunosError);
-          throw alunosError;
-        }
-
-        console.log('👥 Dados dos alunos encontrados:', alunos);
-
-        // Contar inscrições por departamento
-        alunos?.forEach((aluno) => {
-          const dept = aluno.departamento || 'Sem departamento';
-          departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
-        });
-
-        console.log('📈 Contagem por departamento:', departmentCounts);
-
-        // Verificar quais departamentos atingiram o limite
-        Object.entries(departmentCounts).forEach(([dept, count]) => {
-          console.log(`📈 Departamento ${dept}: ${count}/${course.limite_por_departamento}`);
-          if (count >= course.limite_por_departamento!) {
-            departmentLimitsReached.push(dept);
-            console.log(`🚫 Departamento ${dept} atingiu o limite!`);
-          }
-        });
-      } else {
-        console.log('✅ Sem limite por departamento ou sem inscrições');
-      }
-
-      // 5. Resultado final
-      console.log('📋 RESULTADO FINAL:', {
-        totalEnrolled,
-        courseLimitReached,
-        departmentLimitsReached,
-        canEnroll: !courseLimitReached
+      // Extrair dados do curso
+      const courseInfo = courseResult.courseData;
+      setCourseData({
+        limite_alunos: courseInfo.limite_alunos,
+        limite_por_departamento: courseInfo.limite_por_departamento
       });
 
+      console.log('📊 Total de inscrições encontradas:', courseResult.totalEnrolled);
+      console.log('🎯 Limite total atingido:', courseResult.limitReached);
+      console.log('🏢 Departamentos com limite atingido:', courseResult.departmentLimitsReached);
+      console.log('📈 Contagem por departamento:', courseResult.departmentCounts);
+
+      // Atualizar status
       setStatus({
-        totalEnrolled,
-        limitReached: courseLimitReached,
-        departmentLimitsReached,
-        canEnroll: !courseLimitReached,
-        departmentCounts,
+        totalEnrolled: courseResult.totalEnrolled,
+        limitReached: courseResult.limitReached,
+        departmentLimitsReached: courseResult.departmentLimitsReached || [],
+        canEnroll: courseResult.canEnroll,
+        departmentCounts: courseResult.departmentCounts || {},
       });
+
+      console.log('✅ Status atualizado com sucesso');
 
     } catch (error) {
       console.error('💥 Erro ao verificar limites do curso:', error);
+      // Em caso de erro, manter estado seguro
+      setStatus({
+        totalEnrolled: 0,
+        limitReached: false,
+        departmentLimitsReached: [],
+        canEnroll: true,
+        departmentCounts: {},
+      });
+      setCourseData(null);
     } finally {
       setLoading(false);
     }

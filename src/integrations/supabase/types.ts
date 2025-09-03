@@ -922,6 +922,10 @@ export type Database = {
         Args: { nova_senha_hash: string; token_input: string }
         Returns: Json
       }
+      verificar_limites_curso: {
+        Args: { p_curso_id: string }
+        Returns: Json
+      }
       verificar_vagas_disponiveis: {
         Args: { p_curso_nome: string }
         Returns: boolean
