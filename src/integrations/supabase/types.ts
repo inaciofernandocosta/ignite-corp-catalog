@@ -767,10 +767,6 @@ export type Database = {
         Args: { function_name: string; payload?: Json }
         Returns: undefined
       }
-      check_admin_role: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       check_user_role: {
         Args: { required_role: string; user_email: string }
         Returns: boolean
