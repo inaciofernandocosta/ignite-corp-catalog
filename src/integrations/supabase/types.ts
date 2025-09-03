@@ -888,6 +888,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_user_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       limpar_tokens_expirados: {
         Args: Record<PropertyKey, never>
         Returns: undefined
