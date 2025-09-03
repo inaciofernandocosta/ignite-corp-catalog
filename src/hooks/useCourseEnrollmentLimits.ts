@@ -56,7 +56,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
             )
           `)
           .eq('curso_id', courseId)
-          .eq('status', 'aprovado');
+          .in('status', ['aprovado', 'pendente']); // MUDANÇA: incluir pendentes também
 
         if (enrollmentError) {
           console.error('Erro ao buscar inscrições:', enrollmentError);
@@ -64,7 +64,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
         }
 
         const totalEnrolled = enrollments?.length || 0;
-        console.log('Total de inscrições aprovadas:', totalEnrolled);
+        console.log('Total de inscrições (aprovadas + pendentes):', totalEnrolled);
 
         // Contar por departamento
         const departmentCounts: { [key: string]: number } = {};
@@ -148,7 +148,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
           )
         `)
         .eq('curso_id', courseId)
-        .eq('status', 'aprovado');
+        .in('status', ['aprovado', 'pendente']); // MUDANÇA: incluir pendentes também
 
       if (error) throw error;
 
@@ -156,7 +156,7 @@ export const useCourseEnrollmentLimits = (courseId: string) => {
         (e: any) => e.inscricoes_mentoria?.departamento === departamento
       ).length || 0;
 
-      console.log(`CheckDepartmentLimit - Departamento ${departamento}: ${departmentCount}/${courseData.limite_por_departamento}`);
+      console.log(`CheckDepartmentLimit - Departamento ${departamento}: ${departmentCount}/${courseData.limite_por_departamento} (incluindo pendentes)`);
 
       return departmentCount < courseData.limite_por_departamento;
     } catch (error) {
