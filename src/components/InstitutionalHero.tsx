@@ -184,7 +184,7 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
           onClose={() => setShowApplicationForm(false)}
           course={{
             id: "01994310-7306-4bec-9ee9-16d51140dbca",
-            titulo: "IA na Prática"
+            title: "IA na Prática"
           }}
         />
       )}

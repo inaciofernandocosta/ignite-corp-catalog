@@ -535,7 +535,7 @@ export const CourseDetails = () => {
           onClose={handleApplicationFormClose}
           course={course ? {
             id: course.id,
-            titulo: course.titulo
+            title: course.titulo
           } : undefined}
         />
       )}

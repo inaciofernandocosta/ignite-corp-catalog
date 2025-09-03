@@ -55,7 +55,7 @@ interface ApplicationFormProps {
   onClose: () => void;
   course?: {
     id: string;
-    titulo: string;
+    title: string;
   };
 }
 
@@ -104,21 +104,25 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
 
   // Verificar limites de departamento quando a empresa for selecionada
   React.useEffect(() => {
-    if (isCourseEnrollment && selectedCompanyId && availableDepartments.length > 0) {
+    if (isCourseEnrollment && selectedCompanyId && availableDepartments.length > 0 && course?.id) {
       const checkLimits = async () => {
         const limits: { [key: string]: boolean } = {};
+        
+        console.log('Verificando limites para departamentos:', availableDepartments.map(d => d.nome));
         
         for (const dept of availableDepartments) {
           const canEnroll = await checkDepartmentLimit(dept.nome);
           limits[dept.nome] = !canEnroll; // true = atingiu limite
+          console.log(`Departamento ${dept.nome}: limite atingido = ${!canEnroll}`);
         }
         
+        console.log('Limites finais:', limits);
         setDepartmentLimits(limits);
       };
       
       checkLimits();
     }
-  }, [selectedCompanyId, availableDepartments, isCourseEnrollment, checkDepartmentLimit]);
+  }, [selectedCompanyId, availableDepartments, isCourseEnrollment, checkDepartmentLimit, course?.id]);
 
   // Reset department and location when company changes
   React.useEffect(() => {
@@ -179,7 +183,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             unidade: selectedLocation?.nome || '',
             status: 'pendente',
             ativo: false,
-            curso_nome: course.titulo,
+            curso_nome: course.title,
           })
           .select('id')
           .single();
@@ -261,7 +265,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             <X className="h-4 w-4" />
           </Button>
           <CardTitle className="text-2xl">
-            {isCourseEnrollment ? `Inscrição no Curso: ${course?.titulo}` : 'Cadastrar Novo Usuário'}
+            {isCourseEnrollment ? `Inscrição no Curso: ${course?.title}` : 'Cadastrar Novo Usuário'}
           </CardTitle>
           <CardDescription>
             {isCourseEnrollment 
@@ -605,7 +609,7 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
         <CourseEnrollmentLimitModal
           open={showLimitModal}
           onOpenChange={setShowLimitModal}
-          courseName={course?.titulo || ''}
+          courseName={course?.title || ''}
           totalEnrolled={enrollmentStatus.totalEnrolled}
           maxLimit={courseData.limite_alunos || 0}
         />
