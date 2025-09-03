@@ -66,15 +66,6 @@ export function EnrollmentManagement() {
 
       if (error) throw error;
       
-      // Log para debug - verificar se há dados null
-      console.log('📊 EnrollmentManagement - Dados das inscrições:', data);
-      if (data) {
-        const inscricoesComDadosNull = data.filter(i => !i.inscricoes_mentoria || !i.inscricoes_mentoria.nome);
-        if (inscricoesComDadosNull.length > 0) {
-          console.log('⚠️ ENCONTRADAS INSCRIÇÕES COM DADOS NULL:', inscricoesComDadosNull);
-        }
-      }
-      
       setEnrollments(data || []);
     } catch (error) {
       console.error('Erro ao buscar inscrições:', error);

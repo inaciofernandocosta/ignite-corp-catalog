@@ -80,15 +80,6 @@ export const StudentManagement = React.memo(() => {
 
       if (studentsError) throw studentsError;
 
-      // Log para debug - verificar se há dados null
-      console.log('📊 StudentManagement - Dados dos alunos:', studentsData);
-      if (studentsData) {
-        const alunosComNomeNull = studentsData.filter(s => !s.nome);
-        if (alunosComNomeNull.length > 0) {
-          console.log('⚠️ ENCONTRADOS ALUNOS COM NOME NULL:', alunosComNomeNull);
-        }
-      }
-
       setStudents(studentsData || []);
 
       // Buscar estatísticas apenas se necessário - usando Promise.all para melhor performance
