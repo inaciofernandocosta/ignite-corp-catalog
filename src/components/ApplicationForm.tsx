@@ -138,11 +138,11 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   }, [
     isCourseEnrollment, 
     selectedCompanyId, 
-    availableDepartments, 
+    availableDepartments.length, // Usar length em vez do array completo
     course?.id, 
     enrollmentLoading, 
     enrollmentStatus.limitReached, 
-    enrollmentStatus.departmentLimitsReached, 
+    enrollmentStatus.departmentLimitsReached.length, // Usar length em vez do array completo
     courseData?.limite_por_departamento
   ]);
 
