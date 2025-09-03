@@ -1,0 +1,1 @@
+INSERT INTO departamentos (nome, empresa_id) VALUES ('DP', '655b266b-0f04-4353-9af5-e6ecd642346b');
