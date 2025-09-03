@@ -193,6 +193,19 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
 
       if (isCourseEnrollment && course) {
         // Course enrollment flow - create pending entries in both tables
+        console.log('🎯 Inserindo dados na tabela inscricoes_mentoria:', {
+          nome: data.nome,
+          email: data.email,
+          telefone: cleanPhone,
+          empresa: selectedCompany?.nome || '',
+          departamento: selectedDepartment?.nome || '',
+          cargo: data.cargo,
+          unidade: selectedLocation?.nome || '',
+          status: 'pendente',
+          ativo: false,
+          curso_nome: course.title,
+        });
+
         const { data: mentoriaData, error: mentoriaError } = await supabase
           .from('inscricoes_mentoria')
           .insert({
@@ -209,9 +222,26 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
           })
           .select('id');
 
-        if (mentoriaError) throw mentoriaError;
+        if (mentoriaError) {
+          console.error('❌ Erro ao inserir em inscricoes_mentoria:', mentoriaError);
+          throw mentoriaError;
+        }
+
+        // Defensive check for mentoriaData
+        if (!mentoriaData || mentoriaData.length === 0) {
+          console.error('❌ Dados de mentoria não retornados após inserção');
+          throw new Error('Falha ao criar registro de mentoria');
+        }
+
+        console.log('✅ Dados inseridos com sucesso. ID:', mentoriaData[0].id);
 
         // Create course enrollment
+        console.log('🎯 Inserindo inscrição no curso:', {
+          aluno_id: mentoriaData[0].id,
+          curso_id: course.id,
+          status: 'pendente',
+        });
+
         const { error: cursoError } = await supabase
           .from('inscricoes_cursos')
           .insert({
@@ -220,9 +250,24 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             status: 'pendente',
           });
 
-        if (cursoError) throw cursoError;
+        if (cursoError) {
+          console.error('❌ Erro ao inserir em inscricoes_cursos:', cursoError);
+          throw cursoError;
+        }
+
+        console.log('✅ Inscrição no curso criada com sucesso');
       } else {
-        // Regular user registration flow - must use 'pendente' and 'false' for RLS policy
+        // Regular user registration flow - rely on database defaults for cleaner insert
+        console.log('🎯 Inserindo registro de usuário geral:', {
+          nome: data.nome,
+          email: data.email,
+          telefone: cleanPhone,
+          empresa: selectedCompany?.nome || '',
+          departamento: selectedDepartment?.nome || '',
+          cargo: data.cargo,
+          unidade: selectedLocation?.nome || '',
+        });
+
         const { error } = await supabase
           .from('inscricoes_mentoria')
           .insert({
@@ -233,12 +278,15 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
             departamento: selectedDepartment?.nome || '',
             cargo: data.cargo,
             unidade: selectedLocation?.nome || '',
-            status: 'pendente',
-            ativo: false,
-            curso_nome: 'IA na Prática',
+            // Rely on database defaults for status, ativo, curso_nome
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao inserir registro geral:', error);
+          throw error;
+        }
+
+        console.log('✅ Registro de usuário geral criado com sucesso');
       }
 
       toast({
