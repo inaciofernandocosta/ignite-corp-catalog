@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompanyData } from '@/hooks/useCompanyData';
+import { useCourseEnrollmentLimits } from '@/hooks/useCourseEnrollmentLimits';
+import { CourseEnrollmentLimitModal } from '@/components/CourseEnrollmentLimitModal';
+import { DepartmentLimitsDisplay } from '@/components/DepartmentEnrollmentStatus';
 import { applyPhoneMask, removePhoneMask, validateEmailFormat, filterEmailInput } from '@/lib/inputMasks';
 import { X, User, Mail, Phone, Building, Briefcase, MapPin, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
@@ -61,8 +64,17 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailError, setEmailError] = useState<string>('');
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
+  
+  // Hook para controle de vagas do curso
+  const {
+    status: enrollmentStatus,
+    loading: enrollmentLoading,
+    courseData,
+    checkDepartmentLimit,
+  } = useCourseEnrollmentLimits(course?.id || '');
 
   const formSchema = createFormSchema(isCourseEnrollment);
   type FormData = z.infer<typeof formSchema>;
@@ -100,6 +112,31 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
     setIsSubmitting(true);
 
     try {
+      // Verificar limites se for inscrição em curso
+      if (isCourseEnrollment && course) {
+        // Verificar limite total do curso
+        if (enrollmentStatus.limitReached) {
+          setShowLimitModal(true);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Verificar limite por departamento
+        const selectedDepartment = availableDepartments.find(d => d.id === data.departamento_id);
+        if (selectedDepartment) {
+          const canEnrollInDepartment = await checkDepartmentLimit(selectedDepartment.nome);
+          if (!canEnrollInDepartment) {
+            toast({
+              title: 'Limite de departamento atingido',
+              description: `O departamento ${selectedDepartment.nome} já atingiu o limite máximo de alunos para este curso.`,
+              variant: 'destructive',
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       // Buscar nomes das entidades selecionadas
       const selectedCompany = companies.find(c => c.id === data.empresa_id);
       const selectedDepartment = availableDepartments.find(d => d.id === data.departamento_id);
@@ -527,6 +564,26 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Modal de vagas encerradas */}
+      {isCourseEnrollment && courseData && (
+        <CourseEnrollmentLimitModal
+          open={showLimitModal}
+          onOpenChange={setShowLimitModal}
+          courseName={course?.titulo || ''}
+          totalEnrolled={enrollmentStatus.totalEnrolled}
+          maxLimit={courseData.limite_alunos || 0}
+        />
+      )}
+
+      {/* Exibir departamentos com limite atingido */}
+      {isCourseEnrollment && enrollmentStatus.departmentLimitsReached.length > 0 && (
+        <Card className="w-full max-w-2xl mt-4">
+          <CardContent className="p-4">
+            <DepartmentLimitsDisplay departmentLimitsReached={enrollmentStatus.departmentLimitsReached} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -33,6 +33,8 @@ interface Course {
   preco: number;
   data_inicio: string | null;
   data_fim: string | null;
+  limite_alunos: number | null;
+  limite_por_departamento: number | null;
 }
 
 interface EditCourseDialogProps {
@@ -57,6 +59,8 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
     data_inicio: course.data_inicio || '',
     data_fim: course.data_fim || '',
     imagem_capa: course.imagem_capa || '',
+    limite_alunos: course.limite_alunos || '',
+    limite_por_departamento: course.limite_por_departamento || '',
   });
   const [objetivos, setObjetivos] = useState<string[]>(course.objetivos || []);
   const [preRequisitos, setPreRequisitos] = useState<string[]>(course.pre_requisitos || []);
@@ -170,6 +174,8 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
         imagem_capa: imageUrl || null,
         objetivos: objetivos.length > 0 ? objetivos : null,
         pre_requisitos: preRequisitos.length > 0 ? preRequisitos : null,
+        limite_alunos: formData.limite_alunos ? parseInt(formData.limite_alunos.toString()) : null,
+        limite_por_departamento: formData.limite_por_departamento ? parseInt(formData.limite_por_departamento.toString()) : null,
       };
 
       const { error } = await supabase
@@ -359,6 +365,38 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
                 value={formData.preco}
                 onChange={(e) => setFormData({ ...formData, preco: parseFloat(e.target.value) || 0 })}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="limite_alunos">Limite Total de Alunos</Label>
+              <Input
+                id="limite_alunos"
+                type="number"
+                min="1"
+                placeholder="Ex: 50"
+                value={formData.limite_alunos}
+                onChange={(e) => setFormData({ ...formData, limite_alunos: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Número máximo de alunos no curso (deixe vazio para ilimitado)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="limite_por_departamento">Limite por Departamento</Label>
+              <Input
+                id="limite_por_departamento"
+                type="number"
+                min="1"
+                placeholder="Ex: 5"
+                value={formData.limite_por_departamento}
+                onChange={(e) => setFormData({ ...formData, limite_por_departamento: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Número máximo de alunos por departamento (deixe vazio para ilimitado)
+              </p>
             </div>
           </div>
 

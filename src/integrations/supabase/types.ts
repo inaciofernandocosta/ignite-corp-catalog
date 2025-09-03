@@ -195,6 +195,8 @@ export type Database = {
           duracao: string
           id: string
           imagem_capa: string | null
+          limite_alunos: number | null
+          limite_por_departamento: number | null
           local_id: string | null
           nivel: string
           objetivos: string[] | null
@@ -214,6 +216,8 @@ export type Database = {
           duracao: string
           id?: string
           imagem_capa?: string | null
+          limite_alunos?: number | null
+          limite_por_departamento?: number | null
           local_id?: string | null
           nivel: string
           objetivos?: string[] | null
@@ -233,6 +237,8 @@ export type Database = {
           duracao?: string
           id?: string
           imagem_capa?: string | null
+          limite_alunos?: number | null
+          limite_por_departamento?: number | null
           local_id?: string | null
           nivel?: string
           objetivos?: string[] | null
