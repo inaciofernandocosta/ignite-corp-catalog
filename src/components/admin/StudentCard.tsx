@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { EditUserDialog } from './EditUserDialog';
 import { 
   Mail, 
   Phone, 
@@ -13,7 +14,8 @@ import {
   User,
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  Edit
 } from 'lucide-react';
 
 interface Student {
@@ -37,6 +39,7 @@ interface StudentCardProps {
 
 export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
   const { toast } = useToast();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleRemoveStudent = async () => {
     try {
@@ -174,6 +177,16 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setEditDialogOpen(true)}
+            className="flex-1 text-xs sm:text-sm"
+          >
+            <Edit className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
+            Editar
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleToggleStatus}
             className="flex-1 text-xs sm:text-sm"
           >
@@ -201,6 +214,13 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
           </Button>
         </div>
       </CardContent>
+
+      <EditUserDialog
+        isOpen={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        student={student}
+        onUserUpdated={onStudentUpdate}
+      />
     </Card>
   );
 };
