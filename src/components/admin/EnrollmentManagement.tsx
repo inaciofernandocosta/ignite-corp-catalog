@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Calendar, User, BookOpen, MoreVertical, RefreshCw, Filter } from "lucide-react";
+import { Mail, Calendar, User, BookOpen, MoreVertical, RefreshCw, Filter, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { ResendEnrollmentEmailDialog } from "./ResendEnrollmentEmailDialog";
 import { EmailTestDialog } from "./EmailTestDialog";
 import {
@@ -237,6 +238,68 @@ export function EnrollmentManagement() {
     }
   };
 
+  const exportToExcel = () => {
+    try {
+      const workbook = XLSX.utils.book_new();
+      
+      // Dados formatados para o Excel
+      const excelData = filteredEnrollments.map((enrollment, index) => ({
+        'Nº': index + 1,
+        'Curso': enrollment.cursos.titulo,
+        'Nome do Aluno': enrollment.inscricoes_mentoria?.nome || 'Nome não informado',
+        'E-mail': enrollment.inscricoes_mentoria?.email || 'Email não informado',
+        'Empresa': enrollment.inscricoes_mentoria?.empresa || '',
+        'Data da Inscrição': new Date(enrollment.data_inscricao).toLocaleDateString('pt-BR'),
+        'Status': enrollment.status.charAt(0).toUpperCase() + enrollment.status.slice(1),
+        'Progresso (%)': enrollment.progresso,
+        'Duração do Curso': enrollment.cursos.duracao,
+        'Data de Início': enrollment.cursos.data_inicio 
+          ? new Date(enrollment.cursos.data_inicio).toLocaleDateString('pt-BR')
+          : 'A definir'
+      }));
+
+      // Criar planilha
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      
+      // Configurar largura das colunas
+      const columnWidths = [
+        { wch: 5 },   // Nº
+        { wch: 30 },  // Curso
+        { wch: 25 },  // Nome do Aluno
+        { wch: 30 },  // E-mail
+        { wch: 25 },  // Empresa
+        { wch: 15 },  // Data da Inscrição
+        { wch: 12 },  // Status
+        { wch: 12 },  // Progresso
+        { wch: 15 },  // Duração
+        { wch: 15 }   // Data de Início
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Adicionar a planilha ao workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Inscrições');
+
+      // Criar nome do arquivo com data atual
+      const currentDate = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const fileName = `inscricoes_${currentDate}.xlsx`;
+
+      // Exportar o arquivo
+      XLSX.writeFile(workbook, fileName);
+      
+      toast({
+        title: "Exportação concluída!",
+        description: `Arquivo ${fileName} foi baixado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar para Excel:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar os dados para Excel.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -264,7 +327,18 @@ export function EnrollmentManagement() {
               <BookOpen className="w-5 h-5" />
               Gerenciar Inscrições ({filteredEnrollments.length})
             </CardTitle>
-            <EmailTestDialog />
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={exportToExcel}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Exportar Excel
+              </Button>
+              <EmailTestDialog />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
