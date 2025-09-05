@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mail, Calendar, User, BookOpen, MoreVertical, RefreshCw, Filter, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import { ResendEnrollmentEmailDialog } from "./ResendEnrollmentEmailDialog";
-import { EmailTestDialog } from "./EmailTestDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -337,7 +336,6 @@ export function EnrollmentManagement() {
                 <Download className="w-4 h-4" />
                 Exportar Excel
               </Button>
-              <EmailTestDialog />
             </div>
           </div>
         </CardHeader>
