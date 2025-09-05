@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Calendar, User, BookOpen, MoreVertical, RefreshCw } from "lucide-react";
+import { Mail, Calendar, User, BookOpen, MoreVertical, RefreshCw, Filter } from "lucide-react";
 import { ResendEnrollmentEmailDialog } from "./ResendEnrollmentEmailDialog";
 import { EmailTestDialog } from "./EmailTestDialog";
 import {
@@ -13,6 +14,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+interface Course {
+  id: string;
+  titulo: string;
+}
 
 interface Enrollment {
   id: string;
@@ -35,10 +41,41 @@ interface Enrollment {
 
 export function EnrollmentManagement() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Filtrar inscrições por curso selecionado
+  const filteredEnrollments = useMemo(() => {
+    if (!selectedCourseId || selectedCourseId === "all") {
+      return enrollments;
+    }
+    return enrollments.filter(enrollment => enrollment.curso_id === selectedCourseId);
+  }, [enrollments, selectedCourseId]);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cursos')
+        .select('id, titulo')
+        .eq('status', 'active')
+        .order('titulo', { ascending: true });
+
+      if (error) throw error;
+      
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar cursos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os cursos.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchEnrollments = async () => {
     try {
@@ -80,7 +117,10 @@ export function EnrollmentManagement() {
   };
 
   useEffect(() => {
-    fetchEnrollments();
+    Promise.all([
+      fetchEnrollments(),
+      fetchCourses()
+    ]);
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -212,19 +252,42 @@ export function EnrollmentManagement() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
-              Gerenciar Inscrições ({enrollments.length})
+              Gerenciar Inscrições ({filteredEnrollments.length})
             </CardTitle>
             <EmailTestDialog />
           </div>
         </CardHeader>
         <CardContent>
+          {/* Filtro de cursos */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={selectedCourseId || "all"} onValueChange={setSelectedCourseId}>
+                <SelectTrigger className="w-full sm:w-[300px]">
+                  <SelectValue placeholder="Filtrar por curso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os cursos</SelectItem>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.titulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-4">
-            {enrollments.length === 0 ? (
+            {filteredEnrollments.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Nenhuma inscrição encontrada.
+                {selectedCourseId && selectedCourseId !== "all" 
+                  ? "Nenhuma inscrição encontrada para o curso selecionado."
+                  : "Nenhuma inscrição encontrada."
+                }
               </p>
             ) : (
-              enrollments.map((enrollment) => (
+              filteredEnrollments.map((enrollment) => (
                 <div
                   key={enrollment.id}
                   className="border rounded-lg p-4 hover:shadow-sm transition-shadow"
