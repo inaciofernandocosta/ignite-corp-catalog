@@ -43,18 +43,28 @@ export function EnrollmentManagement() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Filtrar inscrições por curso selecionado
+  // Filtrar inscrições por curso e status selecionados
   const filteredEnrollments = useMemo(() => {
-    if (!selectedCourseId || selectedCourseId === "all") {
-      return enrollments;
+    let filtered = enrollments;
+    
+    // Filtrar por curso
+    if (selectedCourseId && selectedCourseId !== "all") {
+      filtered = filtered.filter(enrollment => enrollment.curso_id === selectedCourseId);
     }
-    return enrollments.filter(enrollment => enrollment.curso_id === selectedCourseId);
-  }, [enrollments, selectedCourseId]);
+    
+    // Filtrar por status
+    if (selectedStatus && selectedStatus !== "all") {
+      filtered = filtered.filter(enrollment => enrollment.status === selectedStatus);
+    }
+    
+    return filtered;
+  }, [enrollments, selectedCourseId, selectedStatus]);
 
   const fetchCourses = async () => {
     try {
@@ -258,12 +268,12 @@ export function EnrollmentManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filtro de cursos */}
+          {/* Filtros */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={selectedCourseId || "all"} onValueChange={setSelectedCourseId}>
-                <SelectTrigger className="w-full sm:w-[300px]">
+                <SelectTrigger className="w-full sm:w-[250px]">
                   <SelectValue placeholder="Filtrar por curso" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,6 +283,21 @@ export function EnrollmentManagement() {
                       {course.titulo}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Select value={selectedStatus || "all"} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="reprovado">Reprovado</SelectItem>
+                  <SelectItem value="concluido">Concluído</SelectItem>
                 </SelectContent>
               </Select>
             </div>
