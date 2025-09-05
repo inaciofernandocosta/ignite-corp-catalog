@@ -269,37 +269,85 @@ export function EnrollmentManagement() {
         </CardHeader>
         <CardContent>
           {/* Filtros */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <Select value={selectedCourseId || "all"} onValueChange={setSelectedCourseId}>
-                <SelectTrigger className="w-full sm:w-[250px]">
-                  <SelectValue placeholder="Filtrar por curso" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os cursos</SelectItem>
-                  {courses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.titulo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Select value={selectedStatus || "all"} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="aprovado">Aprovado</SelectItem>
-                  <SelectItem value="reprovado">Reprovado</SelectItem>
-                  <SelectItem value="concluido">Concluído</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="mb-6">
+            <div className="bg-muted/30 rounded-lg p-4 border">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Filtros</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Curso
+                  </label>
+                  <Select value={selectedCourseId || "all"} onValueChange={setSelectedCourseId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecionar curso" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os cursos</SelectItem>
+                      {courses.map((course) => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.titulo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Status
+                  </label>
+                  <Select value={selectedStatus || "all"} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecionar status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="aprovado">Aprovado</SelectItem>
+                      <SelectItem value="reprovado">Reprovado</SelectItem>
+                      <SelectItem value="concluido">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2 flex flex-col justify-end">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedCourseId(null);
+                        setSelectedStatus(null);
+                      }}
+                      className="flex-1"
+                    >
+                      Limpar Filtros
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {(selectedCourseId || selectedStatus) && (
+                <div className="mt-3 pt-3 border-t">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-xs text-muted-foreground">Filtros ativos:</span>
+                    {selectedCourseId && selectedCourseId !== "all" && (
+                      <Badge variant="secondary" className="text-xs">
+                        Curso: {courses.find(c => c.id === selectedCourseId)?.titulo}
+                      </Badge>
+                    )}
+                    {selectedStatus && selectedStatus !== "all" && (
+                      <Badge variant="secondary" className="text-xs">
+                        Status: {selectedStatus}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
