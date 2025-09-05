@@ -8,11 +8,16 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('🚀 Edge function send-password-reset iniciada');
+  console.log(`📧 Método: ${req.method}`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ OPTIONS request - CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log('📨 Processando request...');
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
