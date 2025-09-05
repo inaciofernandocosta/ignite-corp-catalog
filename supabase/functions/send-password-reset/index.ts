@@ -41,7 +41,32 @@ serve(async (req) => {
 
     console.log(`Iniciando reset de senha para: ${email}`);
 
-    // Gerar link de reset usando o método correto com redirect para auth
+    // Verificar se o usuário existe antes de tentar gerar o link
+    try {
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      const userExists = userData?.users?.some(user => user.email === email);
+      
+      if (!userExists) {
+        console.error(`Usuário não encontrado no auth: ${email}`);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Email não encontrado no sistema',
+            debug: `User ${email} not found in auth.users`
+          }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      console.log(`Usuário encontrado no auth: ${email}`);
+    } catch (listError) {
+      console.error('Erro ao listar usuários:', listError);
+    }
+
+    // Gerar link de reset usando o método correto
+    console.log('Tentando gerar link de recovery...');
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
@@ -51,9 +76,22 @@ serve(async (req) => {
     });
 
     if (error) {
-      console.error('Erro ao gerar link de reset:', error);
+      console.error('Erro detalhado ao gerar link de reset:', {
+        error,
+        message: error.message,
+        status: error.status,
+        code: error.code
+      });
+      
       return new Response(
-        JSON.stringify({ error: 'Usuário não encontrado ou erro interno' }),
+        JSON.stringify({ 
+          error: 'Erro ao gerar link de recuperação',
+          debug: {
+            message: error.message,
+            status: error.status,
+            code: error.code
+          }
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
