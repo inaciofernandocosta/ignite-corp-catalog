@@ -207,45 +207,46 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
+    console.log('TESTE BÁSICO - resetPassword chamado');
+    console.log('Email recebido:', email);
+    
     try {
-      console.log('🔄 INICIANDO resetPassword para:', email);
+      console.log('TESTE - Antes do supabase.auth.resetPasswordForEmail');
       
-      // TESTE: Usar APENAS o fallback nativo por enquanto
-      console.log('🔄 Usando SOMENTE fallback nativo do Supabase...');
-      const redirectTo = `${window.location.origin}/#/alterar-senha`;
-      console.log('Redirect URL configurado como:', redirectTo);
+      const result = await supabase.auth.resetPasswordForEmail(email);
       
-      const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectTo
-      });
-
-      console.log('📊 Resultado do fallback nativo:', { fallbackError });
-
-      if (fallbackError) {
-        console.error('❌ Fallback falhou:', fallbackError);
+      console.log('TESTE - Depois do supabase.auth.resetPasswordForEmail');
+      console.log('TESTE - Resultado completo:', JSON.stringify(result, null, 2));
+      
+      if (result.error) {
+        console.log('TESTE - Erro encontrado:', result.error);
+        console.log('TESTE - Tipo do erro:', typeof result.error);
+        console.log('TESTE - Message do erro:', result.error.message);
+        
         toast({
           title: 'Erro ao enviar email',
-          description: fallbackError.message || 'Erro interno',
+          description: result.error.message || 'Erro desconhecido',
           variant: 'destructive',
         });
-        return { error: fallbackError };
+        return { error: result.error };
       }
-
-      console.log('✅ Reset via fallback nativo executado com sucesso');
+      
+      console.log('TESTE - Sucesso!');
       toast({
         title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        description: 'Verifique sua caixa de entrada.',
       });
-
       return { error: null };
       
     } catch (error: any) {
-      console.error('💥 Erro no catch do resetPassword:', error);
-      console.error('Stack trace:', error.stack);
+      console.log('TESTE - Catch executado');
+      console.log('TESTE - Erro no catch:', error);
+      console.log('TESTE - Tipo do erro catch:', typeof error);
+      console.log('TESTE - Message do erro catch:', error?.message);
       
       toast({
         title: 'Erro no sistema',
-        description: error.message || 'Erro interno',
+        description: error?.message || 'Erro desconhecido no catch',
         variant: 'destructive',
       });
       return { error };
