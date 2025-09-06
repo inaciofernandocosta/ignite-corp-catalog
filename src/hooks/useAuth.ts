@@ -208,31 +208,57 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
+      console.log('Tentando reset de senha via edge function para:', email);
+      
+      // Tentar primeiro a edge function customizada
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { email }
       });
 
-      if (error || !data?.success) {
-        // Detectar rate limit
-        if (data?.isRateLimit || error?.message?.includes('rate limit') || error?.message?.includes('too many requests')) {
-          return { error: { ...error, isRateLimit: true } };
-        }
-        
+      // Se a edge function funcionou corretamente
+      if (!error && data?.success) {
+        console.log('Reset via edge function executado com sucesso');
         toast({
-          title: 'Erro ao enviar email',
-          description: data?.error || error?.message || 'Erro interno',
-          variant: 'destructive',
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
         });
-        return { error: error || { message: data?.error } };
+        return { error: null };
       }
 
+      // Detectar rate limit
+      if (data?.isRateLimit || error?.message?.includes('rate limit') || error?.message?.includes('too many requests')) {
+        console.log('Rate limit detectado na edge function');
+        return { error: { ...error, isRateLimit: true } };
+      }
+
+      // Se a edge function retornou 404 ou outro erro, usar fallback
+      console.log('Edge function falhou, usando fallback nativo do Supabase. Erro:', error);
+      
+      const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/#/alterar-senha`
+      });
+
+      if (fallbackError) {
+        console.error('Fallback também falhou:', fallbackError);
+        toast({
+          title: 'Erro ao enviar email',
+          description: fallbackError.message || 'Erro interno',
+          variant: 'destructive',
+        });
+        return { error: fallbackError };
+      }
+
+      console.log('Reset via fallback nativo executado com sucesso');
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
       });
 
       return { error: null };
+      
     } catch (error: any) {
+      console.error('Erro no catch do resetPassword:', error);
+      
       // Detectar rate limit em catch também
       if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
         return { error: { ...error, isRateLimit: true } };
