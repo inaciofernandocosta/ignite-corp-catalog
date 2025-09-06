@@ -25,7 +25,7 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       console.log('🔄 Enviando email de reset para:', email);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/alterar-senha`
+        redirectTo: `${window.location.origin}/auth`
       });
 
       console.log('📊 Resposta do auth:', { error });

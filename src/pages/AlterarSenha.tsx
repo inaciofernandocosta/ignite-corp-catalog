@@ -16,14 +16,17 @@ export const AlterarSenha = () => {
       console.log('AlterarSenha - Verificando token de recuperação');
       
       try {
-        // Verificar se há tokens de recovery no hash
+        // Verificar se há tokens de recovery na URL (hash ou search)
         const hash = window.location.hash.substring(1);
-        const hashParams = new URLSearchParams(hash);
+        const search = window.location.search.substring(1);
         
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
-        const error = hashParams.get('error');
+        // Tentar primeiro no hash, depois no search
+        let urlParams = new URLSearchParams(hash.includes('access_token') ? hash : search);
+        
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+        const type = urlParams.get('type');
+        const error = urlParams.get('error');
         
         console.log('Parâmetros encontrados:', {
           accessToken: accessToken ? 'presente' : 'ausente',

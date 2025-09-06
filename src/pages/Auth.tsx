@@ -76,31 +76,18 @@ const Auth = () => {
           return;
         }
 
-        // Se é um link de recovery válido
+        // Se é um link de recovery válido, redirecionar para /alterar-senha
         if (accessToken && refreshToken && type === 'recovery') {
-          console.log('Link de recovery válido detectado');
+          console.log('Link de recovery válido detectado, redirecionando para /alterar-senha');
           
-          try {
-            // Estabelecer sessão
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-
-            if (!sessionError) {
-              console.log('Sessão estabelecida, mostrando reset password');
-              setShowResetPassword(true);
-              setShowForgotPassword(false);
-              // Limpar hash
-              window.history.replaceState(null, '', '/auth?type=recovery');
-            } else {
-              console.error('Erro ao estabelecer sessão:', sessionError);
-              setShowForgotPassword(true);
-            }
-          } catch (err) {
-            console.error('Erro ao processar recovery:', err);
-            setShowForgotPassword(true);
-          }
+          // Preservar os tokens no hash e redirecionar
+          const tokenParams = new URLSearchParams();
+          tokenParams.set('access_token', accessToken);
+          tokenParams.set('refresh_token', refreshToken);
+          tokenParams.set('type', type);
+          
+          window.location.href = `${window.location.origin}/#/alterar-senha?${tokenParams.toString()}`;
+          return;
         }
         // Se já tem parâmetro type=recovery na URL
         else if (searchParams.get('type') === 'recovery') {
