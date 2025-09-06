@@ -208,16 +208,19 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     try {
-      console.log('Tentando reset de senha via edge function para:', email);
+      console.log('🔄 INICIANDO resetPassword para:', email);
       
       // Tentar primeiro a edge function customizada
+      console.log('📞 Chamando edge function send-password-reset...');
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { email }
       });
 
+      console.log('📊 Resposta da edge function:', { data, error });
+
       // Se a edge function funcionou corretamente
       if (!error && data?.success) {
-        console.log('Reset via edge function executado com sucesso');
+        console.log('✅ Reset via edge function executado com sucesso');
         toast({
           title: 'Email enviado!',
           description: 'Verifique sua caixa de entrada para redefinir sua senha.',
@@ -227,19 +230,27 @@ export const useAuth = () => {
 
       // Detectar rate limit
       if (data?.isRateLimit || error?.message?.includes('rate limit') || error?.message?.includes('too many requests')) {
-        console.log('Rate limit detectado na edge function');
+        console.log('⏰ Rate limit detectado na edge function');
         return { error: { ...error, isRateLimit: true } };
       }
 
       // Se a edge function retornou 404 ou outro erro, usar fallback
-      console.log('Edge function falhou, usando fallback nativo do Supabase. Erro:', error);
+      console.log('❌ Edge function falhou, usando fallback nativo do Supabase');
+      console.log('Detalhes do erro da edge function:', error);
+      console.log('Dados retornados:', data);
+      
+      console.log('🔄 Tentando fallback com supabase.auth.resetPasswordForEmail...');
+      const redirectTo = `${window.location.origin}/#/alterar-senha`;
+      console.log('Redirect URL configurado como:', redirectTo);
       
       const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/alterar-senha`
+        redirectTo: redirectTo
       });
 
+      console.log('📊 Resultado do fallback:', { fallbackError });
+
       if (fallbackError) {
-        console.error('Fallback também falhou:', fallbackError);
+        console.error('❌ Fallback também falhou:', fallbackError);
         toast({
           title: 'Erro ao enviar email',
           description: fallbackError.message || 'Erro interno',
@@ -248,7 +259,7 @@ export const useAuth = () => {
         return { error: fallbackError };
       }
 
-      console.log('Reset via fallback nativo executado com sucesso');
+      console.log('✅ Reset via fallback nativo executado com sucesso');
       toast({
         title: 'Email enviado!',
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
@@ -257,7 +268,8 @@ export const useAuth = () => {
       return { error: null };
       
     } catch (error: any) {
-      console.error('Erro no catch do resetPassword:', error);
+      console.error('💥 Erro no catch do resetPassword:', error);
+      console.error('Stack trace:', error.stack);
       
       // Detectar rate limit em catch também
       if (error.message?.includes('rate limit') || error.message?.includes('too many requests')) {
