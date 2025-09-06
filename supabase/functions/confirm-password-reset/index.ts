@@ -114,27 +114,16 @@ serve(async (req) => {
 
     console.log(`✅ Usuário encontrado: ${user.nome} (${user.email})`);
 
-    // Buscar usuário no auth.users de forma robusta
-    console.log('🔍 Buscando no auth.users...');
+    // Buscar usuário no auth.users de forma mais eficiente
+    console.log('🔍 Buscando usuário auth por email...');
     let authUserId;
     
     try {
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Tentar encontrar usuário usando getUserByEmail (mais eficiente)
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(normalizedEmail);
       
-      if (authError) {
-        console.log('❌ Erro ao listar usuários auth:', authError);
-        throw authError;
-      }
-      
-      console.log(`📊 Total de usuários auth encontrados: ${authUsers.users?.length || 0}`);
-      
-      // Filtrar por email normalizado
-      const matchingUser = authUsers.users?.find(u => 
-        u.email?.trim().toLowerCase() === normalizedEmail
-      );
-      
-      if (!matchingUser) {
-        console.log(`❌ Usuário não encontrado no auth.users para: ${normalizedEmail}`);
+      if (authError || !authUser.user) {
+        console.log('❌ Usuário não encontrado no auth.users:', authError?.message || 'User not found');
         return new Response(JSON.stringify({ 
           success: false,
           error: "Conta de autenticação não encontrada" 
@@ -144,8 +133,8 @@ serve(async (req) => {
         });
       }
       
-      authUserId = matchingUser.id;
-      console.log(`✅ Auth user encontrado: ${authUserId}`);
+      authUserId = authUser.user.id;
+      console.log(`✅ Auth user encontrado: ${authUserId} para email: ${normalizedEmail}`);
       
     } catch (authSearchError) {
       console.log('❌ Erro na busca de auth user:', authSearchError);
