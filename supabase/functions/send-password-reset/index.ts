@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { Resend } from "npm:resend@2.0.0";
 
@@ -6,6 +6,58 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limiting store
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+function getRealIP(request: Request): string {
+  return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
+         request.headers.get("x-real-ip") || 
+         "unknown";
+}
+
+function isRateLimited(key: string, maxAttempts: number = 5): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000; // 1 hour
+  
+  const current = rateLimitStore.get(key);
+  if (!current || now > current.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+  
+  if (current.count >= maxAttempts) {
+    return true;
+  }
+  
+  current.count++;
+  return false;
+}
+
+function validateInput(data: any): { valid: boolean; error?: string } {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, error: 'Invalid request body' };
+  }
+  
+  const { email, redirectTo } = data;
+  
+  if (!email || typeof email !== 'string') {
+    return { valid: false, error: 'Email é obrigatório' };
+  }
+  
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return { valid: false, error: 'Formato de email inválido' };
+  }
+  
+  // Validate redirectTo if provided
+  if (redirectTo && typeof redirectTo !== 'string') {
+    return { valid: false, error: 'redirectTo deve ser uma string' };
+  }
+  
+  return { valid: true };
+}
 
 serve(async (req) => {
   console.log('🚀 Edge function send-password-reset iniciada');
@@ -17,8 +69,53 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Only allow POST requests
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
+  const clientIP = getRealIP(req);
+  
+  // Rate limiting
+  if (isRateLimited(clientIP, 5)) {
+    console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(JSON.stringify({ error: "Muitas tentativas. Tente novamente em 1 hora." }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
   console.log('📨 Processando request...');
   try {
+    // Parse and validate input
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log('📄 Request data recebido:', { email: requestData?.email, hasRedirectTo: !!requestData?.redirectTo });
+    } catch (e) {
+      console.error('❌ Erro no parse do JSON:', e);
+      return new Response(JSON.stringify({ error: "JSON inválido" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const validation = validateInput(requestData);
+    if (!validation.valid) {
+      console.warn(`❌ Validação falhou: ${validation.error} from IP: ${clientIP}`);
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const { email, redirectTo } = requestData;
+
+    console.log(`✅ Validação passou para: ${email}`);
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -31,8 +128,6 @@ serve(async (req) => {
     );
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-    const { email, redirectTo } = await req.json();
 
     if (!email) {
       return new Response(
@@ -158,17 +253,18 @@ serve(async (req) => {
         }
       );
 
-    } catch (emailError) {
-      console.error('Erro detalhado ao enviar email:', JSON.stringify(emailError));
-      console.error('Stack trace:', emailError.stack);
+    } catch (emailError: any) {
+      console.error('❌ Erro detalhado ao enviar email:', {
+        message: emailError?.message,
+        stack: emailError?.stack,
+        type: typeof emailError
+      });
       
-      // Retornar sucesso mesmo se o email falhar (para não revelar se o usuário existe)
+      // Return success even if email fails (security: don't reveal if user exists)
       return new Response(
         JSON.stringify({ 
           message: 'Link de reset de senha enviado para seu email',
-          success: true,
-          debug_error: emailError.message, // Para debug temporário
-          reset_link: resetLink // Para debug, remover em produção
+          success: true
         }),
         { 
           status: 200, 
@@ -177,10 +273,19 @@ serve(async (req) => {
       );
     }
 
-  } catch (error) {
-    console.error('Erro na função:', error);
+  } catch (error: any) {
+    console.error('💥 Erro crítico na função:', {
+      message: error?.message,
+      stack: error?.stack,
+      type: typeof error,
+      name: error?.name
+    });
+    
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }),
+      JSON.stringify({ 
+        error: 'Erro interno do servidor',
+        success: false 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
