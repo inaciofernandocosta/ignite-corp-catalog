@@ -1,15 +1,24 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 import { Resend } from "npm:resend@2.0.0";
 
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-// Rate limiting store
+// Rate limiting store (simple in-memory for demo)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+interface PasswordResetRequest {
+  email: string;
+  redirectTo?: string;
+}
+
+// Security functions
 function getRealIP(request: Request): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
          request.headers.get("x-real-ip") || 
@@ -59,18 +68,24 @@ function validateInput(data: any): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-serve(async (req) => {
-  console.log('🚀 Edge function send-password-reset iniciada');
-  console.log(`📧 Método: ${req.method}`);
+function sanitizeString(str: string, maxLength: number = 200): string {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[<>"\';]/g, '').substring(0, maxLength).trim();
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  console.log('🚀 Password reset function started');
+  console.log(`📧 Method: ${req.method}`);
   
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     console.log('✅ OPTIONS request - CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
   // Only allow POST requests
   if (req.method !== "POST") {
+    console.log('❌ Method not allowed:', req.method);
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -78,26 +93,26 @@ serve(async (req) => {
   }
 
   const clientIP = getRealIP(req);
-  
+  console.log('📍 Client IP:', clientIP);
+
   // Rate limiting
   if (isRateLimited(clientIP, 5)) {
-    console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+    console.warn(`⏰ Rate limit exceeded for IP: ${clientIP}`);
     return new Response(JSON.stringify({ error: "Muitas tentativas. Tente novamente em 1 hora." }), {
       status: 429,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
-  console.log('📨 Processando request...');
   try {
     // Parse and validate input
     let requestData;
     try {
       requestData = await req.json();
-      console.log('📄 Request data recebido:', { email: requestData?.email, hasRedirectTo: !!requestData?.redirectTo });
+      console.log('📄 Request data received for:', requestData?.email);
     } catch (e) {
-      console.error('❌ Erro no parse do JSON:', e);
-      return new Response(JSON.stringify({ error: "JSON inválido" }), {
+      console.error('❌ JSON parse error:', e);
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
@@ -105,191 +120,203 @@ serve(async (req) => {
 
     const validation = validateInput(requestData);
     if (!validation.valid) {
-      console.warn(`❌ Validação falhou: ${validation.error} from IP: ${clientIP}`);
+      console.warn(`❌ Input validation failed: ${validation.error} from IP: ${clientIP}`);
       return new Response(JSON.stringify({ error: validation.error }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const { email, redirectTo } = requestData;
+    const { email, redirectTo }: PasswordResetRequest = requestData;
+    const safeEmail = sanitizeString(email);
+    const finalRedirectTo = redirectTo || 'https://preview--ignite-corp-catalog.lovable.app/#/alterar-senha';
 
-    console.log(`✅ Validação passou para: ${email}`);
+    console.log(`🔄 Processing password reset for: ${safeEmail}`);
+    console.log(`🔗 Redirect URL: ${finalRedirectTo}`);
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+    // Create Supabase client with service role
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-    if (!email) {
-      return new Response(
-        JSON.stringify({ error: 'Email é obrigatório' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    console.log(`Iniciando reset de senha para: ${email}`);
-
-    // Verificar se o usuário existe antes de tentar gerar o link
+    // Check if user exists in Supabase Auth (securely)
     try {
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-      const userExists = userData?.users?.some(user => user.email === email);
+      const { data: authUsers, error: listError } = await supabaseClient.auth.admin.listUsers();
       
+      if (listError) {
+        console.error('❌ Error listing users:', listError);
+        throw listError;
+      }
+
+      const userExists = authUsers?.users?.some(user => user.email === safeEmail);
+      console.log(`👤 User exists in Auth: ${userExists}`);
+
       if (!userExists) {
-        console.error(`Usuário não encontrado no auth: ${email}`);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Email não encontrado no sistema',
-            debug: `User ${email} not found in auth.users`
-          }),
-          { 
-            status: 404, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+        console.log(`⚠️ User not found: ${safeEmail}, but returning success for security`);
+        // Return success anyway for security (don't reveal if user exists)
+        return new Response(JSON.stringify({ 
+          message: 'Link de reset de senha enviado para seu email',
+          success: true
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
       }
 
-      console.log(`Usuário encontrado no auth: ${email}`);
-    } catch (listError) {
-      console.error('Erro ao listar usuários:', listError);
-    }
-
-    // Gerar link de reset usando o método correto
-    console.log('Tentando gerar link de recovery...');
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-      options: {
-        redirectTo: redirectTo || 'https://mentoriafutura.com.br/#/alterar-senha'
-      }
-    });
-
-    if (error) {
-      console.error('Erro detalhado ao gerar link de reset:', {
-        error,
-        message: error.message,
-        status: error.status,
-        code: error.code
+    } catch (userCheckError: any) {
+      console.error('❌ Error checking user existence:', userCheckError);
+      return new Response(JSON.stringify({ 
+        error: "Erro ao verificar usuário",
+        success: false 
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
-      
-      return new Response(
-        JSON.stringify({ 
-          error: 'Erro ao gerar link de recuperação',
-          debug: {
-            message: error.message,
-            status: error.status,
-            code: error.code
-          }
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
     }
 
-    const resetLink = data.properties?.action_link;
-    console.log(`Link de reset gerado para ${email}`);
-
-    // Enviar email usando Resend
+    // Generate recovery link
+    console.log('🔗 Generating recovery link...');
     try {
-      console.log(`Tentando enviar email via Resend para: ${email}`);
+      const { data, error } = await supabaseClient.auth.admin.generateLink({
+        type: 'recovery',
+        email: safeEmail,
+        options: {
+          redirectTo: finalRedirectTo
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error generating recovery link:', error);
+        return new Response(JSON.stringify({ 
+          error: 'Erro ao gerar link de recuperação',
+          success: false
+        }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const resetLink = data.properties?.action_link;
+      if (!resetLink) {
+        console.error('❌ No action link in response');
+        return new Response(JSON.stringify({ 
+          error: 'Erro ao gerar link de recuperação',
+          success: false
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      console.log(`✅ Recovery link generated for ${safeEmail}`);
+
+      // Send email using Resend
+      console.log(`📧 Sending reset email to: ${safeEmail}`);
       
       const emailResponse = await resend.emails.send({
         from: "Lovable <onboarding@resend.dev>",
-        to: [email],
+        to: [safeEmail],
         subject: "Reset de Senha - Mentoria Futura",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333; text-align: center;">Reset de Senha</h1>
-            <p>Olá,</p>
-            <p>Você solicitou a redefinição da sua senha no sistema Mentoria Futura.</p>
-            <p>Clique no botão abaixo para redefinir sua senha:</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #1e40af; margin: 0;">🔐 Reset de Senha</h1>
+              <h2 style="color: #1e293b; margin: 10px 0;">Mentoria Futura</h2>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #1e40af;">
+              <h3 style="color: #1e40af; margin-top: 0;">Olá!</h3>
+              <p style="color: #1e3a8a; line-height: 1.6; margin: 15px 0;">
+                Você solicitou a redefinição da sua senha no sistema Mentoria Futura.
+                Clique no botão abaixo para redefinir sua senha:
+              </p>
+            </div>
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetLink}" 
-                 style="background-color: #ff6b35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Redefinir Senha
+                 style="display: inline-block; background-color: #1e40af; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                🔑 Redefinir Senha
               </a>
             </div>
-            <p>Ou copie e cole este link no seu navegador:</p>
-            <p style="word-break: break-all; color: #666;">${resetLink}</p>
-            <p><strong>Este link expira em 1 hora.</strong></p>
-            <p>Se você não solicitou esta redefinição, ignore este email.</p>
-            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-            <p style="color: #666; font-size: 12px;">
-              Mentoria Futura - Sistema de Gestão de Aprendizagem
-            </p>
+
+            <div style="background-color: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h4 style="color: #1e293b; margin-top: 0;">Ou copie e cole este link:</h4>
+              <p style="word-break: break-all; color: #6b7280; background-color: #f9fafb; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                ${resetLink}
+              </p>
+            </div>
+
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+              <p style="color: #92400e; margin: 0; font-weight: 500;">
+                ⚠️ <strong>Importante:</strong><br>
+                • Este link expira em 1 hora<br>
+                • Se você não solicitou esta redefinição, ignore este email<br>
+                • Após redefinir, faça login com a nova senha
+              </p>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+            
+            <div style="text-align: center;">
+              <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                Mentoria Futura - Sistema de Gestão de Aprendizagem<br>
+                Este é um e-mail automático, por favor não responda diretamente.
+              </p>
+            </div>
           </div>
         `,
       });
 
-      console.log("Email de reset enviado com sucesso:", JSON.stringify(emailResponse));
+      console.log("📧 Reset email sent successfully:", emailResponse);
 
-      // Verificar se houve erro no Resend
+      // Check for Resend errors
       if (emailResponse.error) {
-        console.error("Erro no Resend:", JSON.stringify(emailResponse.error));
-        throw new Error(`Resend error: ${emailResponse.error.message}`);
+        console.error("❌ Resend error:", emailResponse.error);
+        return new Response(JSON.stringify({ 
+          error: 'Erro ao enviar email',
+          success: false
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
       }
 
-      return new Response(
-        JSON.stringify({ 
-          message: 'Link de reset de senha enviado para seu email',
-          success: true
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-
-    } catch (emailError: any) {
-      console.error('❌ Erro detalhado ao enviar email:', {
-        message: emailError?.message,
-        stack: emailError?.stack,
-        type: typeof emailError
+      return new Response(JSON.stringify({ 
+        message: 'Link de reset de senha enviado para seu email',
+        success: true
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
-      
-      // Return success even if email fails (security: don't reveal if user exists)
-      return new Response(
-        JSON.stringify({ 
-          message: 'Link de reset de senha enviado para seu email',
-          success: true
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+
+    } catch (recoveryError: any) {
+      console.error('❌ Recovery generation error:', recoveryError);
+      return new Response(JSON.stringify({ 
+        error: 'Erro ao gerar link de recuperação',
+        success: false
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
   } catch (error: any) {
-    console.error('💥 Erro crítico na função:', {
+    console.error('💥 Critical function error:', {
       message: error?.message,
       stack: error?.stack,
       type: typeof error,
       name: error?.name
     });
     
-    return new Response(
-      JSON.stringify({ 
-        error: 'Erro interno do servidor',
-        success: false 
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    return new Response(JSON.stringify({ 
+      error: 'Erro interno do servidor',
+      success: false 
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
-});
+};
+
+serve(handler);
