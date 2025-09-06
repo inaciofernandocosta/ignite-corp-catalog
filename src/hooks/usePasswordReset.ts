@@ -24,11 +24,14 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
     try {
       console.log('🔄 Enviando email de reset para:', email);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/alterar-senha`
+      const { data, error } = await supabase.functions.invoke('send-password-reset-email', {
+        body: { 
+          email,
+          redirectTo: `${window.location.origin}/#/resetar-senha`
+        }
       });
 
-      console.log('📊 Resposta do auth:', { error });
+      console.log('📊 Resposta da função:', { data, error });
 
       if (error) {
         console.error('❌ Erro no reset:', error);
@@ -51,6 +54,17 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
           variant: 'destructive',
         });
         
+        return { success: false, error: errorMessage };
+      }
+
+      if (data?.error) {
+        console.error('❌ Erro retornado pela função:', data.error);
+        const errorMessage = data.error;
+        toast({
+          title: 'Erro',
+          description: errorMessage,
+          variant: 'destructive',
+        });
         return { success: false, error: errorMessage };
       }
 
