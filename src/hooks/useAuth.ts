@@ -207,55 +207,31 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
-    console.log('🔄 Chamando edge function send-password-reset para:', email);
+    // Função simplificada para compatibilidade
+    // O novo fluxo usa o useForgotPassword hook diretamente
+    console.log('🔄 resetPassword chamado para:', email);
     
     try {
-      const redirectTo = `${window.location.origin}/#/alterar-senha`;
-      console.log('🔗 Redirect URL:', redirectTo);
-      
-      const { data, error } = await supabase.functions.invoke('password-reset-simple', {
-        body: { 
-          email,
-          redirectTo 
-        }
+      const { data, error } = await supabase.functions.invoke('forgot-password', {
+        body: { email }
       });
 
-      console.log('📊 Resposta da edge function:', { data, error });
-      console.log('📊 Data type:', typeof data);
-      console.log('📊 Data content:', JSON.stringify(data));
-
       if (error) {
-        console.error('❌ Erro na edge function:', error);
-        console.error('❌ Error type:', typeof error);
-        console.error('❌ Error details:', JSON.stringify(error));
-        
-        // Se for erro 5xx, mostrar mensagem técnica
-        if (error.status >= 500) {
-          toast({
-            title: 'Erro no servidor',
-            description: 'Tente novamente em alguns minutos.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Erro ao enviar email',
-            description: error.message || 'Verifique o email informado.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Erro ao enviar email',
+          description: 'Tente novamente em alguns minutos.',
+          variant: 'destructive',
+        });
         return { error };
       }
 
-      // Verificar se a resposta indica sucesso
-      if (data && data.success === true) {
-        console.log('✅ Edge function executada com sucesso');
+      if (data?.success) {
         toast({
           title: 'Email enviado!',
           description: 'Verifique sua caixa de entrada para redefinir sua senha.',
         });
         return { error: null };
       } else {
-        console.error('❌ Edge function retornou sucesso false:', data);
         toast({
           title: 'Erro ao processar solicitação',
           description: data?.error || 'Tente novamente.',
@@ -265,8 +241,6 @@ export const useAuth = () => {
       }
       
     } catch (error: any) {
-      console.error('💥 Erro no catch do resetPassword:', error);
-      
       toast({
         title: 'Erro de conexão',
         description: 'Verifique sua conexão e tente novamente.',

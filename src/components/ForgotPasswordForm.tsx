@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/hooks/useAuth';
-import { Mail, ArrowLeft, AlertCircle, Clock } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useForgotPassword } from '@/hooks/useForgotPassword';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Por favor, digite um email válido'),
@@ -22,10 +21,7 @@ interface ForgotPasswordFormProps {
 }
 
 export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: ForgotPasswordFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [showRateLimitModal, setShowRateLimitModal] = useState(false);
-  const { resetPassword } = useAuth();
+  const { isLoading, emailSent, sendResetEmail, resetForm } = useForgotPassword();
 
   const form = useForm<ForgotPasswordData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -36,40 +32,17 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
   });
 
   const onSubmit = async (data: ForgotPasswordData) => {
-    console.log('🟦 ForgotPasswordForm - onSubmit iniciado com email:', data.email);
-    setIsSubmitting(true);
-    
-    try {
-      console.log('🟦 ForgotPasswordForm - Chamando resetPassword...');
-      const result = await resetPassword(data.email);
-      console.log('🟦 ForgotPasswordForm - Resultado do resetPassword:', result);
-      
-      if (result.error?.isRateLimit) {
-        console.log('🟦 ForgotPasswordForm - Rate limit detectado');
-        setShowRateLimitModal(true);
-      } else if (!result.error) {
-        console.log('🟦 ForgotPasswordForm - Sucesso, mostrando tela de email enviado');
-        setEmailSent(true);
-      } else {
-        console.log('🟦 ForgotPasswordForm - Erro no resetPassword:', result.error);
-      }
-    } catch (error) {
-      console.error('🟦 ForgotPasswordForm - Erro no catch:', error);
-      // Erro genérico já tratado no useAuth
-    } finally {
-      console.log('🟦 ForgotPasswordForm - onSubmit finalizado');
-      setIsSubmitting(false);
-    }
+    await sendResetEmail(data.email);
   };
 
   const handleBack = () => {
-    setEmailSent(false);
+    resetForm();
     form.reset();
     onBack();
   };
 
   const handleTryAgain = () => {
-    setEmailSent(false);
+    resetForm();
     form.reset();
   };
 
@@ -83,6 +56,9 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
           <h3 className="text-lg font-semibold">Email Enviado!</h3>
           <p className="text-sm text-muted-foreground">
             Verifique sua caixa de entrada e clique no link para redefinir sua senha.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            O link é válido por 1 hora.
           </p>
         </div>
         
@@ -135,7 +111,7 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
                     type="email"
                     placeholder="seu@email.com"
                     className="pl-10"
-                    disabled={isSubmitting}
+                    disabled={isLoading}
                     {...field}
                   />
                 </div>
@@ -149,9 +125,9 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
           <Button
             type="submit"
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isLoading}
           >
-            {isSubmitting ? 'Enviando...' : 'Enviar Link de Recuperação'}
+            {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
           </Button>
           
           <Button
@@ -159,42 +135,13 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
             variant="ghost"
             className="w-full"
             onClick={handleBack}
-            disabled={isSubmitting}
+            disabled={isLoading}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar ao Login
           </Button>
         </div>
       </form>
-
-      <AlertDialog open={showRateLimitModal} onOpenChange={setShowRateLimitModal}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-              <Clock className="h-6 w-6 text-orange-600" />
-            </div>
-            <AlertDialogTitle className="text-center">
-              Limite de Tentativas Atingido
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center space-y-2">
-              <p>
-                Para sua segurança, há um limite de tentativas de redefinição de senha.
-              </p>
-              <p className="font-medium text-orange-700">
-                Aguarde alguns minutos antes de tentar novamente.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Esta proteção evita uso indevido do sistema e garante a segurança da sua conta.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowRateLimitModal(false)}>
-              Entendi
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Form>
   );
 };

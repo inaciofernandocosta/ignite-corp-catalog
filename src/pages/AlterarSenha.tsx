@@ -13,89 +13,134 @@ export const AlterarSenha = () => {
 
   useEffect(() => {
     const checkRecoveryToken = async () => {
-      const hash = window.location.hash;
-      console.log('AlterarSenha - URL completa:', window.location.href);
-      console.log('AlterarSenha - Hash:', hash);
-      console.log('AlterarSenha - Search:', window.location.search);
+      console.log('AlterarSenha - Verificando token de recuperação');
       
-      if (hash.includes('access_token') && hash.includes('type=recovery')) {
-        console.log('AlterarSenha - Token de recovery detectado');
+      try {
+        // Verificar se há tokens de recovery no hash
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
         
-        // Extrair parâmetros do hash
-        const params = new URLSearchParams(hash.substring(1));
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        const error = hashParams.get('error');
         
-        if (access_token && refresh_token) {
-          // Apenas validar os tokens sem estabelecer sessão persistente
+        console.log('Parâmetros encontrados:', {
+          accessToken: accessToken ? 'presente' : 'ausente',
+          refreshToken: refreshToken ? 'presente' : 'ausente',
+          type,
+          error
+        });
+
+        // Se há erro de token expirado ou inválido
+        if (error) {
+          console.log('Erro detectado:', error);
+          toast({
+            title: "Link inválido",
+            description: "Este link de alteração de senha expirou ou é inválido.",
+            variant: "destructive",
+          });
+          navigate("/auth?expired=true");
+          return;
+        }
+
+        // Se é um link de recovery válido
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('Link de recovery válido detectado');
+          
           try {
-            // Validar os tokens fazendo uma verificação simples
-            const response = await fetch(`https://fauoxtziffljgictcvhi.supabase.co/auth/v1/user`, {
-              headers: {
-                'Authorization': `Bearer ${access_token}`,
-                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhdW94dHppZmZsamdpY3RjdmhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1MTcwNzYsImV4cCI6MjA2NjA5MzA3Nn0.rox_ZN0RwGHW4lY_HtVrOLZ4acVcQ237FfewAOOaQ0s'
-              }
+            // Estabelecer sessão temporária para permitir reset de senha
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
             });
-            
-            if (response.ok) {
-              console.log('Tokens válidos - permitindo alteração de senha');
+
+            if (!sessionError) {
+              console.log('Sessão temporária estabelecida');
               setHasValidToken(true);
               
-              // Armazenar tokens temporariamente para uso no formulário
-              sessionStorage.setItem('recovery_access_token', access_token);
-              sessionStorage.setItem('recovery_refresh_token', refresh_token);
+              // Limpar hash da URL para segurança
+              window.history.replaceState(null, '', '/alterar-senha');
             } else {
-              throw new Error('Tokens inválidos');
+              console.error('Erro ao estabelecer sessão:', sessionError);
+              toast({
+                title: "Erro de autenticação",
+                description: "Não foi possível validar o link de recuperação.",
+                variant: "destructive",
+              });
+              navigate("/auth?expired=true");
             }
-          } catch (error) {
-            console.error('Erro ao validar tokens:', error);
+          } catch (err) {
+            console.error('Erro ao processar recovery:', err);
             toast({
-              title: "Link inválido",
-              description: "Este link de alteração de senha expirou ou é inválido.",
+              title: "Erro interno",
+              description: "Ocorreu um erro ao processar sua solicitação.",
               variant: "destructive",
             });
             navigate("/auth");
           }
+        } else {
+          console.log('Nenhum token válido encontrado');
+          toast({
+            title: "Acesso negado",
+            description: "Esta página só pode ser acessada através de um link de alteração de senha válido.",
+            variant: "destructive",
+          });
+          navigate("/auth");
         }
-      } else {
-        console.log('AlterarSenha - Nenhum token válido encontrado');
+      } catch (error) {
+        console.error('Erro na verificação de token:', error);
         toast({
-          title: "Acesso negado",
-          description: "Esta página só pode ser acessada através de um link de alteração de senha válido.",
+          title: "Erro interno",
+          description: "Ocorreu um erro ao validar o link de recuperação.",
           variant: "destructive",
         });
         navigate("/auth");
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     checkRecoveryToken();
   }, [navigate, toast]);
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
+    console.log('Reset de senha realizado com sucesso');
+    
     toast({
       title: "Senha alterada com sucesso!",
       description: "Sua senha foi atualizada. Você será redirecionado para o login.",
     });
     
-    // Limpar tokens temporários e redirecionar para login
-    sessionStorage.removeItem('recovery_access_token');
-    sessionStorage.removeItem('recovery_refresh_token');
+    try {
+      // Fazer logout para limpar a sessão temporária
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
     
     setTimeout(() => {
       navigate("/auth");
     }, 2000);
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    try {
+      // Fazer logout antes de voltar
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
     navigate("/auth");
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Validando link de recuperação...</p>
+        </div>
       </div>
     );
   }
@@ -105,10 +150,12 @@ export const AlterarSenha = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
+      <Card className="w-full max-w-md shadow-xl border-0 bg-card/50 backdrop-blur-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Alterar Senha</CardTitle>
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Alterar Senha
+          </CardTitle>
           <CardDescription>
             Digite sua nova senha abaixo
           </CardDescription>
