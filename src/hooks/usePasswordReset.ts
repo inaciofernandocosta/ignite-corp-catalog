@@ -24,17 +24,14 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
     try {
       console.log('🔄 Enviando email de reset para:', email);
       
-      const { data, error } = await supabase.functions.invoke('send-password-reset-email', {
-        body: { 
-          email,
-          redirectTo: `${window.location.origin}/#/resetar-senha`
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/#/alterar-senha`
       });
 
-      console.log('📊 Resposta da função:', { data, error });
+      console.log('📊 Resposta do auth:', { error });
 
       if (error) {
-        console.error('❌ Erro na função:', error);
+        console.error('❌ Erro no reset:', error);
         
         // Tratar erro de rate limit especificamente
         if (error.message?.includes('rate limit') || error.message?.includes('429')) {
@@ -57,28 +54,16 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
         return { success: false, error: errorMessage };
       }
 
-      if (data?.success) {
-        console.log('✅ Email enviado com sucesso');
-        setEmailSent(true);
-        
-        toast({
-          title: 'Email enviado!',
-          description: data.message || 'Verifique sua caixa de entrada para redefinir sua senha.',
-        });
-        
-        return { success: true };
-      } else {
-        const errorMessage = data?.error || 'Erro desconhecido';
-        console.error('❌ Resposta de erro:', data);
-        
-        toast({
-          title: 'Erro',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-        
-        return { success: false, error: errorMessage };
-      }
+      // Se chegou aqui sem erro, o email foi enviado com sucesso
+      console.log('✅ Email enviado com sucesso');
+      setEmailSent(true);
+      
+      toast({
+        title: 'Email enviado!',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+      });
+      
+      return { success: true };
       
     } catch (error: any) {
       console.error('💥 Erro no catch:', error);
