@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminStats } from './AdminStats';
 import { StudentCard } from './StudentCard';
 import { CreateUserDialog } from './CreateUserDialog';
+import { UserSyncDialog } from './UserSyncDialog';
 import { Search, UserPlus, Filter, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -283,6 +284,7 @@ export const StudentManagement = React.memo(() => {
                 <Download className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
                 Exportar ({filteredStudents.length})
               </Button>
+              <UserSyncDialog />
               <Button onClick={() => setShowCreateDialog(true)} className="text-xs sm:text-sm" size="sm">
                 <UserPlus className="h-3 sm:h-4 w-3 sm:w-4 mr-1 sm:mr-2" />
                 Cadastrar Usuário
