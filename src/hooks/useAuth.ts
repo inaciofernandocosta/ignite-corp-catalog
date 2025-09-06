@@ -123,9 +123,16 @@ export const useAuth = () => {
         
         console.log('useAuth - Auth state change:', event, session?.user?.email);
         
-        // Se estamos fazendo logout, ignorar mudanças de estado
-        if (isLoggingOut && event !== 'SIGNED_OUT') {
-          console.log('useAuth - Ignorando auth state change durante logout');
+        // Se estamos fazendo logout, só processar evento SIGNED_OUT
+        if (isLoggingOut) {
+          if (event === 'SIGNED_OUT') {
+            console.log('useAuth - Processando SIGNED_OUT durante logout');
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          } else {
+            console.log('useAuth - Ignorando auth state change durante logout');
+          }
           return;
         }
         
@@ -263,7 +270,8 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.removeItem('dashboard-tab-initialized');
+      localStorage.clear(); // Limpar todo o localStorage
+      sessionStorage.clear(); // Limpar também sessionStorage
       
       console.log('Estado local limpo');
       
@@ -276,17 +284,18 @@ export const useAuth = () => {
         console.log('Logout do Supabase realizado');
       }
       
-      // TERCEIRO: Mostrar feedback e redirecionar
+      // TERCEIRO: Mostrar feedback
       toast({
         title: 'Logout realizado',
         description: 'Até logo!',
       });
       
-      // Aguardar um pouco antes de redirecionar
+      // QUARTO: Forçar redirecionamento para home com HashRouter
       setTimeout(() => {
         console.log('Redirecionando para home...');
-        window.location.replace('/');
-      }, 200);
+        // Usar window.location.href para HashRouter
+        window.location.href = window.location.origin + '/#/';
+      }, 500);
       
     } catch (error: any) {
       console.error('Erro durante logout:', error);
@@ -295,7 +304,8 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.removeItem('dashboard-tab-initialized');
+      localStorage.clear();
+      sessionStorage.clear();
       
       toast({
         title: 'Logout realizado',
@@ -303,10 +313,10 @@ export const useAuth = () => {
       });
       
       setTimeout(() => {
-        window.location.replace('/');
-      }, 200);
+        window.location.href = window.location.origin + '/#/';
+      }, 500);
     } finally {
-      setLogoutLoading(false);
+      setLogoutLoading(false);  
       setIsLoggingOut(false);
     }
   };
