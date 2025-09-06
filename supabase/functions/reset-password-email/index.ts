@@ -80,6 +80,7 @@ serve(async (req) => {
     // Verificar se API key do Resend está disponível
     const resendKey = Deno.env.get("RESEND_API_KEY");
     console.log('RESEND_API_KEY disponível:', resendKey ? 'SIM' : 'NÃO');
+    console.log('Todas as env vars:', Object.keys(Deno.env.toObject()).filter(k => k.includes('RESEND')));
     
     if (!resendKey) {
       console.error('❌ RESEND_API_KEY não encontrada nas variáveis de ambiente');
@@ -105,7 +106,7 @@ serve(async (req) => {
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .upsert({
-        user_email: email,
+        email: email,
         token: resetToken,
         expires_at: expiresAt.toISOString(),
         used: false
