@@ -786,6 +786,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_user_status: {
+        Args: { new_status: string; target_user_id: string }
+        Returns: Json
+      }
       backfill_auth_accounts: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -949,6 +953,14 @@ export type Database = {
       }
       is_admin_by_email: {
         Args: { check_email: string }
+        Returns: boolean
+      }
+      is_admin_check: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_simple: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_admin_user: {
