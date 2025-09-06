@@ -183,12 +183,26 @@ export function EnrollmentManagement() {
 
   const handleUpdateStatus = async (enrollmentId: string, newStatus: string) => {
     try {
+      // Verificar se há sessão ativa
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Sessão expirada',
+          description: 'Faça login novamente para continuar.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('inscricoes_cursos')
         .update({ status: newStatus })
         .eq('id', enrollmentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw error;
+      }
 
       // Se estiver aprovando, enviar email de aprovação
       if (newStatus === 'aprovado') {
@@ -227,13 +241,28 @@ export function EnrollmentManagement() {
       }
 
       fetchEnrollments(); // Recarregar dados
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar status:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status.",
-        variant: "destructive"
-      });
+      
+      if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Sua sessão expirou. Faça login novamente.',
+          variant: 'destructive',
+        });
+      } else if (error.message?.includes('RLS') || error.message?.includes('policy')) {
+        toast({
+          title: 'Acesso negado',
+          description: 'Você não tem permissão para esta ação.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar o status.",
+          variant: "destructive"
+        });
+      }
     }
   };
 

@@ -72,12 +72,26 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
     const newStatus = student.status === 'aprovado' ? 'rejeitado' : 'aprovado';
     
     try {
+      // Verificar se há sessão ativa
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Sessão expirada',
+          description: 'Faça login novamente para continuar.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('inscricoes_mentoria')
         .update({ status: newStatus })
         .eq('id', student.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw error;
+      }
 
       toast({
         title: 'Status atualizado',
@@ -85,13 +99,28 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
       });
 
       onStudentUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar status:', error);
-      toast({
-        title: 'Erro ao atualizar',
-        description: 'Não foi possível atualizar o status.',
-        variant: 'destructive',
-      });
+      
+      if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Sua sessão expirou. Faça login novamente.',
+          variant: 'destructive',
+        });
+      } else if (error.message?.includes('RLS') || error.message?.includes('policy')) {
+        toast({
+          title: 'Acesso negado',
+          description: 'Você não tem permissão para esta ação.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro ao atualizar',
+          description: 'Não foi possível atualizar o status.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 

@@ -108,6 +108,14 @@ interface CourseWithModules {
 export const Dashboard = () => {
   const { user, profile, signOut, loading, logoutLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Verificar autenticação e redirecionar se necessário
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('Dashboard: Usuário não logado, redirecionando para /auth');
+      navigate('/auth');
+    }
+  }, [loading, user, navigate]);
   const [courseEnrollments, setCourseEnrollments] = useState<CourseEnrollment[]>([]);
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -200,12 +208,6 @@ export const Dashboard = () => {
       setDataLoading(false);
     }
   }, [profile?.id, profile?.role, profile?.nome]);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
 
   // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
