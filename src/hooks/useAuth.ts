@@ -207,46 +207,54 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
-    console.log('TESTE BÁSICO - resetPassword chamado');
-    console.log('Email recebido:', email);
+    console.log('🔄 Chamando edge function send-password-reset para:', email);
     
     try {
-      console.log('TESTE - Antes do supabase.auth.resetPasswordForEmail');
+      const redirectTo = `${window.location.origin}/#/alterar-senha`;
+      console.log('🔗 Redirect URL:', redirectTo);
       
-      const result = await supabase.auth.resetPasswordForEmail(email);
-      
-      console.log('TESTE - Depois do supabase.auth.resetPasswordForEmail');
-      console.log('TESTE - Resultado completo:', JSON.stringify(result, null, 2));
-      
-      if (result.error) {
-        console.log('TESTE - Erro encontrado:', result.error);
-        console.log('TESTE - Tipo do erro:', typeof result.error);
-        console.log('TESTE - Message do erro:', result.error.message);
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { 
+          email,
+          redirectTo 
+        }
+      });
+
+      console.log('📊 Resposta da edge function:', { data, error });
+
+      if (error) {
+        console.error('❌ Erro na edge function:', error);
         
-        toast({
-          title: 'Erro ao enviar email',
-          description: result.error.message || 'Erro desconhecido',
-          variant: 'destructive',
-        });
-        return { error: result.error };
+        // Se for erro 5xx, mostrar mensagem técnica
+        if (error.status >= 500) {
+          toast({
+            title: 'Erro no servidor',
+            description: 'Tente novamente em alguns minutos.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Erro ao enviar email',
+            description: error.message || 'Verifique o email informado.',
+            variant: 'destructive',
+          });
+        }
+        return { error };
       }
-      
-      console.log('TESTE - Sucesso!');
+
+      console.log('✅ Edge function executada com sucesso');
       toast({
         title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada.',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
       });
       return { error: null };
       
     } catch (error: any) {
-      console.log('TESTE - Catch executado');
-      console.log('TESTE - Erro no catch:', error);
-      console.log('TESTE - Tipo do erro catch:', typeof error);
-      console.log('TESTE - Message do erro catch:', error?.message);
+      console.error('💥 Erro no catch do resetPassword:', error);
       
       toast({
-        title: 'Erro no sistema',
-        description: error?.message || 'Erro desconhecido no catch',
+        title: 'Erro de conexão',
+        description: 'Verifique sua conexão e tente novamente.',
         variant: 'destructive',
       });
       return { error };

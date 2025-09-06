@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-    const { email } = await req.json();
+    const { email, redirectTo } = await req.json();
 
     if (!email) {
       return new Response(
@@ -76,7 +76,7 @@ serve(async (req) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: 'https://mentoriafutura.com.br/#/alterar-senha'
+        redirectTo: redirectTo || 'https://mentoriafutura.com.br/#/alterar-senha'
       }
     });
 
@@ -112,7 +112,7 @@ serve(async (req) => {
       console.log(`Tentando enviar email via Resend para: ${email}`);
       
       const emailResponse = await resend.emails.send({
-        from: "Mentoria Futura <noreply@resend.dev>",
+        from: "Lovable <onboarding@resend.dev>",
         to: [email],
         subject: "Reset de Senha - Mentoria Futura",
         html: `
