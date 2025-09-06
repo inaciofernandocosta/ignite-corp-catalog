@@ -124,87 +124,89 @@ serve(async (req) => {
       .eq('can_reset_password', true)
       .maybeSingle();
 
+    // Se usuário não foi encontrado na view, pode ser que não tenha conta auth ainda
+    // Vamos verificar se existe em inscricoes_mentoria e está aprovado
     if (eligibleError || !eligibleUser) {
-      console.log('❌ Usuário não elegível para reset:', eligibleError);
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: "Usuário não encontrado ou não elegível para reset de senha" 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    if (!eligibleUser.user_id) {
-      console.log('❌ User ID não encontrado para:', normalizedEmail);
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: "Conta de autenticação não encontrada" 
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    const authUserId = eligibleUser.user_id;
-    console.log(`✅ Auth user_id encontrado: ${authUserId} para email: ${normalizedEmail}`);
-
-    // Implementar via criação de novo usuário (mais seguro)
-    console.log(`🔄 Implementando reset via criação de usuário para: ${normalizedEmail}`);
-    
-    try {
-      // Primeiro, tentar deletar usuário existente (se existir)
-      try {
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(authUserId);
-        console.log('🗑️ Tentativa de deleção:', deleteError?.message || 'sucesso');
-      } catch (e) {
-        console.log('⚠️ Usuário pode não existir no auth, continuando...');
-      }
+      console.log('⚠️ Usuário não encontrado na view, verificando em inscricoes_mentoria...');
       
-      // Criar usuário com nova senha
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: normalizedEmail,
-        password: newPassword,
-        email_confirm: true,
-        user_metadata: { nome: user.nome, email: normalizedEmail }
-      });
-      
-      if (createError) {
-        console.error('❌ Erro ao criar usuário:', createError);
-        
-        // Se falhar, marcar token como usado e orientar o usuário
-        await supabase
-          .from('password_reset_tokens')
-          .update({ used: true, used_at: new Date().toISOString() })
-          .eq('token', token);
-          
+      const { data: mentoriaUser, error: mentoriaError } = await supabase
+        .from('inscricoes_mentoria')
+        .select('id, email, nome, status, ativo')
+        .eq('email', normalizedEmail)
+        .eq('ativo', true)
+        .eq('status', 'aprovado')
+        .maybeSingle();
+
+      if (mentoriaError || !mentoriaUser) {
+        console.log('❌ Usuário não encontrado em inscricoes_mentoria ou não aprovado');
         return new Response(JSON.stringify({ 
           success: false,
-          error: "Por favor, use o link de reset de senha enviado por email ou contate o administrador." 
+          error: "Usuário não encontrado ou não aprovado" 
         }), {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
+
+      console.log(`✅ Usuário encontrado em mentoria: ${mentoriaUser.nome} - criando conta auth`);
       
-      console.log('✅ Usuário auth recriado com sucesso');
-      
-    } catch (generalError: any) {
-      console.error('❌ Erro geral:', generalError);
-      
-      // Marcar token como usado mesmo em caso de erro
-      await supabase
-        .from('password_reset_tokens')
-        .update({ used: true, used_at: new Date().toISOString() })
-        .eq('token', token);
-        
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: "Erro interno. Token foi invalidado. Solicite um novo reset de senha." 
-      }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      // Se chegou aqui, usuário existe em mentoria mas não tem conta auth
+      // Vamos criar a conta auth diretamente
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: normalizedEmail,
+        password: newPassword,
+        email_confirm: true,
+        user_metadata: { nome: mentoriaUser.nome, email: normalizedEmail }
       });
+      
+      if (createError) {
+        console.error('❌ Erro ao criar usuário auth:', createError);
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: "Erro ao criar conta de autenticação: " + createError.message 
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      
+      console.log('✅ Conta auth criada com sucesso');
+
+    } else {
+      // Usuário encontrado na view - tem conta auth
+      if (!eligibleUser.user_id) {
+        console.log('❌ User ID não encontrado para:', normalizedEmail);
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: "Conta de autenticação não encontrada" 
+        }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const authUserId = eligibleUser.user_id;
+      console.log(`✅ Auth user_id encontrado: ${authUserId} para email: ${normalizedEmail}`);
+
+      // Atualizar senha do usuário existente
+      console.log(`🔄 Atualizando senha para user ID: ${authUserId}`);
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        authUserId,
+        { password: newPassword }
+      );
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar senha:', updateError);
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: "Erro ao atualizar senha: " + updateError.message 
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      
+      console.log('✅ Senha atualizada com sucesso');
     }
 
     console.log('✅ Senha atualizada no auth.users');
