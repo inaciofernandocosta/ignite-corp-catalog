@@ -54,6 +54,7 @@ serve(async (req) => {
     );
 
     // Verificar se usuário existe e está ativo
+    console.log('Verificando usuário no banco de dados...');
     const { data: user, error: userError } = await supabase
       .from('inscricoes_mentoria')
       .select('id, email, nome, ativo, status')
@@ -63,7 +64,7 @@ serve(async (req) => {
       .single();
 
     if (userError || !user) {
-      console.log(`Usuário não encontrado ou não elegível: ${email}`);
+      console.log(`Usuário não encontrado ou não elegível: ${email}, erro:`, userError);
       // Retornar sucesso para evitar vazamento de informações
       return new Response(JSON.stringify({ 
         success: true,
@@ -74,11 +75,33 @@ serve(async (req) => {
       });
     }
 
+    console.log('✅ Usuário válido encontrado:', user.nome);
+
+    // Verificar se API key do Resend está disponível
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    console.log('RESEND_API_KEY disponível:', resendKey ? 'SIM' : 'NÃO');
+    
+    if (!resendKey) {
+      console.error('❌ RESEND_API_KEY não encontrada nas variáveis de ambiente');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Serviço de email não configurado" 
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     // Gerar token de recuperação único
+    console.log('Gerando token de recuperação...');
     const resetToken = crypto.randomUUID() + '-' + Date.now().toString(36);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
+    console.log('Token gerado:', resetToken.substring(0, 10) + '...');
+    console.log('Expira em:', expiresAt.toISOString());
+
     // Salvar token na tabela de tokens
+    console.log('Salvando token no banco...');
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .upsert({
@@ -89,7 +112,7 @@ serve(async (req) => {
       });
 
     if (tokenError) {
-      console.error('Erro ao salvar token:', tokenError);
+      console.error('❌ Erro ao salvar token:', tokenError);
       return new Response(JSON.stringify({ 
         success: false,
         error: "Erro interno do servidor" 
@@ -99,9 +122,15 @@ serve(async (req) => {
       });
     }
 
+    console.log('✅ Token salvo com sucesso');
+
     // Enviar email via Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    console.log('Inicializando Resend...');
+    const resend = new Resend(resendKey);
     const resetUrl = `https://preview--ignite-corp-catalog.lovable.app/#/resetar-senha?token=${resetToken}`;
+    
+    console.log('URL de reset:', resetUrl);
+    console.log('Enviando email...');
     
     const { error: emailError } = await resend.emails.send({
       from: "Mentoria Futura <onboarding@resend.dev>",
@@ -186,7 +215,8 @@ serve(async (req) => {
     });
 
     if (emailError) {
-      console.error('Erro ao enviar email:', emailError);
+      console.error('❌ Erro ao enviar email:', emailError);
+      console.error('❌ Detalhes do erro:', JSON.stringify(emailError));
       return new Response(JSON.stringify({ 
         success: false,
         error: "Erro ao enviar email" 
@@ -196,7 +226,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`✅ Email de reset enviado para: ${email}`);
+    console.log(`✅ Email de reset enviado com sucesso para: ${email}`);
     
     return new Response(JSON.stringify({ 
       success: true,
