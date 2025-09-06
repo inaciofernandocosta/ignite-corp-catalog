@@ -213,7 +213,7 @@ export const useAuth = () => {
       const redirectTo = `${window.location.origin}/#/alterar-senha`;
       console.log('🔗 Redirect URL:', redirectTo);
       
-      const { data, error } = await supabase.functions.invoke('test-password-reset', {
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { 
           email,
           redirectTo 

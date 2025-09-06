@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,14 +54,17 @@ serve(async (req) => {
     );
     console.log('✅ Supabase client initialized');
 
-    // Check if user exists
+    // Check if user exists using RPC function
     console.log('👤 Checking if user exists...');
-    const { data: authUsers, error: listError } = await supabase.auth.admin.listUsers();
+    const { data: emailExists, error: emailCheckError } = await supabase
+      .rpc('email_exists_for_recovery', { email_to_check: email });
     
-    if (listError) {
-      console.error('❌ Error listing users:', listError);
+    console.log('📊 Email check result:', { emailExists, emailCheckError });
+    
+    if (emailCheckError) {
+      console.error('❌ Error checking email:', emailCheckError);
       return new Response(JSON.stringify({ 
-        error: 'Error checking user: ' + listError.message,
+        error: 'Error checking user: ' + emailCheckError.message,
         success: false
       }), {
         status: 500,
@@ -68,13 +72,10 @@ serve(async (req) => {
       });
     }
 
-    const userExists = authUsers?.users?.some(user => user.email === email);
-    console.log(`👤 User exists: ${userExists}`);
-
-    if (!userExists) {
+    if (!emailExists) {
       console.log('⚠️ User not found, but returning success for security');
       return new Response(JSON.stringify({ 
-        message: 'Link de reset de senha enviado para seu email (user not found)',
+        message: 'Link de reset de senha enviado para seu email',
         success: true
       }), {
         status: 200,
@@ -119,16 +120,57 @@ serve(async (req) => {
 
     console.log('✅ Recovery link generated successfully');
 
-    // For now, just return the link without sending email
-    console.log('✅ Returning success response with link');
-    return new Response(JSON.stringify({ 
-      message: 'Link de reset gerado com sucesso (não enviado por email ainda)',
-      success: true,
-      resetLink: resetLink  // For testing only
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    // Send email via Resend
+    console.log('📧 Sending reset email...');
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Mentoria Futura <onboarding@resend.dev>",
+        to: [email],
+        subject: "Reset de Senha - Mentoria Futura",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #333; text-align: center;">Reset de Senha</h1>
+            <p>Você solicitou um reset de senha para sua conta na Mentoria Futura.</p>
+            <p>Clique no link abaixo para redefinir sua senha:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" 
+                 style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                Redefinir Senha
+              </a>
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              Este link é válido por 1 hora. Se você não solicitou este reset, pode ignorar este email.
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              Se o botão não funcionar, copie e cole este link no seu navegador:<br>
+              <a href="${resetLink}">${resetLink}</a>
+            </p>
+          </div>
+        `,
+      });
+
+      console.log("✅ Email sent successfully:", emailResponse);
+      
+      return new Response(JSON.stringify({ 
+        message: 'Link de reset de senha enviado para seu email',
+        success: true
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+      
+    } catch (emailError: any) {
+      console.error('❌ Error sending email:', emailError);
+      return new Response(JSON.stringify({ 
+        error: 'Error sending email: ' + emailError.message,
+        success: false
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
   } catch (error: any) {
     console.error('💥 Error:', error);
