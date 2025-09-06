@@ -33,6 +33,17 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       if (error) {
         console.error('❌ Erro no reset:', error);
         
+        // Tratar erro de rate limit especificamente
+        if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+          const errorMessage = 'Muitas tentativas de recuperação de senha. Aguarde alguns minutos antes de tentar novamente.';
+          toast({
+            title: 'Limite de tentativas excedido',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+          return { success: false, error: errorMessage };
+        }
+        
         const errorMessage = error.message || 'Erro ao enviar email de recuperação';
         toast({
           title: 'Erro',
