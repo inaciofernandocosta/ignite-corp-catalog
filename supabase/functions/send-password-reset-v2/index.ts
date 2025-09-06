@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
@@ -8,7 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('🚀 Function started');
+  console.log('🚀 Password Reset V2 Function started');
   console.log(`📧 Method: ${req.method}`);
   
   // Handle CORS preflight requests
@@ -46,16 +45,7 @@ serve(async (req) => {
       });
     }
 
-    // Initialize Supabase client
-    console.log('🔧 Initializing Supabase client...');
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-    console.log('✅ Supabase client initialized');
-
-    // Skip user verification and send notification email directly
-    // This prevents enumeration attacks while still providing the service
+    // Send notification email directly (no user verification to avoid database issues)
     console.log('📧 Sending reset notification for email:', email);
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
@@ -90,10 +80,10 @@ serve(async (req) => {
         `,
       });
 
-      console.log("✅ Notification email sent successfully:", emailResponse);
+      console.log("✅ V2 Notification email sent successfully:", emailResponse);
       
       return new Response(JSON.stringify({ 
-        message: 'Link de reset de senha enviado para seu email',
+        message: 'Link de reset de senha enviado para seu email (v2)',
         success: true
       }), {
         status: 200,

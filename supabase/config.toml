@@ -4,6 +4,9 @@ project_id = "fauoxtziffljgictcvhi"
 [functions.send-password-reset]
 verify_jwt = false
 
+[functions.send-password-reset-v2]
+verify_jwt = false
+
 [functions.test-password-reset]
 verify_jwt = false
 
