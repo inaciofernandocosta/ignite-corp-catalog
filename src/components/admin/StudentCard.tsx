@@ -43,24 +43,26 @@ export const StudentCard = ({ student, onStudentUpdate }: StudentCardProps) => {
 
   const handleRemoveStudent = async () => {
     try {
-      const { error } = await supabase
-        .from('inscricoes_mentoria')
-        .update({ ativo: false, status: 'removido' })
-        .eq('id', student.id);
+      const { data, error } = await supabase.rpc('delete_user_completely', {
+        user_email: student.email
+      });
 
       if (error) throw error;
 
-      toast({
-        title: 'Aluno removido',
-        description: `${student.nome || 'Usuário'} foi removido com sucesso.`,
-      });
-
-      onStudentUpdate();
-    } catch (error) {
-      console.error('Erro ao remover aluno:', error);
+      if (data && data.includes('successfully')) {
+        toast({
+          title: 'Usuário removido',
+          description: `${student.nome || 'Usuário'} foi removido completamente do sistema.`,
+        });
+        onStudentUpdate();
+      } else {
+        throw new Error(data || 'Erro desconhecido');
+      }
+    } catch (error: any) {
+      console.error('Erro ao remover usuário:', error);
       toast({
         title: 'Erro ao remover',
-        description: 'Não foi possível remover o aluno.',
+        description: error.message || 'Não foi possível remover o usuário.',
         variant: 'destructive',
       });
     }
