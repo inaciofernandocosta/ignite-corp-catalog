@@ -149,68 +149,58 @@ serve(async (req) => {
     const authUserId = eligibleUser.user_id;
     console.log(`✅ Auth user_id encontrado: ${authUserId} para email: ${normalizedEmail}`);
 
-    // Atualizar senha do usuário - usando abordagem mais robusta
-    console.log(`🔄 Atualizando senha para user ID: ${authUserId}`);
+    // Implementar via criação de novo usuário (mais seguro)
+    console.log(`🔄 Implementando reset via criação de usuário para: ${normalizedEmail}`);
     
     try {
-      // Primeira tentativa: updateUserById normal
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        authUserId,
-        { password: newPassword }
-      );
-
-      if (updateError) {
-        console.log('⚠️ Primeira tentativa falhou:', updateError.message);
-        
-        // Segunda tentativa: recrear o usuário se necessário
-        if (updateError.message.includes('Database error loading user')) {
-          console.log('🔄 Tentando abordagem alternativa...');
-          
-          // Deletar e recriar usuário auth
-          try {
-            await supabase.auth.admin.deleteUser(authUserId);
-            console.log('✅ Usuário auth deletado');
-          } catch (deleteError) {
-            console.log('⚠️ Erro ao deletar (pode não existir):', deleteError);
-          }
-          
-          // Criar novo usuário auth
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: normalizedEmail,
-            password: newPassword,
-            email_confirm: true,
-            user_metadata: { nome: user.nome }
-          });
-          
-          if (createError) {
-            console.error('❌ Erro ao recriar usuário:', createError);
-            return new Response(JSON.stringify({ 
-              success: false,
-              error: "Erro ao recriar conta de autenticação: " + createError.message 
-            }), {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            });
-          }
-          
-          console.log('✅ Usuário auth recriado com sucesso');
-          
-        } else {
-          console.error('❌ Erro ao atualizar senha:', updateError);
-          return new Response(JSON.stringify({ 
-            success: false,
-            error: "Erro ao atualizar senha: " + updateError.message 
-          }), {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          });
-        }
+      // Primeiro, tentar deletar usuário existente (se existir)
+      try {
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(authUserId);
+        console.log('🗑️ Tentativa de deleção:', deleteError?.message || 'sucesso');
+      } catch (e) {
+        console.log('⚠️ Usuário pode não existir no auth, continuando...');
       }
+      
+      // Criar usuário com nova senha
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: normalizedEmail,
+        password: newPassword,
+        email_confirm: true,
+        user_metadata: { nome: user.nome, email: normalizedEmail }
+      });
+      
+      if (createError) {
+        console.error('❌ Erro ao criar usuário:', createError);
+        
+        // Se falhar, marcar token como usado e orientar o usuário
+        await supabase
+          .from('password_reset_tokens')
+          .update({ used: true, used_at: new Date().toISOString() })
+          .eq('token', token);
+          
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: "Por favor, use o link de reset de senha enviado por email ou contate o administrador." 
+        }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      
+      console.log('✅ Usuário auth recriado com sucesso');
+      
     } catch (generalError: any) {
-      console.error('❌ Erro geral na atualização:', generalError);
+      console.error('❌ Erro geral:', generalError);
+      
+      // Marcar token como usado mesmo em caso de erro
+      await supabase
+        .from('password_reset_tokens')
+        .update({ used: true, used_at: new Date().toISOString() })
+        .eq('token', token);
+        
       return new Response(JSON.stringify({ 
         success: false,
-        error: "Erro interno ao atualizar senha" 
+        error: "Erro interno. Token foi invalidado. Solicite um novo reset de senha." 
       }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
