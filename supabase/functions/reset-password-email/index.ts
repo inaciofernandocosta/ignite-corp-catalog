@@ -238,9 +238,19 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('💥 Erro geral:', error);
+    console.error('💥 Stack trace:', error.stack);
+    console.error('💥 Tipo do erro:', typeof error);
+    console.error('💥 Nome do erro:', error.name);
+    console.error('💥 Mensagem:', error.message);
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: "Erro interno do servidor" 
+      error: "Erro interno do servidor",
+      debug: {
+        message: error.message,
+        name: error.name,
+        type: typeof error
+      }
     }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
