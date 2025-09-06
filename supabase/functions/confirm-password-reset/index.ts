@@ -62,7 +62,7 @@ serve(async (req) => {
       .eq('token', token)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (tokenError) {
       console.log('❌ Erro ao buscar token:', tokenError);
@@ -99,7 +99,7 @@ serve(async (req) => {
       .eq('email', normalizedEmail)
       .eq('ativo', true)
       .eq('status', 'aprovado')
-      .single();
+      .maybeSingle();
 
     if (userError || !user) {
       console.log('❌ Usuário não encontrado na inscrições:', userError);
@@ -122,7 +122,7 @@ serve(async (req) => {
       .select('user_id, email, can_reset_password')
       .eq('email', normalizedEmail)
       .eq('can_reset_password', true)
-      .single();
+      .maybeSingle();
 
     if (eligibleError || !eligibleUser) {
       console.log('❌ Usuário não elegível para reset:', eligibleError);
