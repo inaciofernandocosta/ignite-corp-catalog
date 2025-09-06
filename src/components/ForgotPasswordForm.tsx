@@ -36,19 +36,28 @@ export const ForgotPasswordForm = ({ onBack, showExpiredMessage = false }: Forgo
   });
 
   const onSubmit = async (data: ForgotPasswordData) => {
+    console.log('🟦 ForgotPasswordForm - onSubmit iniciado com email:', data.email);
     setIsSubmitting(true);
     
     try {
+      console.log('🟦 ForgotPasswordForm - Chamando resetPassword...');
       const result = await resetPassword(data.email);
+      console.log('🟦 ForgotPasswordForm - Resultado do resetPassword:', result);
       
       if (result.error?.isRateLimit) {
+        console.log('🟦 ForgotPasswordForm - Rate limit detectado');
         setShowRateLimitModal(true);
       } else if (!result.error) {
+        console.log('🟦 ForgotPasswordForm - Sucesso, mostrando tela de email enviado');
         setEmailSent(true);
+      } else {
+        console.log('🟦 ForgotPasswordForm - Erro no resetPassword:', result.error);
       }
     } catch (error) {
+      console.error('🟦 ForgotPasswordForm - Erro no catch:', error);
       // Erro genérico já tratado no useAuth
     } finally {
+      console.log('🟦 ForgotPasswordForm - onSubmit finalizado');
       setIsSubmitting(false);
     }
   };
