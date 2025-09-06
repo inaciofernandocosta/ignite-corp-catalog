@@ -114,57 +114,40 @@ serve(async (req) => {
 
     console.log(`✅ Usuário encontrado: ${user.nome} (${user.email})`);
 
-    // Buscar usuário no auth.users usando listUsers com paginação
-    console.log('🔍 Buscando usuário auth por email...');
-    let authUserId;
+    // Buscar user_id diretamente na view users_eligible_for_reset
+    console.log('🔍 Buscando user_id na view users_eligible_for_reset...');
     
-    try {
-      // Usar listUsers com paginação para encontrar o usuário específico
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000 // Limite razoável para busca
-      });
-      
-      if (authError) {
-        console.log('❌ Erro ao buscar usuários auth:', authError);
-        return new Response(JSON.stringify({ 
-          success: false,
-          error: "Erro ao verificar conta de autenticação" 
-        }), {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-      
-      // Filtrar por email
-      const matchingUser = authData.users?.find(u => 
-        u.email?.trim().toLowerCase() === normalizedEmail
-      );
-      
-      if (!matchingUser) {
-        console.log('❌ Usuário não encontrado no auth.users:', normalizedEmail);
-        return new Response(JSON.stringify({ 
-          success: false,
-          error: "Conta de autenticação não encontrada" 
-        }), {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-      
-      authUserId = matchingUser.id;
-      console.log(`✅ Auth user encontrado: ${authUserId} para email: ${normalizedEmail}`);
-      
-    } catch (authSearchError) {
-      console.log('❌ Erro na busca de auth user:', authSearchError);
+    const { data: eligibleUser, error: eligibleError } = await supabase
+      .from('users_eligible_for_reset')
+      .select('user_id, email, can_reset_password')
+      .eq('email', normalizedEmail)
+      .eq('can_reset_password', true)
+      .single();
+
+    if (eligibleError || !eligibleUser) {
+      console.log('❌ Usuário não elegível para reset:', eligibleError);
       return new Response(JSON.stringify({ 
         success: false,
-        error: "Erro ao verificar conta de autenticação" 
+        error: "Usuário não encontrado ou não elegível para reset de senha" 
       }), {
-        status: 500,
+        status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
+
+    if (!eligibleUser.user_id) {
+      console.log('❌ User ID não encontrado para:', normalizedEmail);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: "Conta de autenticação não encontrada" 
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const authUserId = eligibleUser.user_id;
+    console.log(`✅ Auth user_id encontrado: ${authUserId} para email: ${normalizedEmail}`);
 
     // Atualizar senha do usuário
     console.log(`🔄 Atualizando senha para user ID: ${authUserId}`);
