@@ -4,8 +4,6 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { PasswordResetEmail } from './_templates/password-reset.tsx'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0'
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -25,6 +23,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verificar se temos a API key do Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    if (!resendApiKey) {
+      console.error('❌ RESEND_API_KEY não configurada')
+      return new Response(
+        JSON.stringify({ error: 'Configuração de email não encontrada' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const resend = new Resend(resendApiKey)
+
     const { email, redirectTo } = await req.json()
 
     if (!email) {
@@ -47,9 +60,9 @@ Deno.serve(async (req) => {
     // Check if user exists and is approved
     const { data: userData, error: userError } = await supabase
       .from('inscricoes_mentoria')
-      .select('nome_completo, status_aprovacao')
+      .select('nome, status')
       .eq('email', email.toLowerCase())
-      .eq('status_aprovacao', 'aprovado')
+      .eq('status', 'aprovado')
       .single()
 
     console.log('👤 Dados do usuário:', { userData, userError })
@@ -69,7 +82,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('✅ Usuário encontrado e aprovado:', userData.nome_completo)
+    console.log('✅ Usuário encontrado e aprovado:', userData.nome)
 
     // Generate reset token
     const resetToken = crypto.randomUUID()
@@ -101,7 +114,7 @@ Deno.serve(async (req) => {
     const emailHtml = await renderAsync(
       React.createElement(PasswordResetEmail, {
         resetLink,
-        userName: userData.nome_completo.split(' ')[0], // First name
+        userName: userData.nome.split(' ')[0], // First name
       })
     )
 
