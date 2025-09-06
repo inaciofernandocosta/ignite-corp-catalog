@@ -149,18 +149,68 @@ serve(async (req) => {
     const authUserId = eligibleUser.user_id;
     console.log(`✅ Auth user_id encontrado: ${authUserId} para email: ${normalizedEmail}`);
 
-    // Atualizar senha do usuário
+    // Atualizar senha do usuário - usando abordagem mais robusta
     console.log(`🔄 Atualizando senha para user ID: ${authUserId}`);
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      authUserId,
-      { password: newPassword }
-    );
+    
+    try {
+      // Primeira tentativa: updateUserById normal
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        authUserId,
+        { password: newPassword }
+      );
 
-    if (updateError) {
-      console.error('❌ Erro ao atualizar senha:', updateError);
+      if (updateError) {
+        console.log('⚠️ Primeira tentativa falhou:', updateError.message);
+        
+        // Segunda tentativa: recrear o usuário se necessário
+        if (updateError.message.includes('Database error loading user')) {
+          console.log('🔄 Tentando abordagem alternativa...');
+          
+          // Deletar e recriar usuário auth
+          try {
+            await supabase.auth.admin.deleteUser(authUserId);
+            console.log('✅ Usuário auth deletado');
+          } catch (deleteError) {
+            console.log('⚠️ Erro ao deletar (pode não existir):', deleteError);
+          }
+          
+          // Criar novo usuário auth
+          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+            email: normalizedEmail,
+            password: newPassword,
+            email_confirm: true,
+            user_metadata: { nome: user.nome }
+          });
+          
+          if (createError) {
+            console.error('❌ Erro ao recriar usuário:', createError);
+            return new Response(JSON.stringify({ 
+              success: false,
+              error: "Erro ao recriar conta de autenticação: " + createError.message 
+            }), {
+              status: 500,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
+          }
+          
+          console.log('✅ Usuário auth recriado com sucesso');
+          
+        } else {
+          console.error('❌ Erro ao atualizar senha:', updateError);
+          return new Response(JSON.stringify({ 
+            success: false,
+            error: "Erro ao atualizar senha: " + updateError.message 
+          }), {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+      }
+    } catch (generalError: any) {
+      console.error('❌ Erro geral na atualização:', generalError);
       return new Response(JSON.stringify({ 
         success: false,
-        error: "Erro ao atualizar senha: " + updateError.message 
+        error: "Erro interno ao atualizar senha" 
       }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
