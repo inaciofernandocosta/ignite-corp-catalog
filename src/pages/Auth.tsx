@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { ForgotPasswordForm } from '@/components/ForgotPasswordForm';
+import { NewForgotPasswordForm } from '@/components/NewForgotPasswordForm';
 import { ResetPasswordForm } from '@/components/ResetPasswordForm';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
@@ -223,7 +223,7 @@ const Auth = () => {
             {showResetPassword ? (
               <ResetPasswordForm onSuccess={handleResetSuccess} onBack={handleBackToLogin} />
             ) : showForgotPassword ? (
-              <ForgotPasswordForm onBack={handleBackToLogin} showExpiredMessage={searchParams.get('expired') === 'true'} />
+              <NewForgotPasswordForm onBack={handleBackToLogin} showExpiredMessage={searchParams.get('expired') === 'true'} />
             ) : (
               // Formulário de Login
               <Form {...loginForm}>

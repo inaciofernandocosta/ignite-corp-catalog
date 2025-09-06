@@ -561,6 +561,39 @@ export type Database = {
           },
         ]
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          updated_at: string
+          used: boolean
+          used_at: string | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token: string
+          updated_at?: string
+          used?: boolean
+          used_at?: string | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          updated_at?: string
+          used?: boolean
+          used_at?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       progresso_aulas: {
         Row: {
           aula_id: string
@@ -740,7 +773,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      users_eligible_for_reset: {
+        Row: {
+          can_reset_password: boolean | null
+          email: string | null
+          email_confirmed_at: string | null
+          inscricao_ativa: boolean | null
+          inscricao_status: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       backfill_auth_accounts: {
@@ -767,9 +810,21 @@ export type Database = {
         Args: { function_name: string; payload?: Json }
         Returns: undefined
       }
+      check_password_reset_eligibility: {
+        Args: { user_email: string }
+        Returns: {
+          eligible: boolean
+          reason: string
+          user_data: Json
+        }[]
+      }
       check_user_role: {
         Args: { required_role: string; user_email: string }
         Returns: boolean
+      }
+      cleanup_expired_reset_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       create_first_admin: {
         Args: { admin_email: string }
@@ -801,6 +856,14 @@ export type Database = {
       }
       email_exists_for_recovery: {
         Args: { email_to_check: string }
+        Returns: boolean
+      }
+      email_exists_for_recovery_backup: {
+        Args: { email_to_check: string }
+        Returns: boolean
+      }
+      email_exists_for_recovery_v2: {
+        Args: { email_param: string }
         Returns: boolean
       }
       generate_signed_url: {
@@ -895,6 +958,10 @@ export type Database = {
       limpar_tokens_expirados: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      password_reset_check: {
+        Args: { user_email: string }
+        Returns: Json
       }
       promote_user_to_admin: {
         Args: { promoted_by_email: string; user_email: string }

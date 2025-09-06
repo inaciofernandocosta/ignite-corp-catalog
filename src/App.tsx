@@ -12,6 +12,7 @@ import { TermsOfUse } from "./pages/TermsOfUse";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { LGPD } from "./pages/LGPD";
 import { AlterarSenha } from "./pages/AlterarSenha";
+import { ResetarSenha } from "./pages/ResetarSenha";
 import NotFound from "./pages/NotFound";
 
 
@@ -74,6 +75,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/alterar-senha" element={<AlterarSenha />} />
+            <Route path="/resetar-senha" element={<ResetarSenha />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/curso/:slug" element={<CourseDetails />} />
             <Route path="/termos-de-uso" element={<TermsOfUse />} />
