@@ -221,9 +221,13 @@ export const useAuth = () => {
       });
 
       console.log('📊 Resposta da edge function:', { data, error });
+      console.log('📊 Data type:', typeof data);
+      console.log('📊 Data content:', JSON.stringify(data));
 
       if (error) {
         console.error('❌ Erro na edge function:', error);
+        console.error('❌ Error type:', typeof error);
+        console.error('❌ Error details:', JSON.stringify(error));
         
         // Se for erro 5xx, mostrar mensagem técnica
         if (error.status >= 500) {
@@ -242,12 +246,23 @@ export const useAuth = () => {
         return { error };
       }
 
-      console.log('✅ Edge function executada com sucesso');
-      toast({
-        title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
-      });
-      return { error: null };
+      // Verificar se a resposta indica sucesso
+      if (data && data.success === true) {
+        console.log('✅ Edge function executada com sucesso');
+        toast({
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+        });
+        return { error: null };
+      } else {
+        console.error('❌ Edge function retornou sucesso false:', data);
+        toast({
+          title: 'Erro ao processar solicitação',
+          description: data?.error || 'Tente novamente.',
+          variant: 'destructive',
+        });
+        return { error: new Error(data?.error || 'Unknown error') };
+      }
       
     } catch (error: any) {
       console.error('💥 Erro no catch do resetPassword:', error);
