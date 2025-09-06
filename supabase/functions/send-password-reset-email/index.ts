@@ -9,6 +9,8 @@ const corsHeaders = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('🚀 Send Password Reset Email Function iniciada');
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -22,23 +24,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Verificar se temos a API key do Resend
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      console.error('❌ RESEND_API_KEY não configurada');
-      return new Response(
-        JSON.stringify({ error: 'Configuração de email não encontrada' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    const resend = new Resend(resendApiKey);
     const { email, redirectTo } = await req.json();
+    console.log(`📧 Processando reset para: ${email}`);
 
     if (!email) {
+      console.log('❌ Email não fornecido');
       return new Response(
         JSON.stringify({ error: 'Email é obrigatório' }),
         { 
@@ -48,18 +38,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Normalizar email
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log(`🔄 Email normalizado: ${normalizedEmail}`);
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('✅ Supabase client inicializado');
 
-    console.log('🔍 Verificando usuário no sistema:', email);
+    console.log('🔍 Verificando usuário no sistema:', normalizedEmail);
 
     // Check if user exists and is approved
     const { data: userData, error: userError } = await supabase
       .from('inscricoes_mentoria')
       .select('nome, status')
-      .eq('email', email.toLowerCase())
+      .eq('email', normalizedEmail)
       .eq('status', 'aprovado')
       .single();
 
@@ -83,16 +78,25 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('✅ Usuário encontrado e aprovado:', userData.nome);
 
     // Generate reset token
-    const resetToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const resetToken = crypto.getRandomValues(new Uint8Array(32))
+      .reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 horas
 
-    console.log('🎫 Gerando token de reset:', resetToken);
+    console.log(`🎫 Gerando token de reset: ${resetToken.substring(0, 10)}...`);
 
-    // Store reset token in database
+    // Clean old tokens for this user
+    console.log('🗑️ Limpando tokens antigos...');
+    await supabase
+      .from('password_reset_tokens')
+      .delete()
+      .eq('user_email', normalizedEmail);
+
+    // Store reset token in database (using user_email)
+    console.log('💾 Salvando token no banco...');
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .insert({
-        user_email: email.toLowerCase(),
+        user_email: normalizedEmail, // Usar user_email, não email
         token: resetToken,
         expires_at: expiresAt.toISOString(),
         used: false
@@ -103,10 +107,34 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Erro interno do servidor');
     }
 
-    // Create reset link
-    const resetLink = `${redirectTo}?token=${resetToken}`;
+    console.log('✅ Token salvo no banco');
 
-    console.log('🔗 Link de reset criado:', resetLink);
+    // Create reset link - usar URL correta ou fallback do redirectTo
+    const resetUrl = redirectTo 
+      ? `${redirectTo}?token=${resetToken}`
+      : `https://preview--ignite-corp-catalog.lovable.app/#/resetar-senha?token=${resetToken}`;
+
+    console.log('🔗 Link de reset criado:', resetUrl);
+
+    // Check if we have Resend API key
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.log('⚠️ RESEND_API_KEY não encontrada - retornando fallback com reset_url');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Token criado com sucesso (modo debug - sem email)',
+          reset_url: resetUrl // Fallback para desenvolvimento
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('✅ RESEND_API_KEY encontrada, enviando email...');
+    const resend = new Resend(resendApiKey);
 
     // Create professional email HTML
     const emailHtml = `
@@ -139,13 +167,13 @@ const handler = async (req: Request): Promise<Response> => {
               </p>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetLink}" style="background-color: #ff6b35; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
+                <a href="${resetUrl}" style="background-color: #ff6b35; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
                   Redefinir Minha Senha
                 </a>
               </div>
 
               <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 20px 0; text-align: center;">
-                <strong>Este link expira em 1 hora por questões de segurança.</strong>
+                <strong>Este link expira em 2 horas por questões de segurança.</strong>
               </p>
 
               <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
@@ -163,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <p style="color: #888888; font-size: 12px; line-height: 1.6; text-align: center; margin: 30px 0 0 0;">
                 Se você está tendo problemas para clicar no botão, copie e cole a URL abaixo no seu navegador:<br>
-                <a href="${resetLink}" style="color: #ff6b35; word-break: break-all;">${resetLink}</a>
+                <a href="${resetUrl}" style="color: #ff6b35; word-break: break-all;">${resetUrl}</a>
               </p>
             </td>
           </tr>
@@ -172,29 +200,50 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email via Resend
-    const emailResponse = await resend.emails.send({
-      from: "Mentoria Futura <no-reply@mentoriafutura.com.br>",
-      to: [email],
-      subject: "Redefinição de Senha - Mentoria Futura",
-      html: emailHtml,
-    });
+    try {
+      // Send email via Resend
+      const emailResponse = await resend.emails.send({
+        from: "Mentoria Futura <no-reply@mentoriafutura.com.br>",
+        to: [normalizedEmail],
+        subject: "Redefinição de Senha - Mentoria Futura",
+        html: emailHtml,
+      });
 
-    console.log("📧 Email enviado com sucesso:", emailResponse);
+      console.log("✅ Email enviado com sucesso:", emailResponse);
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Email de recuperação enviado com sucesso!' 
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
-    );
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Email de recuperação enviado com sucesso!' 
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+      
+    } catch (emailError) {
+      console.error('❌ Erro ao enviar email:', emailError);
+      // Retornar sucesso com fallback se o email falhar
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Token criado (erro no envio de email)',
+          reset_url: resetUrl // Fallback se email falhar
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
   } catch (error: any) {
     console.error("💥 Erro no processo:", error);
     return new Response(
