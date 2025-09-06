@@ -106,7 +106,7 @@ serve(async (req) => {
     const { error: tokenError } = await supabase
       .from('password_reset_tokens')
       .upsert({
-        email: email,
+        user_email: email,
         token: resetToken,
         expires_at: expiresAt.toISOString(),
         used: false
