@@ -36,6 +36,8 @@ interface Enrollment {
     nome: string;
     email: string;
     empresa: string;
+    telefone?: string;
+    departamento?: string;
   };
 }
 
@@ -106,7 +108,9 @@ export function EnrollmentManagement() {
           inscricoes_mentoria (
             nome,
             email,
-            empresa
+            empresa,
+            telefone,
+            departamento
           )
         `)
         .order('data_inscricao', { ascending: false });
@@ -276,7 +280,9 @@ export function EnrollmentManagement() {
         'Curso': enrollment.cursos.titulo,
         'Nome do Aluno': enrollment.inscricoes_mentoria?.nome || 'Nome não informado',
         'E-mail': enrollment.inscricoes_mentoria?.email || 'Email não informado',
+        'Telefone': enrollment.inscricoes_mentoria?.telefone || '',
         'Empresa': enrollment.inscricoes_mentoria?.empresa || '',
+        'Departamento': enrollment.inscricoes_mentoria?.departamento || '',
         'Data da Inscrição': new Date(enrollment.data_inscricao).toLocaleDateString('pt-BR'),
         'Status': enrollment.status.charAt(0).toUpperCase() + enrollment.status.slice(1),
         'Progresso (%)': enrollment.progresso,
@@ -295,7 +301,9 @@ export function EnrollmentManagement() {
         { wch: 30 },  // Curso
         { wch: 25 },  // Nome do Aluno
         { wch: 30 },  // E-mail
+        { wch: 18 },  // Telefone
         { wch: 25 },  // Empresa
+        { wch: 20 },  // Departamento
         { wch: 15 },  // Data da Inscrição
         { wch: 12 },  // Status
         { wch: 12 },  // Progresso
