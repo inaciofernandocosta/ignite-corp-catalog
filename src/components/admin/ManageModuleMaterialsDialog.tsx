@@ -94,11 +94,10 @@ export const ManageModuleMaterialsDialog: React.FC<ManageModuleMaterialsDialogPr
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('modulo-materiais')
-        .getPublicUrl(filePath);
+      // Para bucket privado, retornar o caminho do arquivo em vez da URL pública
+      const fileUrl = `https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/modulo-materiais/${filePath}`;
 
-      return publicUrl;
+      return fileUrl;
     } catch (error: any) {
       console.error('Erro no upload:', error);
       toast({
