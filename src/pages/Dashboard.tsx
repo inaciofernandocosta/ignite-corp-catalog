@@ -428,8 +428,12 @@ export const Dashboard = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-muted-foreground">Cursos Ativos</span>
-                    <span className="font-medium">{courseEnrollments.filter(c => c.status === 'ativo').length}</span>
+                    <span className="text-muted-foreground">Cursos Matriculados</span>
+                    <span className="font-medium">{courseEnrollments.length}</span>
+                  </div>
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-muted-foreground">Cursos Concluídos</span>
+                    <span className="font-medium">{courseEnrollments.filter(c => c.status === 'concluido').length}</span>
                   </div>
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Certificados</span>
