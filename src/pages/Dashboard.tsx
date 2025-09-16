@@ -44,6 +44,8 @@ import { EnrollmentManagement } from '@/components/admin/EnrollmentManagement';
 import { CertificateManagement } from '@/components/admin/CertificateManagement';
 import { UserProfile } from '@/components/UserProfile';
 import { CourseModulesViewer } from '@/components/student/CourseModulesViewer';
+import { StudentImpersonationDialog } from '@/components/admin/StudentImpersonationDialog';
+import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 
 interface CourseEnrollment {
   id: string;
@@ -107,7 +109,7 @@ interface CourseWithModules {
 }
 
 export const Dashboard = () => {
-  const { user, profile, signOut, loading, logoutLoading } = useAuth();
+  const { user, profile, signOut, loading, logoutLoading, getImpersonatedStudent, isImpersonating } = useAuth();
   const navigate = useNavigate();
 
   // Verificar autenticação e redirecionar se necessário
@@ -125,19 +127,23 @@ export const Dashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
 
   const fetchUserData = useCallback(async () => {
-    if (!profile?.id) return;
+    // Verificar se admin está impersonando um aluno
+    const impersonatedStudent = getImpersonatedStudent();
+    const targetUserId = impersonatedStudent ? impersonatedStudent.id : profile?.id;
+    
+    if (!targetUserId) return;
 
     try {
       setDataLoading(true);
 
-      // Buscar inscrições em cursos
+      // Buscar inscrições em cursos (do aluno ou do admin impersonando)
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from('inscricoes_cursos')
         .select(`
           *,
           curso:cursos(*)
         `)
-        .eq('aluno_id', profile.id);
+        .eq('aluno_id', targetUserId);
 
       if (enrollmentsError) throw enrollmentsError;
       
@@ -145,8 +151,8 @@ export const Dashboard = () => {
       const validEnrollments = (enrollments || []).filter(enrollment => enrollment.curso !== null);
       setCourseEnrollments(validEnrollments);
 
-      // Para admins, buscar todos os cursos disponíveis
-      if (profile?.role === 'admin') {
+      // Para admins não impersonando, buscar todos os cursos disponíveis
+      if (profile?.role === 'admin' && !impersonatedStudent) {
         const { data: allCoursesData, error: allCoursesError } = await supabase
           .from('cursos')
           .select('*')
@@ -154,9 +160,12 @@ export const Dashboard = () => {
 
         if (allCoursesError) throw allCoursesError;
         setAllCourses(allCoursesData || []);
+      } else {
+        // Se está impersonando, limpar a lista de todos os cursos
+        setAllCourses([]);
       }
 
-      // Buscar certificados
+      // Buscar certificados (do aluno ou do admin impersonando)
       const { data: certs, error: certsError } = await supabase
         .from('certificados_conclusao')
         .select('*')
@@ -165,9 +174,10 @@ export const Dashboard = () => {
       if (certsError) throw certsError;
       
       // Adicionar o nome do aluno aos certificados
+      const studentName = impersonatedStudent ? impersonatedStudent.nome : profile?.nome;
       const certificatesWithNames = (certs || []).map(cert => ({
         ...cert,
-        aluno_nome: profile.nome
+        aluno_nome: studentName
       }));
       
       setCertificates(certificatesWithNames);
@@ -208,7 +218,7 @@ export const Dashboard = () => {
     } finally {
       setDataLoading(false);
     }
-  }, [profile?.id, profile?.role, profile?.nome]);
+  }, [profile?.id, profile?.role, profile?.nome, getImpersonatedStudent]);
 
   // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
@@ -219,10 +229,10 @@ export const Dashboard = () => {
   }, [profile?.role]);
 
   useEffect(() => {
-    if (profile?.id) {
+    if (profile?.id || getImpersonatedStudent()) {
       fetchUserData();
     }
-  }, [profile?.id, fetchUserData]);
+  }, [profile?.id, fetchUserData, getImpersonatedStudent]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -287,8 +297,15 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      {/* Impersonation Banner */}
+      {profile?.role === 'admin' && isImpersonating() && (
+        <div className="sticky top-0 z-50">
+          <ImpersonationBanner />
+        </div>
+      )}
+      
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 sm:py-4">
            <div className="flex items-center justify-between">
              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -301,6 +318,10 @@ export const Dashboard = () => {
              </div>
 
              <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
+               {profile?.role === 'admin' && !isImpersonating() && (
+                 <StudentImpersonationDialog />
+               )}
+               
                <Button 
                  variant="ghost" 
                  size="sm" 
@@ -383,21 +404,28 @@ export const Dashboard = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
+            {/* Show impersonation info in sidebar when impersonating */}
+            {profile?.role === 'admin' && isImpersonating() && (
+              <div className="mb-4">
+                <ImpersonationBanner />
+              </div>
+            )}
+            
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-5' : 'grid-cols-1'} h-auto p-1 gap-1`}>
-                {profile?.role === 'admin' && (
+              <TabsList className={`grid w-full ${profile?.role === 'admin' && !isImpersonating() ? 'grid-cols-5' : 'grid-cols-1'} h-auto p-1 gap-1`}>
+                {profile?.role === 'admin' && !isImpersonating() && (
                   <TabsTrigger value="gerenciar" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Users className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Alunos</span>
                   </TabsTrigger>
                 )}
-                {profile?.role === 'admin' && (
+                {profile?.role === 'admin' && !isImpersonating() && (
                   <TabsTrigger value="inscricoes" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Mail className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Inscrições</span>
                   </TabsTrigger>
                 )}
-                {profile?.role === 'admin' && (
+                {profile?.role === 'admin' && !isImpersonating() && (
                   <TabsTrigger value="certificados" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Award className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Certificados</span>
@@ -405,9 +433,11 @@ export const Dashboard = () => {
                 )}
                 <TabsTrigger value="cursos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                   <BookOpen className="h-3 w-3" />
-                  <span className="hidden xs:inline text-xs">{profile?.role === 'admin' ? 'Gerenciar' : 'Cursos'}</span>
+                  <span className="hidden xs:inline text-xs">
+                    {profile?.role === 'admin' && !isImpersonating() ? 'Gerenciar' : 'Cursos'}
+                  </span>
                 </TabsTrigger>
-                {profile?.role === 'admin' && (
+                {profile?.role === 'admin' && !isImpersonating() && (
                   <TabsTrigger value="meus-cursos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <GraduationCap className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Meus Cursos</span>
@@ -423,21 +453,21 @@ export const Dashboard = () => {
               ) : (
                 <>
                    {/* Admin Tab - Gerenciar Inscrições */}
-                   {profile?.role === 'admin' && (
+                   {profile?.role === 'admin' && !isImpersonating() && (
                      <TabsContent value="inscricoes" className="space-y-6">
                        {activeTab === 'inscricoes' && <EnrollmentManagement />}
                      </TabsContent>
                    )}
 
                    {/* Admin Tab - Gerenciar Alunos */}
-                   {profile?.role === 'admin' && (
+                   {profile?.role === 'admin' && !isImpersonating() && (
                      <TabsContent value="gerenciar" className="space-y-6">
                        {activeTab === 'gerenciar' && <StudentManagement />}
                      </TabsContent>
                    )}
 
                    {/* Admin Tab - Gerenciar Certificados */}
-                   {profile?.role === 'admin' && (
+                   {profile?.role === 'admin' && !isImpersonating() && (
                      <TabsContent value="certificados" className="space-y-6">
                        {activeTab === 'certificados' && <CertificateManagement />}
                      </TabsContent>

@@ -270,7 +270,7 @@ export const useAuth = () => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      localStorage.clear(); // Limpar todo o localStorage
+      localStorage.clear(); // Limpar todo o localStorage (incluindo impersonação)
       sessionStorage.clear(); // Limpar também sessionStorage
       
       console.log('Estado local limpo');
@@ -321,6 +321,20 @@ export const useAuth = () => {
     }
   };
 
+  // Check if admin is impersonating a student
+  const getImpersonatedStudent = () => {
+    try {
+      const stored = localStorage.getItem('admin_impersonation');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const isImpersonating = () => {
+    return getImpersonatedStudent() !== null;
+  };
+
   return {
     user,
     session,
@@ -331,5 +345,7 @@ export const useAuth = () => {
     signUp,
     signOut,
     resetPassword,
+    getImpersonatedStudent,
+    isImpersonating,
   };
 };
