@@ -30,7 +30,35 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
     setError('');
     
     try {
-      const img = await loadImageSimple();
+      // Buscar o curso associado ao certificado para pegar o template específico
+      const { data: cursoData, error: cursoError } = await supabase
+        .from('inscricoes_cursos')
+        .select(`
+          curso_id,
+          cursos (
+            certificado_template
+          )
+        `)
+        .eq('id', certificate.inscricao_curso_id)
+        .single();
+
+      if (cursoError) {
+        console.error('Erro ao buscar curso:', cursoError);
+      }
+
+      // Usar template específico do curso se disponível, senão usar padrão
+      let templateUrl = 'Certificado.jpeg'; // URL padrão
+      if (cursoData?.cursos?.certificado_template) {
+        // Se o template do curso é uma URL completa, usar diretamente
+        if (cursoData.cursos.certificado_template.startsWith('http')) {
+          templateUrl = cursoData.cursos.certificado_template;
+        } else {
+          // Senão, assumir que é um arquivo no storage
+          templateUrl = cursoData.cursos.certificado_template;
+        }
+      }
+
+      const img = await loadImageFromTemplate(templateUrl);
       setCertificateImage(img);
       setIsLoading(false);
     } catch (err) {
@@ -69,17 +97,24 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
     }
   }, []);
 
-  // Image loading function - simplified since bucket is now public
-  const loadImageSimple = useCallback(async (): Promise<HTMLImageElement> => {
+  // Image loading function - handles both storage files and external URLs
+  const loadImageFromTemplate = useCallback(async (templateUrl: string): Promise<HTMLImageElement> => {
     return new Promise(async (resolve, reject) => {
       try {
-        // Get public URL directly since bucket is public
-        const { data } = supabase.storage
-          .from('certificados')
-          .getPublicUrl('Certificado.jpeg');
+        let imageUrl = templateUrl;
         
-        const imageUrl = data.publicUrl;
-        console.log('Carregando certificado via URL pública:', imageUrl);
+        // Se for uma URL externa, usar diretamente
+        if (templateUrl.startsWith('http')) {
+          imageUrl = templateUrl;
+        } else {
+          // Se for um arquivo no storage, gerar URL pública
+          const { data } = supabase.storage
+            .from('certificados')
+            .getPublicUrl(templateUrl);
+          imageUrl = data.publicUrl;
+        }
+        
+        console.log('Carregando certificado via URL:', imageUrl);
 
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -104,11 +139,11 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
         
         img.src = imageUrl;
       } catch (err) {
-        console.error('Erro geral no loadImageSimple:', err);
+        console.error('Erro geral no loadImageFromTemplate:', err);
         reject(err);
       }
     });
-  }, [getSignedUrl]);
+  }, []);
 
   // Gerar o certificado com o nome do aluno
   const generateCertificate = async () => {

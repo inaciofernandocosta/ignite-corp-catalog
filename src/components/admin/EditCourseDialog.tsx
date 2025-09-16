@@ -35,6 +35,7 @@ interface Course {
   data_fim: string | null;
   limite_alunos: number | null;
   limite_por_departamento: number | null;
+  certificado_template: string | null;
 }
 
 interface EditCourseDialogProps {
@@ -61,6 +62,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
     imagem_capa: course.imagem_capa || '',
     limite_alunos: course.limite_alunos || '',
     limite_por_departamento: course.limite_por_departamento || '',
+    certificado_template: course.certificado_template || '',
   });
   const [objetivos, setObjetivos] = useState<string[]>(course.objetivos || []);
   const [preRequisitos, setPreRequisitos] = useState<string[]>(course.pre_requisitos || []);
@@ -176,6 +178,7 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
         pre_requisitos: preRequisitos.length > 0 ? preRequisitos : null,
         limite_alunos: formData.limite_alunos ? parseInt(formData.limite_alunos.toString()) : null,
         limite_por_departamento: formData.limite_por_departamento ? parseInt(formData.limite_por_departamento.toString()) : null,
+        certificado_template: formData.certificado_template || null,
       };
 
       const { error } = await supabase
@@ -430,6 +433,21 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
             />
             <Label htmlFor="certificacao">Emite certificado de conclusão</Label>
           </div>
+
+          {formData.certificacao && (
+            <div className="space-y-2">
+              <Label htmlFor="certificado_template">Template do Certificado (URL)</Label>
+              <Input
+                id="certificado_template"
+                placeholder="https://exemplo.com/certificado.png"
+                value={formData.certificado_template}
+                onChange={(e) => setFormData({ ...formData, certificado_template: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                URL da imagem do certificado que será usado como template para este curso
+              </p>
+            </div>
+          )}
 
           {/* Objetivos */}
           <div className="space-y-2">

@@ -218,6 +218,7 @@ export type Database = {
       cursos: {
         Row: {
           certificacao: boolean | null
+          certificado_template: string | null
           created_at: string
           data_fim: string | null
           data_inicio: string | null
@@ -239,6 +240,7 @@ export type Database = {
         }
         Insert: {
           certificacao?: boolean | null
+          certificado_template?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
@@ -260,6 +262,7 @@ export type Database = {
         }
         Update: {
           certificacao?: boolean | null
+          certificado_template?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
