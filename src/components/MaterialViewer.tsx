@@ -94,25 +94,42 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
     setDownloadingIds(prev => new Set(prev).add(material.id));
     
     try {
-      // Se é um arquivo do storage, fazer download direto
+      // Se é um arquivo do storage do Supabase
       if (material.url.includes('supabase') || material.tipo === 'arquivo') {
-        const response = await fetch(material.url);
-        if (!response.ok) throw new Error('Erro ao baixar arquivo');
+        // Extrair o path do arquivo da URL
+        const urlParts = material.url.split('/');
+        const bucketIndex = urlParts.findIndex(part => part === 'modulo-materiais');
         
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = material.arquivo_nome || `${material.titulo}.${material.formato}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        toast({
-          title: 'Download iniciado',
-          description: `Download do arquivo "${material.titulo}" iniciado com sucesso.`
-        });
+        if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
+          // Pegar o path completo após o bucket
+          const filePath = urlParts.slice(bucketIndex + 1).join('/');
+          
+          // Fazer download usando a API do Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('modulo-materiais')
+            .download(filePath);
+
+          if (error) {
+            throw new Error(`Erro ao baixar do storage: ${error.message}`);
+          }
+
+          // Criar URL para download
+          const url = window.URL.createObjectURL(data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = material.arquivo_nome || `${material.titulo}.${material.formato}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          toast({
+            title: 'Download iniciado',
+            description: `Download do arquivo "${material.titulo}" iniciado com sucesso.`
+          });
+        } else {
+          throw new Error('URL do arquivo inválida');
+        }
       } else {
         // Para links externos, abrir em nova aba
         window.open(material.url, '_blank');
@@ -121,7 +138,7 @@ export const MaterialViewer: React.FC<MaterialViewerProps> = ({
       console.error('Erro no download:', error);
       toast({
         title: 'Erro no download',
-        description: error.message,
+        description: error.message || 'Erro desconhecido ao baixar arquivo',
         variant: 'destructive'
       });
     } finally {
