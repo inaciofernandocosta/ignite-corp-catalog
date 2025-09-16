@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompanyData } from '@/hooks/useCompanyData';
-import { useCargoData } from '@/hooks/useCargoData';
 import { useCourseEnrollmentLimits } from '@/hooks/useCourseEnrollmentLimits';
 import { CourseEnrollmentLimitModal } from '@/components/CourseEnrollmentLimitModal';
 import { DepartmentLimitsDisplay } from '@/components/DepartmentEnrollmentStatus';
@@ -70,7 +69,6 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   const [departmentLimits, setDepartmentLimits] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
   const { companies, loading, getDepartmentsByCompany, getLocationsByCompany } = useCompanyData();
-  const { cargos, loading: cargosLoading, fetchCargosByDepartment } = useCargoData();
   
   // Hook para controle de vagas do curso
   const {
@@ -101,7 +99,6 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
   });
 
   const selectedCompanyId = form.watch('empresa_id');
-  const selectedDepartmentId = form.watch('departamento_id');
   const availableDepartments = selectedCompanyId ? getDepartmentsByCompany(selectedCompanyId) : [];
   const availableLocations = selectedCompanyId ? getLocationsByCompany(selectedCompanyId) : [];
 
@@ -154,17 +151,8 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
     if (selectedCompanyId) {
       form.setValue('departamento_id', '');
       form.setValue('local_id', '');
-      form.setValue('cargo', '');
     }
   }, [selectedCompanyId, form]);
-
-  // Reset cargo when department changes and fetch new cargos
-  React.useEffect(() => {
-    if (selectedDepartmentId) {
-      form.setValue('cargo', '');
-      fetchCargosByDepartment(selectedCompanyId, selectedDepartmentId);
-    }
-  }, [selectedDepartmentId, selectedCompanyId, form, fetchCargosByDepartment]);
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -550,29 +538,8 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
                       <FormLabel>Cargo</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value}
-                            disabled={!selectedDepartmentId || cargosLoading}
-                          >
-                            <SelectTrigger className="pl-10">
-                              <SelectValue placeholder={
-                                !selectedDepartmentId 
-                                  ? "Selecione primeiro o departamento" 
-                                  : cargosLoading 
-                                  ? "Carregando cargos..." 
-                                  : "Selecione o cargo"
-                              } />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {cargos.map((cargo) => (
-                                <SelectItem key={cargo.id} value={cargo.cargo_nome}>
-                                  {cargo.cargo_nome}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="Cargo atual" className="pl-10" {...field} />
                         </div>
                       </FormControl>
                       <FormMessage />
