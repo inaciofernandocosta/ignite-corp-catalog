@@ -26,10 +26,13 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
 
   // Carregar o template do certificado
   const loadCertificateTemplate = async () => {
+    console.log('=== CARREGANDO TEMPLATE DO CERTIFICADO ===');
     setIsLoading(true);
     setError('');
     
     try {
+      console.log('Buscando curso para certificado ID:', certificate.inscricao_curso_id);
+      
       // Buscar o curso associado ao certificado para pegar o template específico
       const { data: cursoData, error: cursoError } = await supabase
         .from('inscricoes_cursos')
@@ -46,6 +49,8 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
         console.error('Erro ao buscar curso:', cursoError);
       }
 
+      console.log('Dados do curso encontrados:', cursoData);
+
       // Usar template específico do curso se disponível, senão usar padrão
       let templateUrl = 'Certificado.jpeg'; // URL padrão
       if (cursoData?.cursos?.certificado_template) {
@@ -58,7 +63,10 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
         }
       }
 
+      console.log('Template URL que será usado:', templateUrl);
+
       const img = await loadImageFromTemplate(templateUrl);
+      console.log('Imagem carregada com sucesso:', img.width, 'x', img.height);
       setCertificateImage(img);
       setIsLoading(false);
     } catch (err) {
@@ -354,59 +362,76 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
                     className="max-w-full max-h-full object-contain"
                     style={{ display: 'none' }}
                   />
-                  {/* Exibir apenas o canvas, não tentar renderizar a imagem com generateCertificate */}
-                  <img 
-                    ref={(el) => {
-                      // Quando o componente montar, renderizar o certificado no canvas e exibir
-                      if (el && certificateImage) {
-                        const canvas = canvasRef.current;
-                        const ctx = canvas?.getContext('2d');
-                        if (ctx) {
-                          // Configurar canvas
-                          canvas.width = certificateImage.width;
-                          canvas.height = certificateImage.height;
-                          
-                          // Desenhar imagem
-                          ctx.drawImage(certificateImage, 0, 0);
-                          
-                          // Desenhar texto - ajustado para o novo design
-                          // Posicionamento na parte superior do certificado
-                          const textoX = canvas.width * 0.075; // Ajustado ainda mais para a esquerda
-                          const textoY = canvas.height * 0.355; // Mantido na mesma altura
-                          const textoWidth = canvas.width * 0.65; // Aumentado para acomodar nomes maiores
-                          const textoHeight = 35;
-                          
-                          // Não precisamos mais do retângulo azul, pois o fundo já é azul
-                          // ctx.fillStyle = '#0066cc';
-                          // ctx.fillRect(textoX, textoY - 28, textoWidth, textoHeight);
-                          
-                          ctx.font = 'bold 32px Arial'; // Aumentado para 32px e em negrito para destacar o nome
-                          ctx.fillStyle = 'white';
-                          ctx.textAlign = 'left';
-                          
-                          const novoTexto = `Certificamos que ${certificate.aluno_nome || "Aluno"} `;
-                          ctx.fillText(novoTexto, textoX, textoY);
-                          
-                          // Usar o canvas como fonte da imagem
-                          try {
-                            el.src = canvas.toDataURL('image/jpeg', 0.95);
-                          } catch (err) {
-                            console.error('Erro ao gerar toDataURL (Tainted Canvas):', err);
-                            // Mostrar mensagem de erro
-                            toast({
-                              title: "Erro de segurança CORS",
-                              description: "Não foi possível gerar o certificado devido a restrições de segurança.",
-                              variant: "destructive"
-                            });
-                            // Exibir apenas a imagem original como fallback
-                            el.src = certificateImage.src;
-                          }
-                        }
-                      }
-                    }}
-                    alt={`Certificado de ${certificate.aluno_nome}`}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                   {/* Exibir apenas o canvas, não tentar renderizar a imagem com generateCertificate */}
+                   <img 
+                     ref={(el) => {
+                       // Quando o componente montar, renderizar o certificado no canvas e exibir
+                       if (el && certificateImage) {
+                         console.log('Iniciando renderização do certificado...');
+                         const canvas = canvasRef.current;
+                         const ctx = canvas?.getContext('2d');
+                         
+                         if (!canvas) {
+                           console.error('Canvas não encontrado');
+                           return;
+                         }
+                         
+                         if (!ctx) {
+                           console.error('Contexto 2D não obtido');
+                           return;
+                         }
+                         
+                         try {
+                           // Configurar canvas
+                           canvas.width = certificateImage.width;
+                           canvas.height = certificateImage.height;
+                           console.log('Canvas configurado:', canvas.width, 'x', canvas.height);
+                           
+                           // Desenhar imagem
+                           ctx.drawImage(certificateImage, 0, 0);
+                           console.log('Imagem base desenhada');
+                           
+                           // Desenhar texto - ajustado para o novo design
+                           // Posicionamento na parte superior do certificado
+                           const textoX = canvas.width * 0.075;
+                           const textoY = canvas.height * 0.355;
+                           
+                           console.log('Preparando texto na posição:', textoX, textoY);
+                           
+                           ctx.font = 'bold 32px Arial';
+                           ctx.fillStyle = 'white';
+                           ctx.textAlign = 'left';
+                           
+                           const novoTexto = `Certificamos que ${certificate.aluno_nome || "Aluno"}`;
+                           ctx.fillText(novoTexto, textoX, textoY);
+                           console.log('Texto desenhado:', novoTexto);
+                           
+                           // Usar o canvas como fonte da imagem
+                           try {
+                             const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                             el.src = dataUrl;
+                             console.log('Certificado gerado com sucesso');
+                           } catch (err) {
+                             console.error('Erro ao gerar toDataURL (Tainted Canvas):', err);
+                             // Mostrar mensagem de erro
+                             toast({
+                               title: "Erro de segurança CORS",
+                               description: "Não foi possível gerar o certificado devido a restrições de segurança.",
+                               variant: "destructive"
+                             });
+                             // Exibir apenas a imagem original como fallback
+                             el.src = certificateImage.src;
+                           }
+                         } catch (error) {
+                           console.error('Erro geral na renderização:', error);
+                           // Fallback para imagem original
+                           el.src = certificateImage.src;
+                         }
+                       }
+                     }}
+                     alt={`Certificado de ${certificate.aluno_nome}`}
+                     className="max-w-full max-h-full object-contain"
+                   />
                 </>
               ) : (
                 <div className="text-white">Erro ao carregar certificado</div>
