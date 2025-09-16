@@ -570,12 +570,18 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
                             </div>
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          {availableLocations.map((location) => (
-                            <SelectItem key={location.id} value={location.id}>
-                              {location.nome} {location.cidade && `- ${location.cidade}`}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="bg-background z-50 border shadow-lg">
+                          {availableLocations.length === 0 ? (
+                            <div className="p-2 text-muted-foreground text-sm">
+                              Nenhum local encontrado para esta empresa
+                            </div>
+                          ) : (
+                            availableLocations.map((location) => (
+                              <SelectItem key={location.id} value={location.id} className="bg-background hover:bg-accent">
+                                {location.nome} {location.cidade && `- ${location.cidade}`}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

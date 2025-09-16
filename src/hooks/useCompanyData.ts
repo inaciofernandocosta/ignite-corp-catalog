@@ -59,6 +59,17 @@ export const useCompanyData = () => {
         setCompanies(companiesData || []);
         setDepartments(departmentsData || []);
         setLocations(locationsData || []);
+        
+        console.log('✅ Dados carregados:', {
+          empresas: companiesData?.length || 0,
+          departamentos: departmentsData?.length || 0,
+          locais: locationsData?.length || 0,
+          locaisPorEmpresa: locationsData?.reduce((acc: any, loc: any) => {
+            const empresa = companiesData?.find((c: any) => c.id === loc.empresa_id)?.nome || 'Desconhecida';
+            acc[empresa] = (acc[empresa] || 0) + 1;
+            return acc;
+          }, {})
+        });
       } catch (error) {
         console.error('Erro ao buscar dados da empresa:', error);
       } finally {
@@ -74,7 +85,9 @@ export const useCompanyData = () => {
   };
 
   const getLocationsByCompany = (companyId: string) => {
-    return locations.filter(loc => loc.empresa_id === companyId);
+    const filteredLocations = locations.filter(loc => loc.empresa_id === companyId);
+    console.log(`🏢 Locais para empresa ${companyId}:`, filteredLocations);
+    return filteredLocations;
   };
 
   return {
