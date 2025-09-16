@@ -562,7 +562,11 @@ export const ApplicationForm = ({ onClose, course }: ApplicationFormProps) => {
                           <SelectTrigger>
                             <div className="flex items-center">
                               <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                              <SelectValue placeholder="Poços de Caldas" />
+                              <SelectValue placeholder={
+                                !selectedCompanyId 
+                                  ? "Selecione primeiro uma empresa" 
+                                  : "Selecione o local"
+                              } />
                             </div>
                           </SelectTrigger>
                         </FormControl>
