@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminImpersonation } from '@/hooks/useAdminImpersonation';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +111,7 @@ interface CourseWithModules {
 
 export const Dashboard = () => {
   const { user, profile, signOut, loading, logoutLoading, getImpersonatedStudent, isImpersonating } = useAuth();
+  const { impersonatedStudent } = useAdminImpersonation();
   const navigate = useNavigate();
 
   // Verificar autenticação e redirecionar se necessário
@@ -141,18 +143,11 @@ export const Dashboard = () => {
       }
 
       const targetUserId = impersonatedStudent ? impersonatedStudent.id : profile?.id;
-      
-      console.log('=== DEBUG IMPERSONATION ===');
-      console.log('Profile ID:', profile?.id);
-      console.log('Impersonated Student:', impersonatedStudent);
-      console.log('Target User ID:', targetUserId);
-      console.log('Is impersonating?', !!impersonatedStudent);
 
       try {
         setDataLoading(true);
 
         // Buscar inscrições em cursos (do aluno ou do admin impersonando)
-        console.log('Fazendo query com targetUserId:', targetUserId);
         const { data: enrollments, error: enrollmentsError } = await supabase
           .from('inscricoes_cursos')
           .select(`
@@ -161,14 +156,10 @@ export const Dashboard = () => {
           `)
           .eq('aluno_id', targetUserId);
 
-        console.log('Query result - Error:', enrollmentsError);
-        console.log('Query result - Data:', enrollments);
-
         if (enrollmentsError) throw enrollmentsError;
         
         // Filtrar apenas inscrições com cursos válidos
         const validEnrollments = (enrollments || []).filter(enrollment => enrollment.curso !== null);
-        console.log('Valid enrollments:', validEnrollments);
         setCourseEnrollments(validEnrollments);
 
       // Para admins não impersonando, buscar todos os cursos disponíveis
@@ -526,16 +517,16 @@ export const Dashboard = () => {
                      </TabsContent>
                    )}
 
-                    {/* Cursos Tab */}
-                   {profile?.role === 'admin' && (
-                     <TabsContent value="cursos" className="space-y-6">
-                       <div className="flex justify-between items-center">
-                         <div>
-                           <h2 className="text-2xl font-bold">Gerenciar Cursos</h2>
-                           <p className="text-muted-foreground">Crie e gerencie os cursos da plataforma</p>
-                         </div>
-                         <CreateCourseDialog onCourseCreated={fetchUserData} />
-                       </div>
+                     {/* Cursos Tab - Gerenciar (apenas para admin não impersonando) */}
+                    {profile?.role === 'admin' && !isImpersonating() && (
+                      <TabsContent value="cursos" className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h2 className="text-2xl font-bold">Gerenciar Cursos</h2>
+                            <p className="text-muted-foreground">Crie e gerencie os cursos da plataforma</p>
+                          </div>
+                          <CreateCourseDialog onCourseCreated={fetchUserData} />
+                        </div>
                        
                        {/* Visualização administrativa de cursos */}
                        {allCourses.length === 0 ? (
@@ -722,20 +713,35 @@ export const Dashboard = () => {
                      </TabsContent>
                    )}
 
-                   {/* Aba Cursos original para não-admins */}
-                   {profile?.role !== 'admin' && (
-                     <TabsContent value="cursos" className="space-y-6">
-                       {courseEnrollments.length === 0 ? (
-                         <Card>
-                           <CardContent className="text-center py-12">
-                             <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                             <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
-                             <p className="text-muted-foreground">
-                               Você ainda não está inscrito em nenhum curso.
-                             </p>
-                           </CardContent>
-                         </Card>
-                        ) : (
+                    {/* Aba Cursos para alunos ou admin impersonando */}
+                    {(profile?.role !== 'admin' || isImpersonating()) && (
+                      <TabsContent value="cursos" className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h2 className="text-2xl font-bold">Meus Cursos</h2>
+                            <p className="text-muted-foreground">
+                              {isImpersonating() ? 
+                                `Cursos de ${impersonatedStudent?.nome}` : 
+                                'Seus cursos matriculados'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {courseEnrollments.length === 0 ? (
+                          <Card>
+                            <CardContent className="text-center py-12">
+                              <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">Nenhum curso encontrado</h3>
+                              <p className="text-muted-foreground">
+                                {isImpersonating() ? 
+                                  'Este aluno ainda não está inscrito em nenhum curso.' :
+                                  'Você ainda não está inscrito em nenhum curso.'
+                                }
+                              </p>
+                            </CardContent>
+                          </Card>
+                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {courseEnrollments.map((enrollment) => (
                               <Card key={enrollment.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
