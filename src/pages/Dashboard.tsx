@@ -129,36 +129,47 @@ export const Dashboard = () => {
   const fetchUserData = useCallback(async () => {
     if (!profile?.id) return;
 
-    // Verificar se admin está impersonando um aluno - sem usar função como dependência
-    let impersonatedStudent = null;
-    try {
-      const stored = localStorage.getItem('admin_impersonation');
-      if (stored) {
-        impersonatedStudent = JSON.parse(stored);
+      // Verificar se admin está impersonando um aluno - sem usar função como dependência
+      let impersonatedStudent = null;
+      try {
+        const stored = localStorage.getItem('admin_impersonation');
+        if (stored) {
+          impersonatedStudent = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Error parsing impersonation data:', error);
       }
-    } catch (error) {
-      console.error('Error parsing impersonation data:', error);
-    }
 
-    const targetUserId = impersonatedStudent ? impersonatedStudent.id : profile?.id;
-
-    try {
-      setDataLoading(true);
-
-      // Buscar inscrições em cursos (do aluno ou do admin impersonando)
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from('inscricoes_cursos')
-        .select(`
-          *,
-          curso:cursos(*)
-        `)
-        .eq('aluno_id', targetUserId);
-
-      if (enrollmentsError) throw enrollmentsError;
+      const targetUserId = impersonatedStudent ? impersonatedStudent.id : profile?.id;
       
-      // Filtrar apenas inscrições com cursos válidos
-      const validEnrollments = (enrollments || []).filter(enrollment => enrollment.curso !== null);
-      setCourseEnrollments(validEnrollments);
+      console.log('=== DEBUG IMPERSONATION ===');
+      console.log('Profile ID:', profile?.id);
+      console.log('Impersonated Student:', impersonatedStudent);
+      console.log('Target User ID:', targetUserId);
+      console.log('Is impersonating?', !!impersonatedStudent);
+
+      try {
+        setDataLoading(true);
+
+        // Buscar inscrições em cursos (do aluno ou do admin impersonando)
+        console.log('Fazendo query com targetUserId:', targetUserId);
+        const { data: enrollments, error: enrollmentsError } = await supabase
+          .from('inscricoes_cursos')
+          .select(`
+            *,
+            curso:cursos(*)
+          `)
+          .eq('aluno_id', targetUserId);
+
+        console.log('Query result - Error:', enrollmentsError);
+        console.log('Query result - Data:', enrollments);
+
+        if (enrollmentsError) throw enrollmentsError;
+        
+        // Filtrar apenas inscrições com cursos válidos
+        const validEnrollments = (enrollments || []).filter(enrollment => enrollment.curso !== null);
+        console.log('Valid enrollments:', validEnrollments);
+        setCourseEnrollments(validEnrollments);
 
       // Para admins não impersonando, buscar todos os cursos disponíveis
       if (profile?.role === 'admin' && !impersonatedStudent) {
