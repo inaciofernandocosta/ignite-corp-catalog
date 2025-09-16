@@ -64,6 +64,26 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
     limite_por_departamento: course.limite_por_departamento || '',
     certificado_template: course.certificado_template || '',
   });
+
+  // Update form data when course prop changes
+  useEffect(() => {
+    setFormData({
+      titulo: course.titulo,
+      descricao: course.descricao,
+      duracao: course.duracao,
+      nivel: course.nivel,
+      status: course.status,
+      certificacao: course.certificacao,
+      preco: course.preco,
+      data_inicio: course.data_inicio || '',
+      data_fim: course.data_fim || '',
+      imagem_capa: course.imagem_capa || '',
+      limite_alunos: course.limite_alunos || '',
+      limite_por_departamento: course.limite_por_departamento || '',
+      certificado_template: course.certificado_template || '',
+    });
+    setImagePreview(course.imagem_capa);
+  }, [course]);
   const [objetivos, setObjetivos] = useState<string[]>(course.objetivos || []);
   const [preRequisitos, setPreRequisitos] = useState<string[]>(course.pre_requisitos || []);
   const [novoObjetivo, setNovoObjetivo] = useState('');
@@ -425,29 +445,37 @@ export const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ course, onCo
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="certificacao"
-              checked={formData.certificacao}
-              onCheckedChange={(checked) => setFormData({ ...formData, certificacao: checked })}
-            />
-            <Label htmlFor="certificacao">Emite certificado de conclusão</Label>
-          </div>
-
-          {formData.certificacao && (
-            <div className="space-y-2">
-              <Label htmlFor="certificado_template">Template do Certificado (URL)</Label>
-              <Input
-                id="certificado_template"
-                placeholder="https://exemplo.com/certificado.png"
-                value={formData.certificado_template}
-                onChange={(e) => setFormData({ ...formData, certificado_template: e.target.value })}
+          {/* Certificação e Template */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="certificacao"
+                checked={formData.certificacao}
+                onCheckedChange={(checked) => setFormData({ ...formData, certificacao: checked })}
               />
-              <p className="text-xs text-muted-foreground">
-                URL da imagem do certificado que será usado como template para este curso
-              </p>
+              <Label htmlFor="certificacao">Emite certificado de conclusão</Label>
             </div>
-          )}
+
+            {formData.certificacao && (
+              <div className="space-y-2 p-4 border rounded-lg bg-muted/50">
+                <Label htmlFor="certificado_template" className="text-sm font-medium">
+                  Template do Certificado
+                </Label>
+                <Input
+                  id="certificado_template"
+                  placeholder="Cole aqui a URL da imagem do certificado (ex: https://...)"
+                  value={formData.certificado_template}
+                  onChange={(e) => setFormData({ ...formData, certificado_template: e.target.value })}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  📋 Cole a URL completa da imagem do certificado que será usado para este curso.
+                  <br />
+                  Exemplo: https://fauoxtziffljgictcvhi.supabase.co/storage/v1/object/public/certificados/17.09%20-%20certificado.png
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Objetivos */}
           <div className="space-y-2">
