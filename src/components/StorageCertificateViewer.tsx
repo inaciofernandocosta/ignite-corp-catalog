@@ -173,7 +173,7 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
       // ctx.fillRect(textoX, textoY - 28, textoWidth, textoHeight);
       
       // Configurar fonte e estilo para o novo texto
-      ctx.font = 'bold 28px Arial'; // Aumentado para 28px para melhor legibilidade
+      ctx.font = 'bold 32px Arial'; // Aumentado para 32px e em negrito para destacar o nome
       ctx.fillStyle = 'white';
       ctx.textAlign = 'left';
       
@@ -380,7 +380,7 @@ export const StorageCertificateViewer = ({ certificate, showControls = true }: S
                           // ctx.fillStyle = '#0066cc';
                           // ctx.fillRect(textoX, textoY - 28, textoWidth, textoHeight);
                           
-                          ctx.font = '28px Arial'; // Sem negrito e mantendo o tamanho para legibilidade
+                          ctx.font = 'bold 32px Arial'; // Aumentado para 32px e em negrito para destacar o nome
                           ctx.fillStyle = 'white';
                           ctx.textAlign = 'left';
                           
