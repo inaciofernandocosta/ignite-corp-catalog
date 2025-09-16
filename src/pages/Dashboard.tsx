@@ -127,11 +127,20 @@ export const Dashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
 
   const fetchUserData = useCallback(async () => {
-    // Verificar se admin está impersonando um aluno
-    const impersonatedStudent = getImpersonatedStudent();
+    if (!profile?.id) return;
+
+    // Verificar se admin está impersonando um aluno - sem usar função como dependência
+    let impersonatedStudent = null;
+    try {
+      const stored = localStorage.getItem('admin_impersonation');
+      if (stored) {
+        impersonatedStudent = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error parsing impersonation data:', error);
+    }
+
     const targetUserId = impersonatedStudent ? impersonatedStudent.id : profile?.id;
-    
-    if (!targetUserId) return;
 
     try {
       setDataLoading(true);
@@ -218,7 +227,7 @@ export const Dashboard = () => {
     } finally {
       setDataLoading(false);
     }
-  }, [profile?.id, profile?.role, profile?.nome, getImpersonatedStudent]);
+  }, [profile?.id, profile?.role, profile?.nome]);
 
   // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
@@ -228,11 +237,36 @@ export const Dashboard = () => {
     }
   }, [profile?.role]);
 
+  // State para detectar mudanças na impersonação
+  const [impersonationKey, setImpersonationKey] = useState(() => {
+    return localStorage.getItem('admin_impersonation') || 'none';
+  });
+
+  // Listen for impersonation changes
   useEffect(() => {
-    if (profile?.id || getImpersonatedStudent()) {
+    const handleStorageChange = () => {
+      const currentKey = localStorage.getItem('admin_impersonation') || 'none';
+      if (currentKey !== impersonationKey) {
+        setImpersonationKey(currentKey);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically for changes from the same tab
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [impersonationKey]);
+
+  useEffect(() => {
+    if (profile?.id) {
       fetchUserData();
     }
-  }, [profile?.id, fetchUserData, getImpersonatedStudent]);
+  }, [profile?.id, fetchUserData, impersonationKey]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
