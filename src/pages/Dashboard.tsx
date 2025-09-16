@@ -227,7 +227,7 @@ export const Dashboard = () => {
     } finally {
       setDataLoading(false);
     }
-  }, [profile?.id, profile?.role, profile?.nome]);
+  }, [profile?.id, profile?.role]);
 
   // Gerenciar inicialização da tab baseado no role - APENAS na primeira carga
   useEffect(() => {
@@ -237,36 +237,40 @@ export const Dashboard = () => {
     }
   }, [profile?.role]);
 
-  // State para detectar mudanças na impersonação
-  const [impersonationKey, setImpersonationKey] = useState(() => {
+  // Controle da impersonação sem dependência circular
+  const [lastImpersonationCheck, setLastImpersonationCheck] = useState(() => {
     return localStorage.getItem('admin_impersonation') || 'none';
   });
 
-  // Listen for impersonation changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const currentKey = localStorage.getItem('admin_impersonation') || 'none';
-      if (currentKey !== impersonationKey) {
-        setImpersonationKey(currentKey);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check periodically for changes from the same tab
-    const interval = setInterval(handleStorageChange, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [impersonationKey]);
-
+  // Carregar dados quando necessário
   useEffect(() => {
     if (profile?.id) {
       fetchUserData();
     }
-  }, [profile?.id, fetchUserData, impersonationKey]);
+  }, [profile?.id, fetchUserData]);
+
+  // Monitorar mudanças na impersonação
+  useEffect(() => {
+    const checkImpersonation = () => {
+      const current = localStorage.getItem('admin_impersonation') || 'none';
+      if (current !== lastImpersonationCheck) {
+        setLastImpersonationCheck(current);
+        if (profile?.id) {
+          fetchUserData();
+        }
+      }
+    };
+
+    // Check immediately
+    checkImpersonation();
+
+    // Set up interval for periodic checks (only when component is mounted)
+    const interval = setInterval(checkImpersonation, 2000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [lastImpersonationCheck, profile?.id, fetchUserData]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
