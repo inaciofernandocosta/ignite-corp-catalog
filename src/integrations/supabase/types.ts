@@ -55,6 +55,36 @@ export type Database = {
           },
         ]
       }
+      cargos_departamento: {
+        Row: {
+          ativo: boolean
+          cargo_nome: string
+          created_at: string
+          departamento_id: string
+          empresa_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cargo_nome: string
+          created_at?: string
+          departamento_id: string
+          empresa_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cargo_nome?: string
+          created_at?: string
+          departamento_id?: string
+          empresa_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certificados_conclusao: {
         Row: {
           aprovado_por: string | null
