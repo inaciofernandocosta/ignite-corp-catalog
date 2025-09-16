@@ -200,7 +200,7 @@ export function EnrollmentManagement() {
 
       const { error } = await supabase
         .from('inscricoes_cursos')
-        .update({ status: newStatus })
+        .update({ status: newStatus, progresso: newStatus === 'concluido' ? 100 : null })
         .eq('id', enrollmentId);
 
       if (error) {
@@ -208,8 +208,43 @@ export function EnrollmentManagement() {
         throw error;
       }
 
-      // Se estiver aprovando, enviar email de aprovação
-      if (newStatus === 'aprovado') {
+      // Se estiver marcando como concluído, criar certificado automaticamente
+      if (newStatus === 'concluido') {
+        const enrollment = enrollments.find(e => e.id === enrollmentId);
+        if (enrollment) {
+          try {
+            // Criar certificado na tabela certificados_conclusao
+            const numeroCarificado = `CERT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 999999) + 1).padStart(6, '0')}`;
+            const { error: certError } = await supabase
+              .from('certificados_conclusao')
+              .insert({
+                inscricao_curso_id: enrollmentId,
+                numero_certificado: numeroCarificado,
+                data_conclusao: new Date().toISOString().split('T')[0], // Data atual
+                aprovado_por: session.user.email,
+                status: 'aprovado'
+              });
+
+            if (certError) {
+              console.error('Erro ao criar certificado:', certError);
+              // Não interromper o fluxo se houver erro no certificado
+            }
+
+            toast({
+              title: "Curso concluído com sucesso!",
+              description: `${enrollment.inscricoes_mentoria?.nome || 'Aluno'} foi marcado como concluído e o certificado foi gerado.`,
+            });
+          } catch (certError) {
+            console.error('Erro ao gerar certificado:', certError);
+            toast({
+              title: "Concluído, mas erro no certificado",
+              description: "O curso foi marcado como concluído, mas houve problema na geração do certificado.",
+              variant: "destructive"
+            });
+          }
+        }
+      } else if (newStatus === 'aprovado') {
+        // Se estiver aprovando, enviar email de aprovação
         const enrollment = enrollments.find(e => e.id === enrollmentId);
         if (enrollment) {
           try {

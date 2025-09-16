@@ -41,6 +41,7 @@ import { EditModuleDialog } from '@/components/admin/EditModuleDialog';
 import { ManageModuleMaterialsDialog } from '@/components/admin/ManageModuleMaterialsDialog';
 import { ViewModulesDialog } from '@/components/admin/ViewModulesDialog';
 import { EnrollmentManagement } from '@/components/admin/EnrollmentManagement';
+import { CertificateManagement } from '@/components/admin/CertificateManagement';
 import { UserProfile } from '@/components/UserProfile';
 import { CourseModulesViewer } from '@/components/student/CourseModulesViewer';
 
@@ -383,7 +384,7 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-1'} h-auto p-1 gap-1`}>
+              <TabsList className={`grid w-full ${profile?.role === 'admin' ? 'grid-cols-5' : 'grid-cols-1'} h-auto p-1 gap-1`}>
                 {profile?.role === 'admin' && (
                   <TabsTrigger value="gerenciar" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Users className="h-3 w-3" />
@@ -394,6 +395,12 @@ export const Dashboard = () => {
                   <TabsTrigger value="inscricoes" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Mail className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Inscrições</span>
+                  </TabsTrigger>
+                )}
+                {profile?.role === 'admin' && (
+                  <TabsTrigger value="certificados" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
+                    <Award className="h-3 w-3" />
+                    <span className="hidden xs:inline text-xs">Certificados</span>
                   </TabsTrigger>
                 )}
                 <TabsTrigger value="cursos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
@@ -429,7 +436,14 @@ export const Dashboard = () => {
                      </TabsContent>
                    )}
 
-                   {/* Cursos Tab */}
+                   {/* Admin Tab - Gerenciar Certificados */}
+                   {profile?.role === 'admin' && (
+                     <TabsContent value="certificados" className="space-y-6">
+                       {activeTab === 'certificados' && <CertificateManagement />}
+                     </TabsContent>
+                   )}
+
+                    {/* Cursos Tab */}
                    {profile?.role === 'admin' && (
                      <TabsContent value="cursos" className="space-y-6">
                        <div className="flex justify-between items-center">
