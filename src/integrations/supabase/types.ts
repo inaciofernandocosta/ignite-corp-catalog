@@ -53,6 +53,13 @@ export type Database = {
             referencedRelation: "inscricoes_mentoria"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_action_tokens_inscricao_id_fkey"
+            columns: ["inscricao_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cargos_departamento: {
@@ -388,6 +395,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inscricoes_cursos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inscricoes_cursos_curso_id_fkey"
             columns: ["curso_id"]
             isOneToOne: false
@@ -669,6 +683,33 @@ export type Database = {
           },
         ]
       }
+      user_access_logs: {
+        Row: {
+          access_timestamp: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_email: string
+        }
+        Insert: {
+          access_timestamp?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_email: string
+        }
+        Update: {
+          access_timestamp?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       user_admin: {
         Row: {
           ativo: boolean
@@ -751,10 +792,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_roles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "inscricoes_mentoria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_access_stats"
             referencedColumns: ["id"]
           },
         ]
@@ -806,6 +861,23 @@ export type Database = {
       }
     }
     Views: {
+      user_access_stats: {
+        Row: {
+          ativo: boolean | null
+          data_inscricao: string | null
+          departamento: string | null
+          email: string | null
+          empresa: string | null
+          id: string | null
+          nome: string | null
+          primeiro_acesso: string | null
+          status: string | null
+          status_acesso: string | null
+          total_acessos: number | null
+          ultimo_acesso: string | null
+        }
+        Relationships: []
+      }
       users_eligible_for_reset: {
         Row: {
           can_reset_password: boolean | null

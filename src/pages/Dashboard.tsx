@@ -29,7 +29,8 @@ import {
   UserCheck,
   Home,
   Briefcase,
-  BookOpen
+  BookOpen,
+  Activity
 } from "lucide-react";
 import { formatDateWithoutTimezone } from "@/lib/dateUtils";
 import { StorageCertificateViewer } from '@/components/StorageCertificateViewer';
@@ -47,6 +48,7 @@ import { UserProfile } from '@/components/UserProfile';
 import { CourseModulesViewer } from '@/components/student/CourseModulesViewer';
 import { StudentImpersonationDialog } from '@/components/admin/StudentImpersonationDialog';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
+import { AdminUserAccess } from '@/components/admin/AdminUserAccess';
 
 interface CourseEnrollment {
   id: string;
@@ -456,7 +458,7 @@ export const Dashboard = () => {
             )}
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-              <TabsList className={`grid w-full ${profile?.role === 'admin' && !isImpersonating() ? 'grid-cols-5' : 'grid-cols-1'} h-auto p-1 gap-1`}>
+              <TabsList className={`grid w-full ${profile?.role === 'admin' && !isImpersonating() ? 'grid-cols-6' : 'grid-cols-1'} h-auto p-1 gap-1`}>
                 {profile?.role === 'admin' && !isImpersonating() && (
                   <TabsTrigger value="gerenciar" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Users className="h-3 w-3" />
@@ -473,6 +475,12 @@ export const Dashboard = () => {
                   <TabsTrigger value="certificados" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
                     <Award className="h-3 w-3" />
                     <span className="hidden xs:inline text-xs">Certificados</span>
+                  </TabsTrigger>
+                )}
+                {profile?.role === 'admin' && !isImpersonating() && (
+                  <TabsTrigger value="acessos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
+                    <Activity className="h-3 w-3" />
+                    <span className="hidden xs:inline text-xs">Acessos</span>
                   </TabsTrigger>
                 )}
                 <TabsTrigger value="cursos" className="flex items-center justify-center gap-1 py-2 px-1 text-xs">
@@ -510,12 +518,19 @@ export const Dashboard = () => {
                      </TabsContent>
                    )}
 
-                   {/* Admin Tab - Gerenciar Certificados */}
-                   {profile?.role === 'admin' && !isImpersonating() && (
-                     <TabsContent value="certificados" className="space-y-6">
-                       {activeTab === 'certificados' && <CertificateManagement />}
-                     </TabsContent>
-                   )}
+                    {/* Admin Tab - Gerenciar Certificados */}
+                    {profile?.role === 'admin' && !isImpersonating() && (
+                      <TabsContent value="certificados" className="space-y-6">
+                        {activeTab === 'certificados' && <CertificateManagement />}
+                      </TabsContent>
+                    )}
+
+                    {/* Admin Tab - Acessos dos Usuários */}
+                    {profile?.role === 'admin' && !isImpersonating() && (
+                      <TabsContent value="acessos" className="space-y-6">
+                        {activeTab === 'acessos' && <AdminUserAccess />}
+                      </TabsContent>
+                    )}
 
                      {/* Cursos Tab - Gerenciar (apenas para admin não impersonando) */}
                     {profile?.role === 'admin' && !isImpersonating() && (

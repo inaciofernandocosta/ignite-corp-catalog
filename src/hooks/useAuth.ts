@@ -139,18 +139,22 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Buscar perfil sempre que há uma sessão válida (após inicialização)
-        if (session?.user && session.user.email && isInitialized && !isLoggingOut) {
-          console.log('useAuth - Buscando perfil após auth change');
-          setTimeout(() => {
-            if (isMounted && !isLoggingOut) {
-              fetchUserProfile(session.user.email);
-            }
-          }, 0);
-        } else if (!session?.user) {
-          console.log('useAuth - Limpando perfil - sem usuário');
-          setProfile(null);
-        }
+         // Buscar perfil sempre que há uma sessão válida (após inicialização)
+         if (session?.user && session.user.email && isInitialized && !isLoggingOut) {
+           console.log('useAuth - Buscando perfil após auth change');
+           setTimeout(() => {
+             if (isMounted && !isLoggingOut) {
+               fetchUserProfile(session.user.email);
+               // Registrar acesso apenas no SIGNED_IN ou INITIAL_SESSION
+               if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                 logUserAccess(session.user.email);
+               }
+             }
+           }, 0);
+         } else if (!session?.user) {
+           console.log('useAuth - Limpando perfil - sem usuário');
+           setProfile(null);
+         }
         
         // Ensure loading is resolved if not already
         if (!isInitialized) {
@@ -168,6 +172,26 @@ export const useAuth = () => {
       subscription.unsubscribe();
     };
   }, [fetchUserProfile, isLoggingOut]);
+
+  const logUserAccess = async (email: string) => {
+    try {
+      const userAgent = navigator.userAgent;
+      
+      const { error } = await supabase
+        .from('user_access_logs')
+        .insert({
+          user_email: email,
+          user_agent: userAgent,
+          // ip_address será null pois não temos acesso no frontend
+        });
+
+      if (error) {
+        console.error('Erro ao registrar acesso:', error);
+      }
+    } catch (error) {
+      console.error('Erro ao registrar acesso:', error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
