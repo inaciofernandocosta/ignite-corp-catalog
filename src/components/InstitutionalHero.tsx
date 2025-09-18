@@ -166,7 +166,7 @@ export function InstitutionalHero({ userState, onCorporateLogin, onContractForCo
             {/* Stats Row */}
             <div className="flex justify-center items-center gap-6 sm:gap-8 pt-4 animate-fade-in px-4" style={{ animationDelay: '1s' }}>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-primary">20+</div>
+                <div className="text-2xl sm:text-3xl font-bold text-primary">50+</div>
                 <div className="text-xs sm:text-sm text-muted-foreground">Profissionais Transformados</div>
               </div>
               <div className="w-px h-8 sm:h-10 bg-border"></div>
