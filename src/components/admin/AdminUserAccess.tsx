@@ -323,13 +323,15 @@ export const AdminUserAccess = React.memo(() => {
               {filteredUsers.map((user) => (
                 <div key={user.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{user.nome}</h4>
-                        <Badge variant={getStatusBadgeVariant(user.status_acesso)} className="text-xs">
-                          {user.status_acesso}
-                        </Badge>
-                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium">{user.nome}</h4>
+                          {user.status_acesso !== 'Nunca acessou' && (
+                            <Badge variant={getStatusBadgeVariant(user.status_acesso)} className="text-xs">
+                              {user.status_acesso}
+                            </Badge>
+                          )}
+                        </div>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                       <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
                         {user.empresa && (
